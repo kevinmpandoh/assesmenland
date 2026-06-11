@@ -17,8 +17,8 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Play SawahVerse — The Village" },
-      { name: "description", content: "Enter the SawahVerse village. Farm, fish, and chill — wallet required." },
+      { title: "Play Sawah Voyages — Set Sail" },
+      { name: "description", content: "Masuk pelabuhan Sawah Voyages. Naik perahu, mancing, dan chill — wallet diperlukan." },
     ],
   }),
   component: GamePage,
@@ -43,14 +43,14 @@ function GamePage() {
 
 function GateShell({ icon: Icon, title, children, tone = "ocean" }: any) {
   return (
-    <div className="mx-auto mt-8 max-w-xl rounded-3xl glass-card p-10 text-center">
-      <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${tone === "ocean" ? "bg-[image:var(--gradient-ocean)] text-white" : "bg-gold/20 text-gold"}`}>
+    <div className="mx-auto mt-8 max-w-xl card-pop p-10 text-center">
+      <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ink-border ${tone === "ocean" ? "bg-sky-deep text-ink" : "bg-sunset text-ink"}`}>
         <Icon className="h-7 w-7" />
       </div>
-      <h2 className="mt-5 text-2xl font-bold">{title}</h2>
+      <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
       {children}
       <div className="mt-6 flex justify-center">
-        <Link to="/"><Button variant="ghost"><ArrowLeft className="mr-1 h-4 w-4" /> Back to landing</Button></Link>
+        <Link to="/" className="pill text-xs"><ArrowLeft className="h-4 w-4" /> Balik ke beranda</Link>
       </div>
     </div>
   );
@@ -58,9 +58,9 @@ function GateShell({ icon: Icon, title, children, tone = "ocean" }: any) {
 
 function ConnectGate() {
   return (
-    <GateShell icon={Wallet} title="Connect your wallet to enter">
-      <p className="mt-3 text-muted-foreground">
-        Hold at least {MIN_TOKEN_BALANCE} SawahVerse token to access the village.
+    <GateShell icon={Wallet} title="Connect wallet buat masuk">
+      <p className="mt-3 text-ink/70">
+        Pegang minimal {MIN_TOKEN_BALANCE} token Sawah Voyages buat masuk pelabuhan.
       </p>
       <div className="mt-6 flex justify-center"><WalletButton /></div>
     </GateShell>
@@ -69,21 +69,21 @@ function ConnectGate() {
 
 function LoadingGate() {
   return (
-    <GateShell icon={Sparkles} title="Checking your wallet…">
-      <p className="mt-3 text-muted-foreground">Reading your token balance on Solana.</p>
+    <GateShell icon={Sparkles} title="Lagi ngecek wallet…">
+      <p className="mt-3 text-ink/70">Bentar, lagi baca saldo token kamu di Solana.</p>
     </GateShell>
   );
 }
 
 function InsufficientGate({ balance }: { balance: number }) {
   return (
-    <GateShell icon={Lock} title="You need at least 1 token" tone="gold">
-      <p className="mt-3 text-muted-foreground">
-        Current balance: <span className="font-semibold text-foreground">{balance.toLocaleString()}</span>.
-        Grab a token to unlock the village.
+    <GateShell icon={Lock} title="Butuh minimal 1 token" tone="gold">
+      <p className="mt-3 text-ink/70">
+        Saldo sekarang: <span className="font-semibold text-ink">{balance.toLocaleString()}</span>.
+        Ambil 1 token dulu buat buka pelabuhan.
       </p>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
-        <Button size="lg" className="mt-6 btn-glossy rounded-xl">Get Token</Button>
+        <Button size="lg" className="mt-6 chunky-btn">🪙 Beli Token</Button>
       </a>
     </GateShell>
   );
@@ -91,8 +91,8 @@ function InsufficientGate({ balance }: { balance: number }) {
 
 function ErrorGate() {
   return (
-    <GateShell icon={AlertCircle} title="Network hiccup" tone="gold">
-      <p className="mt-3 text-muted-foreground">We couldn't reach Solana RPC. Refresh and try again.</p>
+    <GateShell icon={AlertCircle} title="Jaringan lagi nyendat" tone="gold">
+      <p className="mt-3 text-ink/70">Kami nggak bisa ngubungin RPC Solana. Coba refresh sebentar.</p>
     </GateShell>
   );
 }
@@ -105,11 +105,11 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
       <div className="space-y-6">
         <ProfileCard address={address} balance={balance} state={state} />
         <Tabs defaultValue="farm" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam/70 p-1">
-            <TabsTrigger value="farm" className="rounded-lg"><Sprout className="mr-1.5 h-4 w-4" />Farm</TabsTrigger>
-            <TabsTrigger value="fish" className="rounded-lg"><Fish className="mr-1.5 h-4 w-4" />Fish</TabsTrigger>
-            <TabsTrigger value="inventory" className="rounded-lg"><ShoppingBag className="mr-1.5 h-4 w-4" />Inventory</TabsTrigger>
-            <TabsTrigger value="shop" className="rounded-lg"><Coins className="mr-1.5 h-4 w-4" />Shop</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
+            <TabsTrigger value="farm" className="rounded-lg"><Sprout className="mr-1.5 h-4 w-4" />Dermaga</TabsTrigger>
+            <TabsTrigger value="fish" className="rounded-lg"><Fish className="mr-1.5 h-4 w-4" />Mancing</TabsTrigger>
+            <TabsTrigger value="inventory" className="rounded-lg"><ShoppingBag className="mr-1.5 h-4 w-4" />Tas</TabsTrigger>
+            <TabsTrigger value="shop" className="rounded-lg"><Coins className="mr-1.5 h-4 w-4" />Toko</TabsTrigger>
           </TabsList>
           <TabsContent value="farm" className="mt-4"><FarmPanel game={game} /></TabsContent>
           <TabsContent value="fish" className="mt-4"><FishingPanel game={game} /></TabsContent>
@@ -130,22 +130,22 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
 function ProfileCard({ address, balance, state }: any) {
   const xpNeeded = state.level * 100;
   return (
-    <div className="rounded-3xl glass-card p-6">
+    <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[image:var(--gradient-ocean)] text-2xl text-white shadow-soft">
-          🌾
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
+          ⛵
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold">Villager</h3>
-            <Badge className="bg-leaf/15 text-leaf hover:bg-leaf/20"><Sparkles className="mr-1 h-3 w-3" /> Access Granted</Badge>
+            <h3 className="pixel text-base text-ink">Kapten</h3>
+            <Badge className="bg-leaf/20 text-ink hover:bg-leaf/30"><Sparkles className="mr-1 h-3 w-3" /> Akses Terbuka</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">{shortAddress(address)} · {balance.toLocaleString()} tokens</p>
+          <p className="text-xs text-muted-foreground">{shortAddress(address)} · {balance.toLocaleString()} token</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Stat label="Level" value={state.level} icon={Trophy} />
-          <Stat label="Coins" value={state.coins} icon={Coins} />
-          <Stat label="Seeds" value={state.seeds} icon={Sprout} />
+          <Stat label="Koin" value={state.coins} icon={Coins} />
+          <Stat label="Umpan" value={state.seeds} icon={Sprout} />
         </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
