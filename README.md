@@ -107,6 +107,22 @@ supabase/schema.sql    # tables, leaderboard view, RLS
   2s rate limit per wallet), recent-catches feed — all polling the game API.
 - **Identity:** click your name on the profile card to set a villager name.
 
+## 5b. The Island (explorable world)
+
+`/world` is a live isometric island rendered on a `<canvas>` (no game-engine
+dependency). Walk with WASD/arrows or click/tap, and you'll see every other
+online captain walking around in real time:
+
+- **Multiplayer presence:** the client calls `pingWorld` every 1.5s — one
+  round-trip sends your position and returns everyone else's. Players idle
+  for 12s disappear. Positions are interpolated client-side so movement
+  looks smooth.
+- **Chat bubbles:** messages from Harbor Chat appear above players' heads.
+- **Fishing:** walk to the shore or the end of the dock and a Cast button
+  appears — same odds, energy, and inventory as the dashboard.
+- **Map:** defined in `src/lib/world-map.ts` (pure data — collision,
+  fishing zones, and spawn point are unit tested).
+
 ## 6. API endpoints (server functions)
 
 All in `src/lib/api/game.functions.ts`, callable from the client as typed
@@ -120,6 +136,7 @@ async functions, validated with zod on the server:
 | `sendChatMessage`  | POST   | Post a message (rate-limited per wallet)            |
 | `logFishCatch`     | POST   | Append to the catch log                             |
 | `getRecentCatches` | GET    | Activity feed                                       |
+| `pingWorld`        | POST   | Report my world position, get all online players    |
 
 ## 7. Going further
 

@@ -42,6 +42,14 @@ export type CatchRow = {
   caught_at: string;
 };
 
+export type PresenceRow = {
+  wallet_address: string;
+  name: string;
+  x: number;
+  y: number;
+  updated_at: string;
+};
+
 export interface GameStore {
   upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow>;
   getPlayer(wallet: string): Promise<PlayerRow | null>;
@@ -50,6 +58,8 @@ export interface GameStore {
   insertChat(wallet: string, body: string): Promise<ChatRow>;
   logCatch(c: Omit<CatchRow, "id" | "caught_at" | "display_name">): Promise<void>;
   recentCatches(limit: number): Promise<CatchRow[]>;
+  upsertPresence(p: Omit<PresenceRow, "updated_at">): Promise<void>;
+  listPresence(maxAgeMs: number): Promise<PresenceRow[]>;
 }
 
 export function displayName(p: { username: string | null; wallet_address: string }) {
@@ -157,6 +167,24 @@ class SupabaseStore implements GameStore {
       caught_at: c.caught_at,
     }));
   }
+
+  async upsertPresence(p: Omit<PresenceRow, "updated_at">): Promise<void> {
+    const { error } = await this.db
+      .from("world_presence")
+      .upsert({ ...p, updated_at: new Date().toISOString() }, { onConflict: "wallet_address" });
+    if (error) throw new Error(`upsertPresence: ${error.message}`);
+  }
+
+  async listPresence(maxAgeMs: number): Promise<PresenceRow[]> {
+    const cutoff = new Date(Date.now() - maxAgeMs).toISOString();
+    const { data, error } = await this.db
+      .from("world_presence")
+      .select()
+      .gte("updated_at", cutoff)
+      .limit(100);
+    if (error) throw new Error(`listPresence: ${error.message}`);
+    return (data ?? []) as PresenceRow[];
+  }
 }
 
 // -------------------------------------------------------------- File (dev)
@@ -261,6 +289,24 @@ class FileStore implements GameStore {
   async recentCatches(limit: number): Promise<CatchRow[]> {
     const data = await this.load();
     return data.catches.slice(0, limit);
+  }
+
+  // Presence is ephemeral — in dev (single process) memory is enough,
+  // no need to hammer the JSON file every ping.
+  private presence = new Map<string, PresenceRow>();
+
+  async upsertPresence(p: Omit<PresenceRow, "updated_at">): Promise<void> {
+    this.presence.set(p.wallet_address, { ...p, updated_at: new Date().toISOString() });
+  }
+
+  async listPresence(maxAgeMs: number): Promise<PresenceRow[]> {
+    const cutoff = Date.now() - maxAgeMs;
+    const out: PresenceRow[] = [];
+    for (const [wallet, row] of this.presence) {
+      if (new Date(row.updated_at).getTime() >= cutoff) out.push(row);
+      else this.presence.delete(wallet);
+    }
+    return out;
   }
 }
 

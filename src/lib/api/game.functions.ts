@@ -106,3 +106,29 @@ export const logFishCatch = createServerFn({ method: "POST" })
 export const getRecentCatches = createServerFn({ method: "GET" }).handler(async () => {
   return getStore().recentCatches(10);
 });
+
+// ----------------------------------------------------------------- world
+
+// One call per tick: report my position, get everyone back. Players who
+// haven't pinged in 12s are considered offline.
+const PRESENCE_TTL_MS = 12_000;
+
+export const pingWorld = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      wallet: wallet,
+      name: z.string().trim().min(1).max(20),
+      x: z.number().min(0).max(200),
+      y: z.number().min(0).max(200),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const store = getStore();
+    await store.upsertPresence({
+      wallet_address: data.wallet,
+      name: data.name,
+      x: Math.round(data.x * 100) / 100,
+      y: Math.round(data.y * 100) / 100,
+    });
+    return store.listPresence(PRESENCE_TTL_MS);
+  });
