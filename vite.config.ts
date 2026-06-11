@@ -7,15 +7,17 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  define: {
-    "process.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
-    "import.meta.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        "process.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
-        "import.meta.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
+  vite: {
+    define: {
+      "process.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
+      "import.meta.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        define: {
+          "process.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
+          "import.meta.env.TSS_SERVER_FN_BASE": JSON.stringify(SERVER_FN_BASE),
+        },
       },
     },
   },
