@@ -87,6 +87,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Sawah Voyages — Sail, Cast, Chill on Solana" },
       { name: "twitter:description", content: "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
