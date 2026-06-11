@@ -85,24 +85,44 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SawahVerse — Farm, Fish, Chill on Solana" },
+      { title: "Sawah Voyages — Sail, Cast, Chill on Solana" },
       {
         name: "description",
         content:
-          "A relaxing multiplayer Solana village game. Connect your wallet, hold the token, farm rice, fish, and chill.",
+          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
       },
-      { property: "og:title", content: "SawahVerse — Farm, Fish, Chill on Solana" },
+      { property: "og:title", content: "Sawah Voyages — Sail, Cast, Chill on Solana" },
       {
         property: "og:description",
-        content: "A relaxing multiplayer Solana village game where your wallet unlocks the world.",
+        content:
+          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Sawah Voyages — Sail, Cast, Chill on Solana" },
+      {
+        name: "twitter:description",
+        content:
+          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png",
+      },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",

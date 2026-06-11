@@ -51,10 +51,11 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Play SawahVerse — The Village" },
+      { title: "Play Sawah Voyages — Set Sail" },
       {
         name: "description",
-        content: "Enter the SawahVerse village. Farm, fish, and chill — wallet required.",
+        content:
+          "Enter the Sawah Voyages harbor. Hop on a boat, cast your line, and chill — wallet required.",
       },
     ],
   }),
@@ -94,19 +95,17 @@ function GateShell({
   tone?: "ocean" | "gold";
 }) {
   return (
-    <div className="mx-auto mt-8 max-w-xl rounded-3xl glass-card p-10 text-center">
+    <div className="mx-auto mt-8 max-w-xl card-pop p-10 text-center">
       <div
-        className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${tone === "ocean" ? "bg-[image:var(--gradient-ocean)] text-white" : "bg-gold/20 text-gold"}`}
+        className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ink-border ${tone === "ocean" ? "bg-sky-deep text-ink" : "bg-sunset text-ink"}`}
       >
         <Icon className="h-7 w-7" />
       </div>
-      <h2 className="mt-5 text-2xl font-bold">{title}</h2>
+      <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
       {children}
       <div className="mt-6 flex justify-center">
-        <Link to="/">
-          <Button variant="ghost">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Back to landing
-          </Button>
+        <Link to="/" className="pill text-xs">
+          <ArrowLeft className="h-4 w-4" /> Back to home
         </Link>
       </div>
     </div>
@@ -115,9 +114,9 @@ function GateShell({
 
 function ConnectGate() {
   return (
-    <GateShell icon={Wallet} title="Connect your wallet to enter">
-      <p className="mt-3 text-muted-foreground">
-        Hold at least {MIN_TOKEN_BALANCE} SawahVerse token to access the village.
+    <GateShell icon={Wallet} title="Connect wallet to come aboard">
+      <p className="mt-3 text-ink/70">
+        Hold at least {MIN_TOKEN_BALANCE} Sawah Voyages token to enter the harbor.
       </p>
       <div className="mt-6 flex justify-center">
         <WalletButton />
@@ -129,22 +128,21 @@ function ConnectGate() {
 function LoadingGate() {
   return (
     <GateShell icon={Sparkles} title="Checking your wallet…">
-      <p className="mt-3 text-muted-foreground">Reading your token balance on Solana.</p>
+      <p className="mt-3 text-ink/70">Hang on, reading your token balance on Solana.</p>
     </GateShell>
   );
 }
 
 function InsufficientGate({ balance }: { balance: number }) {
   return (
-    <GateShell icon={Lock} title="You need at least 1 token to enter SawahVerse." tone="gold">
-      <p className="mt-3 text-muted-foreground">
-        Current balance:{" "}
-        <span className="font-semibold text-foreground">{balance.toLocaleString()}</span>. Grab a
-        token to unlock the village.
+    <GateShell icon={Lock} title="At least 1 token needed" tone="gold">
+      <p className="mt-3 text-ink/70">
+        Current balance: <span className="font-semibold text-ink">{balance.toLocaleString()}</span>.
+        Grab 1 token first to unlock the harbor.
       </p>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
-        <Button size="lg" className="mt-6 btn-glossy rounded-xl">
-          Get Token
+        <Button size="lg" className="mt-6 chunky-btn">
+          🪙 Get Token
         </Button>
       </a>
     </GateShell>
@@ -153,12 +151,11 @@ function InsufficientGate({ balance }: { balance: number }) {
 
 function ErrorGate({ onRetry }: { onRetry: () => void }) {
   return (
-    <GateShell icon={AlertCircle} title="Network hiccup" tone="gold">
-      <p className="mt-3 text-muted-foreground">
-        We couldn't reach Solana RPC. The public endpoint rate-limits sometimes — give it another
-        try.
+    <GateShell icon={AlertCircle} title="Network is choppy" tone="gold">
+      <p className="mt-3 text-ink/70">
+        We couldn't reach the Solana RPC. Give it another try in a moment.
       </p>
-      <Button onClick={onRetry} size="lg" className="mt-6 btn-glossy rounded-xl">
+      <Button onClick={onRetry} size="lg" className="mt-6 chunky-btn">
         <RefreshCw className="mr-1.5 h-4 w-4" /> Retry balance check
       </Button>
     </GateShell>
@@ -167,24 +164,23 @@ function ErrorGate({ onRetry }: { onRetry: () => void }) {
 
 function Dashboard({ address, balance }: { address: string; balance: number }) {
   const game = useGame(address);
-  const { state } = game;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">
         <ProfileCard address={address} balance={balance} game={game} />
         <Tabs defaultValue="farm" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam/70 p-1">
+          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
             <TabsTrigger value="farm" className="rounded-lg">
               <Sprout className="mr-1.5 h-4 w-4" />
-              Farm
+              Dock
             </TabsTrigger>
             <TabsTrigger value="fish" className="rounded-lg">
               <Fish className="mr-1.5 h-4 w-4" />
-              Fish
+              Fishing
             </TabsTrigger>
             <TabsTrigger value="inventory" className="rounded-lg">
               <ShoppingBag className="mr-1.5 h-4 w-4" />
-              Inventory
+              Bag
             </TabsTrigger>
             <TabsTrigger value="shop" className="rounded-lg">
               <Coins className="mr-1.5 h-4 w-4" />
@@ -218,7 +214,7 @@ function SyncBadge({ syncState }: { syncState: string }) {
   if (syncState === "error") {
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-medium text-gold"
+        className="inline-flex items-center gap-1 rounded-full bg-sunset/30 px-2 py-0.5 text-[10px] font-medium text-ink"
         title="Progress is saved locally; cloud sync will retry."
       >
         <CloudOff className="h-3 w-3" /> offline
@@ -260,10 +256,10 @@ function ProfileCard({
   };
 
   return (
-    <div className="rounded-3xl glass-card p-6">
+    <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[image:var(--gradient-ocean)] text-2xl text-white shadow-soft">
-          🌾
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
+          ⛵
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -280,8 +276,8 @@ function ProfileCard({
                   onChange={(e) => setDraft(e.target.value)}
                   maxLength={20}
                   autoFocus
-                  placeholder="Your villager name"
-                  className="h-8 w-40 rounded-lg border border-border bg-foam px-2 text-sm outline-none focus:border-ocean"
+                  placeholder="Your captain name"
+                  className="h-8 w-40 rounded-lg border-2 border-ink bg-foam px-2 text-sm outline-none focus:border-sunset-deep"
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 w-8 p-0">
                   <Check className="h-4 w-4" />
@@ -289,23 +285,23 @@ function ProfileCard({
               </form>
             ) : (
               <button onClick={startEdit} className="group flex items-center gap-1.5">
-                <h3 className="text-lg font-bold">{state.username || "Villager"}</h3>
+                <h3 className="pixel text-base text-ink">{state.username || "Captain"}</h3>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
               </button>
             )}
-            <Badge className="bg-leaf/15 text-leaf hover:bg-leaf/20">
-              <Sparkles className="mr-1 h-3 w-3" /> Access Granted
+            <Badge className="bg-leaf/20 text-ink hover:bg-leaf/30">
+              <Sparkles className="mr-1 h-3 w-3" /> Access granted
             </Badge>
             <SyncBadge syncState={syncState} />
           </div>
           <p className="text-xs text-muted-foreground">
-            {shortAddress(address)} · {balance.toLocaleString()} tokens
+            {shortAddress(address)} · {balance.toLocaleString()} token
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Stat label="Level" value={state.level} icon={Trophy} />
           <Stat label="Coins" value={state.coins} icon={Coins} />
-          <Stat label="Seeds" value={state.seeds} icon={Sprout} />
+          <Stat label="Bait" value={state.seeds} icon={Sprout} />
         </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -349,24 +345,24 @@ function FarmPanel({ game }: { game: GameApi }) {
   const { state, plant, harvest, upgradeFarm } = game;
   const cols = Math.ceil(Math.sqrt(state.farmSize));
   return (
-    <div className="rounded-3xl glass-card p-6">
+    <div className="card-pop p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-bold">Rice Paddy</h3>
+          <h3 className="pixel text-sm text-ink">Dock</h3>
           <p className="text-xs text-muted-foreground">
-            Click empty tiles to plant. Harvest when golden.
+            Click an empty slot to drop a net. Pull it up when it's full.
           </p>
         </div>
         <Button
           onClick={() => {
             upgradeFarm();
-            toast.success("Farm expanded!");
+            toast.success("Dock expanded!");
           }}
           disabled={state.coins < UPGRADE_COST || state.farmSize >= 25}
           variant="outline"
-          className="rounded-lg"
+          className="rounded-lg ink-border"
         >
-          <ArrowUpCircle className="mr-1 h-4 w-4" /> Upgrade ({UPGRADE_COST} coins)
+          <ArrowUpCircle className="mr-1 h-4 w-4" /> Expand ({UPGRADE_COST} coins)
         </Button>
       </div>
       <div
@@ -383,18 +379,18 @@ function FarmPanel({ game }: { game: GameApi }) {
               key={t.id}
               onClick={() =>
                 ready
-                  ? (harvest(t.id), toast.success(`+1 rice +${HARVEST_COINS} coins +10 XP`))
+                  ? (harvest(t.id), toast.success(`+1 catch +${HARVEST_COINS} coins +10 XP`))
                   : plant(t.id)
               }
               className={`relative aspect-square rounded-xl border-2 transition active:scale-95 ${
                 ready
-                  ? "border-gold/40 bg-gold/30 hover:bg-gold/40"
+                  ? "border-sunset bg-sunset/40 hover:bg-sunset/60"
                   : growing
-                    ? "border-leaf/40 bg-leaf/20"
-                    : "border-dashed border-ocean/30 bg-foam/50 hover:bg-cyan-soft"
+                    ? "border-leaf bg-leaf/20"
+                    : "border-dashed border-ink/40 bg-foam hover:bg-sky"
               }`}
             >
-              <span className="text-2xl">{ready ? "🌾" : growing ? "🌱" : ""}</span>
+              <span className="text-2xl">{ready ? "🐟" : growing ? "🪝" : ""}</span>
               {growing && (
                 <div className="absolute inset-x-1 bottom-1 h-1 rounded-full bg-foam">
                   <div
@@ -429,7 +425,7 @@ function FishingPanel({ game }: { game: GameApi }) {
     }, 1200);
   };
   return (
-    <div className="rounded-3xl glass-card overflow-hidden">
+    <div className="card-pop overflow-hidden">
       <div className="relative h-56 bg-[image:var(--gradient-ocean)] p-6 text-white">
         <div className="absolute inset-0 opacity-40">
           {Array.from({ length: 30 }).map((_, i) => (
@@ -447,16 +443,16 @@ function FishingPanel({ game }: { game: GameApi }) {
           ))}
         </div>
         <div className="relative">
-          <h3 className="text-xl font-bold">Riverbank</h3>
+          <h3 className="pixel text-base text-white">Open Water</h3>
           <p className="text-sm text-white/85">Cast your line. Costs 5 energy.</p>
           <Button
             onClick={cast}
             disabled={casting || onCooldown}
             size="lg"
-            className="mt-6 rounded-xl bg-white text-ocean hover:bg-white/90"
+            className="mt-6 chunky-btn"
           >
             {casting
-              ? "Reeling…"
+              ? "Reeling in…"
               : onCooldown
                 ? `Wait ${Math.ceil(cooldownLeft / 1000)}s…`
                 : "🎣 Cast Line"}
@@ -466,7 +462,7 @@ function FishingPanel({ game }: { game: GameApi }) {
       </div>
       <div className="grid grid-cols-2 gap-2 p-4 text-xs sm:grid-cols-5">
         {RARITY_ODDS.map(({ rarity, chance }) => (
-          <div key={rarity} className="rounded-lg bg-foam p-2 text-center">
+          <div key={rarity} className="rounded-lg bg-foam p-2 text-center ink-border">
             <div className={`font-bold ${rarityColor[rarity]}`}>{rarity}</div>
             <div className="text-muted-foreground">{(chance * 100).toLocaleString()}%</div>
           </div>
@@ -479,13 +475,13 @@ function FishingPanel({ game }: { game: GameApi }) {
 function InventoryPanel({ game }: { game: GameApi }) {
   const { state, sellRice, sellFish } = game;
   return (
-    <div className="rounded-3xl glass-card p-6">
-      <h3 className="font-bold">Inventory</h3>
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-foam p-4">
+    <div className="card-pop p-6">
+      <h3 className="pixel text-sm text-ink">Bag</h3>
+      <div className="mt-4 flex items-center justify-between rounded-xl bg-foam p-4 ink-border">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🌾</span>
+          <span className="text-2xl">🐟</span>
           <div>
-            <div className="font-semibold">Rice</div>
+            <div className="font-semibold">Net Catch</div>
             <div className="text-xs text-muted-foreground">Sells for {SELL_PRICE} coins each</div>
           </div>
         </div>
@@ -505,13 +501,16 @@ function InventoryPanel({ game }: { game: GameApi }) {
           </Button>
         </div>
       </div>
-      <h4 className="mt-6 mb-2 text-sm font-semibold">Fish ({state.inventory.fish.length})</h4>
+      <h4 className="mt-6 mb-2 text-sm font-semibold">Rare fish ({state.inventory.fish.length})</h4>
       {state.inventory.fish.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No catch yet. Head to the river!</p>
+        <p className="text-sm text-muted-foreground">Nothing yet. Try the open water!</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {state.inventory.fish.map((f) => (
-            <li key={f.id} className="flex items-center justify-between rounded-xl bg-foam p-3">
+            <li
+              key={f.id}
+              className="flex items-center justify-between rounded-xl bg-foam p-3 ink-border"
+            >
               <div className="flex items-center gap-2">
                 <span className="text-xl">{f.emoji}</span>
                 <div>
@@ -541,13 +540,13 @@ function InventoryPanel({ game }: { game: GameApi }) {
 function ShopPanel({ game }: { game: GameApi }) {
   const { state, buySeeds } = game;
   return (
-    <div className="rounded-3xl glass-card p-6">
-      <h3 className="font-bold">Village Shop</h3>
+    <div className="card-pop p-6">
+      <h3 className="pixel text-sm text-ink">Harbor Shop</h3>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl bg-foam p-4">
+        <div className="rounded-xl bg-foam p-4 ink-border">
           <div className="flex items-center gap-2">
             <Sprout className="h-4 w-4 text-leaf" />
-            <span className="font-semibold">Rice Seeds</span>
+            <span className="font-semibold">Bait</span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{SEED_PRICE} coins each</p>
           <div className="mt-3 flex gap-2">
@@ -560,7 +559,7 @@ function ShopPanel({ game }: { game: GameApi }) {
                 disabled={state.coins < q * SEED_PRICE}
                 onClick={() => {
                   buySeeds(q);
-                  toast.success(`+${q} seeds`);
+                  toast.success(`+${q} bait`);
                 }}
               >
                 Buy {q}
@@ -568,13 +567,13 @@ function ShopPanel({ game }: { game: GameApi }) {
             ))}
           </div>
         </div>
-        <div className="rounded-xl bg-cyan-soft p-4">
+        <div className="rounded-xl bg-cyan-soft p-4 ink-border">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-ocean" />
-            <span className="font-semibold">More coming soon</span>
+            <span className="font-semibold">Coming soon</span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Cosmetics, land plots, and crafting are on the roadmap.
+            Cosmetics, new boats, and crafting are still being assembled.
           </p>
         </div>
       </div>
@@ -585,9 +584,9 @@ function ShopPanel({ game }: { game: GameApi }) {
 function Leaderboard({ meAddress }: { meAddress: string }) {
   const { data, isLoading, isError, refetch } = useLeaderboard(8);
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold">
-        <Trophy className="h-4 w-4 text-gold" /> Village Leaderboard
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink">
+        <Trophy className="h-4 w-4 text-sunset-deep" /> Leaderboard
       </h4>
       {isLoading && (
         <div className="mt-3 space-y-2">
@@ -611,7 +610,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          No villagers ranked yet — keep playing, your progress syncs automatically.
+          No captains ranked yet — keep playing, your progress syncs automatically.
         </p>
       )}
       {data && data.length > 0 && (
@@ -621,16 +620,12 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
             return (
               <li
                 key={r.wallet}
-                className={`flex items-center justify-between rounded-lg px-2 py-1.5 ${isMe ? "bg-[image:var(--gradient-ocean)] text-white" : ""}`}
+                className={`flex items-center justify-between rounded-lg px-2 py-1.5 ${isMe ? "bg-sunset text-ink" : ""}`}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="w-4 shrink-0 text-xs opacity-70">#{r.rank}</span>
                   <span className="truncate font-medium">{isMe ? "You" : r.name}</span>
-                  <span
-                    className={`shrink-0 text-[10px] ${isMe ? "text-white/80" : "text-muted-foreground"}`}
-                  >
-                    lv {r.level}
-                  </span>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">lv {r.level}</span>
                 </div>
                 <span className="shrink-0 text-xs">{r.coins.toLocaleString()} 🪙</span>
               </li>
@@ -645,8 +640,8 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
 function ActivityFeed() {
   const { data, isLoading } = useRecentCatches();
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold">
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink">
         <Fish className="h-4 w-4 text-ocean" /> Recent Catches
       </h4>
       {isLoading && (
@@ -658,7 +653,7 @@ function ActivityFeed() {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          The river is quiet… be the first to catch something!
+          The water is calm… be the first to catch something!
         </p>
       )}
       {data && data.length > 0 && (
@@ -704,9 +699,9 @@ function ChatPanel({ address }: { address: string }) {
   };
 
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold">
-        <MessageCircle className="h-4 w-4 text-ocean" /> Village Chat
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink">
+        <MessageCircle className="h-4 w-4 text-ocean" /> Harbor Chat
       </h4>
       <div ref={scrollRef} className="mt-3 max-h-48 space-y-2 overflow-y-auto pr-1 text-sm">
         {messages.isLoading && (
@@ -720,7 +715,7 @@ function ChatPanel({ address }: { address: string }) {
           <p className="text-xs text-muted-foreground">Chat is unreachable right now.</p>
         )}
         {messages.data && messages.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet — say selamat pagi! 👋</p>
+          <p className="text-xs text-muted-foreground">No messages yet — say hi, captain! 👋</p>
         )}
         {messages.data?.map((m) => (
           <div key={m.id} className="rounded-lg bg-foam px-3 py-1.5">
@@ -735,9 +730,10 @@ function ChatPanel({ address }: { address: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Say hi…"
+          placeholder="Say hi to other captains…"
           maxLength={280}
-          className="flex-1 rounded-lg border border-border bg-foam px-3 py-1.5 text-sm outline-none focus:border-ocean"
+          className="flex-1 rounded-lg border-2 border-ink bg-foam px-3 py-1.5 text-sm outline-none focus:border-sunset-deep"
+          aria-label="Chat message"
         />
         <Button type="submit" size="sm" disabled={send.isPending} className="rounded-lg">
           {send.isPending ? "…" : "Send"}

@@ -1,54 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import { TOKEN_MINT, MIN_TOKEN_BALANCE } from "@/lib/solana-config";
+import { createContext, useContext } from "react";
+
+// Token-gate state lives in a context filled by the GateBridge inside
+// SolanaProvider (which lazy-loads all wallet libraries client-side).
+// `refresh` re-runs the balance check — used by the retry button when
+// the RPC errors out.
 
 export type GateStatus = "idle" | "loading" | "granted" | "insufficient" | "error";
 
-/**
- * Read-only token gate: sums the wallet's balance for the gate mint via
- * getParsedTokenAccountsByOwner. No transaction, no signature.
- */
-export function useTokenGate() {
-  const { connection } = useConnection();
-  const { publicKey, connected } = useWallet();
-  const [balance, setBalance] = useState<number>(0);
-  const [status, setStatus] = useState<GateStatus>("idle");
-  const [attempt, setAttempt] = useState(0);
+export type GateState = {
+  balance: number;
+  status: GateStatus;
+  address: string | null;
+  connected: boolean;
+  refresh: () => void;
+};
 
-  const refresh = useCallback(() => setAttempt((n) => n + 1), []);
+export const defaultGateState: GateState = {
+  balance: 0,
+  status: "idle",
+  address: null,
+  connected: false,
+  refresh: () => {},
+};
 
-  useEffect(() => {
-    if (!connected || !publicKey) {
-      setStatus("idle");
-      setBalance(0);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setStatus("loading");
-      try {
-        const mint = new PublicKey(TOKEN_MINT);
-        const resp = await connection.getParsedTokenAccountsByOwner(publicKey, { mint });
-        let total = 0;
-        for (const acc of resp.value) {
-          const info = acc.account.data.parsed.info as {
-            tokenAmount?: { uiAmount?: number | null };
-          };
-          total += Number(info.tokenAmount?.uiAmount ?? 0);
-        }
-        if (cancelled) return;
-        setBalance(total);
-        setStatus(total >= MIN_TOKEN_BALANCE ? "granted" : "insufficient");
-      } catch (e) {
-        console.error("token gate error", e);
-        if (!cancelled) setStatus("error");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [connected, publicKey, connection, attempt]);
+export const TokenGateContext = createContext<GateState>(defaultGateState);
 
-  return { balance, status, address: publicKey?.toBase58() ?? null, connected, refresh };
+export function useTokenGate(): GateState {
+  return useContext(TokenGateContext);
 }
