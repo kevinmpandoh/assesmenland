@@ -23,6 +23,16 @@ export const PLANT_COST = 1; // seed
 export const SELL_PRICE = 8;
 export const SEED_PRICE = 3;
 export const UPGRADE_COST = 250;
+export const HARVEST_COINS = 2;
+export const FISH_COOLDOWN_MS = 5_000;
+
+export const RARITY_ODDS: { rarity: Rarity; chance: number }[] = [
+  { rarity: "Common", chance: 0.7 },
+  { rarity: "Uncommon", chance: 0.2 },
+  { rarity: "Rare", chance: 0.07 },
+  { rarity: "Epic", chance: 0.025 },
+  { rarity: "Legendary", chance: 0.005 },
+];
 
 function makeTiles(size: number): Tile[] {
   return Array.from({ length: size }, (_, i) => ({ id: i, state: "empty", plantedAt: null }));
@@ -63,6 +73,7 @@ export function xpForLevel(level: number) {
 export function useGame() {
   const [state, setState] = useState<GameState>(initial);
   const [mounted, setMounted] = useState(false);
+  const [lastFishAt, setLastFishAt] = useState(0);
 
   useEffect(() => {
     setState(loadState());
@@ -117,7 +128,7 @@ export function useGame() {
       const tiles = s.tiles.map((t) => (t.id === idx ? { ...t, state: "empty" as const, plantedAt: null } : t));
       return { ...s, tiles, inventory: { ...s.inventory, rice: s.inventory.rice + 1 } };
     });
-    grant(10);
+    grant(10, HARVEST_COINS);
   };
 
   const sellRice = (qty = 1) => {
@@ -159,13 +170,17 @@ export function useGame() {
 
   const fish = () => {
     if (state.energy < 5) return null;
+    if (Date.now() - lastFishAt < FISH_COOLDOWN_MS) return null;
     const roll = Math.random();
-    let rarity: Rarity;
-    if (roll < 0.5) rarity = "Common";
-    else if (roll < 0.8) rarity = "Uncommon";
-    else if (roll < 0.94) rarity = "Rare";
-    else if (roll < 0.99) rarity = "Epic";
-    else rarity = "Legendary";
+    let rarity: Rarity = "Legendary";
+    let cumulative = 0;
+    for (const { rarity: r, chance } of RARITY_ODDS) {
+      cumulative += chance;
+      if (roll < cumulative) {
+        rarity = r;
+        break;
+      }
+    }
     const fishes: Record<Rarity, { name: string; emoji: string; value: number; xp: number }[]> = {
       Common: [{ name: "Sardine", emoji: "🐟", value: 5, xp: 4 }, { name: "Carp", emoji: "🐠", value: 7, xp: 5 }],
       Uncommon: [{ name: "Snapper", emoji: "🐡", value: 18, xp: 10 }, { name: "Mackerel", emoji: "🐟", value: 20, xp: 10 }],
@@ -188,6 +203,7 @@ export function useGame() {
       energy: s.energy - 5,
       inventory: { ...s.inventory, fish: [caught, ...s.inventory.fish].slice(0, 30) },
     }));
+    setLastFishAt(Date.now());
     grant(pick.xp);
     return caught;
   };
@@ -207,7 +223,9 @@ export function useGame() {
     });
   });
 
-  return { state, plant, harvest, sellRice, sellFish, buySeeds, upgradeFarm, fish };
+  const fishCooldownRemaining = Math.max(0, FISH_COOLDOWN_MS - (Date.now() - lastFishAt));
+
+  return { state, plant, harvest, sellRice, sellFish, buySeeds, upgradeFarm, fish, fishCooldownRemaining };
 }
 
 export const rarityColor: Record<Rarity, string> = {

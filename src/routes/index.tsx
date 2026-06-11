@@ -97,7 +97,7 @@ function GateBanner({ status, balance, address, connected }: { status: string; b
         )}
         {connected && status === "insufficient" && (
           <p className="flex items-center gap-1.5 text-foreground">
-            <AlertCircle className="h-4 w-4 text-gold" /> You need at least 1 token to play. Current: {balance.toLocaleString()}.
+            <AlertCircle className="h-4 w-4 text-gold" /> You need at least 1 token to enter SawahVerse. Current: {balance.toLocaleString()}.
           </p>
         )}
         {connected && status === "error" && (

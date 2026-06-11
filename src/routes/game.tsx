@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
-import { useGame, GROW_MS, SEED_PRICE, SELL_PRICE, UPGRADE_COST, rarityColor } from "@/hooks/useGame";
+import { useGame, GROW_MS, SEED_PRICE, SELL_PRICE, UPGRADE_COST, HARVEST_COINS, RARITY_ODDS, rarityColor } from "@/hooks/useGame";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { toast } from "sonner";
 import { Coins, Sprout, Fish, Zap, Trophy, MessageCircle, Users, ArrowLeft, Sparkles, ShoppingBag, ArrowUpCircle, Wallet, Lock, AlertCircle } from "lucide-react";
@@ -77,7 +77,7 @@ function LoadingGate() {
 
 function InsufficientGate({ balance }: { balance: number }) {
   return (
-    <GateShell icon={Lock} title="You need at least 1 token" tone="gold">
+    <GateShell icon={Lock} title="You need at least 1 token to enter SawahVerse." tone="gold">
       <p className="mt-3 text-muted-foreground">
         Current balance: <span className="font-semibold text-foreground">{balance.toLocaleString()}</span>.
         Grab a token to unlock the village.
@@ -193,7 +193,7 @@ function FarmPanel({ game }: any) {
           return (
             <button
               key={t.id}
-              onClick={() => ready ? (harvest(t.id), toast.success("+1 rice +10 XP")) : plant(t.id)}
+              onClick={() => ready ? (harvest(t.id), toast.success(`+1 rice +${HARVEST_COINS} coins +10 XP`)) : plant(t.id)}
               className={`relative aspect-square rounded-xl border-2 transition active:scale-95 ${
                 ready
                   ? "border-gold/40 bg-gold/30 hover:bg-gold/40"
@@ -218,8 +218,11 @@ function FarmPanel({ game }: any) {
 
 function FishingPanel({ game }: any) {
   const [casting, setCasting] = useState(false);
+  const cooldownLeft = game.fishCooldownRemaining as number;
+  const onCooldown = cooldownLeft > 0;
   const cast = () => {
     if (game.state.energy < 5) { toast.error("Not enough energy"); return; }
+    if (onCooldown) return;
     setCasting(true);
     setTimeout(() => {
       const caught = game.fish();
@@ -238,17 +241,17 @@ function FishingPanel({ game }: any) {
         <div className="relative">
           <h3 className="text-xl font-bold">Riverbank</h3>
           <p className="text-sm text-white/85">Cast your line. Costs 5 energy.</p>
-          <Button onClick={cast} disabled={casting} size="lg" className="mt-6 rounded-xl bg-white text-ocean hover:bg-white/90">
-            {casting ? "Reeling…" : "🎣 Cast Line"}
+          <Button onClick={cast} disabled={casting || onCooldown} size="lg" className="mt-6 rounded-xl bg-white text-ocean hover:bg-white/90">
+            {casting ? "Reeling…" : onCooldown ? `Wait ${Math.ceil(cooldownLeft / 1000)}s…` : "🎣 Cast Line"}
           </Button>
         </div>
         {casting && <div className="absolute bottom-4 right-4 text-3xl animate-bounce">🎣</div>}
       </div>
       <div className="grid grid-cols-2 gap-2 p-4 text-xs sm:grid-cols-5">
-        {(["Common","Uncommon","Rare","Epic","Legendary"] as const).map((r) => (
-          <div key={r} className="rounded-lg bg-foam p-2 text-center">
-            <div className={`font-bold ${rarityColor[r]}`}>{r}</div>
-            <div className="text-muted-foreground">{["50%","30%","14%","5%","1%"][["Common","Uncommon","Rare","Epic","Legendary"].indexOf(r)]}</div>
+        {RARITY_ODDS.map(({ rarity, chance }) => (
+          <div key={rarity} className="rounded-lg bg-foam p-2 text-center">
+            <div className={`font-bold ${rarityColor[rarity]}`}>{rarity}</div>
+            <div className="text-muted-foreground">{(chance * 100).toLocaleString()}%</div>
           </div>
         ))}
       </div>
