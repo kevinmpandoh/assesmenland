@@ -4,7 +4,8 @@ import { renderErrorPage } from "./lib/error-page";
 
 const SERVER_FN_BASE = "/_serverFn/";
 
-function serverFnFetch(url: string, init: RequestInit) {
+function serverFnFetch(input: string | Request | URL, init?: RequestInit) {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
   const normalizedUrl = url.startsWith("undefined")
     ? `${SERVER_FN_BASE}${url.slice("undefined".length)}`
     : url.startsWith("eyJ")
