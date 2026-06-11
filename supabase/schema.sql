@@ -1,49 +1,49 @@
 -- ============================================================
 -- SawahVerse — Supabase schema
 -- ============================================================
--- Run this in the Supabase SQL editor (or `supabase db push`).
--- The game currently saves progress in localStorage; this schema
--- is the next step so progress, chat, and the leaderboard become
--- real and shared between players.
+-- Run this once in the Supabase SQL editor.
 --
--- Identity model: players are identified by their Solana wallet
--- address. The recommended flow is "Sign in with Solana" via a
--- Supabase Edge Function that verifies a signed message and mints
--- a Supabase JWT whose `sub` is the wallet address. The RLS
--- policies below assume `auth.jwt() ->> 'wallet'` holds that
--- verified wallet address.
+-- Access model: ALL writes go through the app's server functions
+-- (src/lib/api/game.functions.ts) using the SERVICE ROLE key, which
+-- bypasses RLS. Set these env vars on the server to activate it:
+--
+--   SUPABASE_URL=https://<project>.supabase.co
+--   SUPABASE_SERVICE_ROLE_KEY=<service role key — server only, never VITE_>
+--
+-- Without them the app falls back to a local file store, so dev
+-- works with zero configuration.
+--
+-- RLS below allows public READS only; anon clients can never write.
 -- ============================================================
 
 -- ---------- users ----------
+-- One row per player, keyed by Solana wallet address.
 create table if not exists public.users (
-  id uuid primary key default gen_random_uuid(),
-  wallet_address text not null unique,
+  wallet_address text primary key,
   username text,
   level int not null default 1,
   xp int not null default 0,
   coins int not null default 50,
-  energy int not null default 100,
+  rice_harvested int not null default 0,
+  fish_caught int not null default 0,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now()
 );
+create index if not exists users_coins_idx on public.users (coins desc);
 
 -- ---------- farms ----------
--- One row per player; tiles stored as JSON for the MVP
--- (e.g. [{"id":0,"state":"growing","planted_at":"..."}]).
+-- Tile layout per player (the client also keeps a local copy).
 create table if not exists public.farms (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
+  wallet_address text primary key references public.users(wallet_address) on delete cascade,
   size int not null default 9,
   tiles jsonb not null default '[]'::jsonb,
-  upgraded_at timestamptz,
-  unique (user_id)
+  updated_at timestamptz not null default now()
 );
 
 -- ---------- inventory ----------
--- One row per (player, item). Stackable items use quantity.
 create table if not exists public.inventory (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
   item_type text not null check (item_type in ('rice', 'seed', 'fish', 'rare_item')),
   item_name text not null,
   rarity text check (rarity in ('Common', 'Uncommon', 'Rare', 'Epic', 'Legendary')),
@@ -51,51 +51,47 @@ create table if not exists public.inventory (
   metadata jsonb not null default '{}'::jsonb,
   acquired_at timestamptz not null default now()
 );
-create index if not exists inventory_user_idx on public.inventory (user_id);
+create index if not exists inventory_wallet_idx on public.inventory (wallet_address);
 
 -- ---------- fish_catches ----------
--- Append-only log of every catch (powers stats + activity feed).
+-- Append-only log of every catch; powers the activity feed.
 create table if not exists public.fish_catches (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
   fish_name text not null,
   rarity text not null check (rarity in ('Common', 'Uncommon', 'Rare', 'Epic', 'Legendary')),
   value int not null default 0,
   caught_at timestamptz not null default now()
 );
-create index if not exists fish_catches_user_idx on public.fish_catches (user_id, caught_at desc);
-
--- ---------- leaderboard ----------
--- A view, not a table: it can never drift out of sync with users.
-create or replace view public.leaderboard as
-select
-  u.id,
-  coalesce(u.username, left(u.wallet_address, 4) || '…' || right(u.wallet_address, 4)) as display_name,
-  u.level,
-  u.xp,
-  u.coins,
-  (select count(*) from public.fish_catches fc
-    where fc.user_id = u.id and fc.rarity in ('Epic', 'Legendary')) as rare_catches
-from public.users u
-order by u.coins desc
-limit 100;
+create index if not exists fish_catches_time_idx on public.fish_catches (caught_at desc);
 
 -- ---------- chat_messages ----------
 create table if not exists public.chat_messages (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users(id) on delete cascade,
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
   body text not null check (char_length(body) between 1 and 280),
   created_at timestamptz not null default now()
 );
 create index if not exists chat_created_idx on public.chat_messages (created_at desc);
 
--- Enable Supabase Realtime on chat for live messages.
-alter publication supabase_realtime add table public.chat_messages;
+-- ---------- leaderboard ----------
+-- A view, not a table: it can never drift out of sync with users.
+create or replace view public.leaderboard as
+select
+  u.wallet_address,
+  coalesce(nullif(trim(u.username), ''),
+           left(u.wallet_address, 4) || '…' || right(u.wallet_address, 4)) as display_name,
+  u.level,
+  u.coins,
+  u.fish_caught,
+  u.last_seen_at
+from public.users u
+order by u.coins desc
+limit 100;
 
 -- ============================================================
--- Row Level Security
--- Everyone may read public game data; players may only write
--- rows tied to their own verified wallet.
+-- Row Level Security: public read, no anon writes.
+-- The server's service-role key bypasses RLS for writes.
 -- ============================================================
 alter table public.users enable row level security;
 alter table public.farms enable row level security;
@@ -103,23 +99,8 @@ alter table public.inventory enable row level security;
 alter table public.fish_catches enable row level security;
 alter table public.chat_messages enable row level security;
 
-create policy "users readable by all" on public.users for select using (true);
-create policy "users update own row" on public.users for update
-  using (wallet_address = auth.jwt() ->> 'wallet');
-
-create policy "farms readable by all" on public.farms for select using (true);
-create policy "farms write own" on public.farms for all
-  using (user_id in (select id from public.users where wallet_address = auth.jwt() ->> 'wallet'));
-
-create policy "inventory read own" on public.inventory for select
-  using (user_id in (select id from public.users where wallet_address = auth.jwt() ->> 'wallet'));
-create policy "inventory write own" on public.inventory for all
-  using (user_id in (select id from public.users where wallet_address = auth.jwt() ->> 'wallet'));
-
-create policy "catches readable by all" on public.fish_catches for select using (true);
-create policy "catches insert own" on public.fish_catches for insert
-  with check (user_id in (select id from public.users where wallet_address = auth.jwt() ->> 'wallet'));
-
-create policy "chat readable by all" on public.chat_messages for select using (true);
-create policy "chat insert own" on public.chat_messages for insert
-  with check (user_id in (select id from public.users where wallet_address = auth.jwt() ->> 'wallet'));
+create policy "public read users" on public.users for select using (true);
+create policy "public read farms" on public.farms for select using (true);
+create policy "public read catches" on public.fish_catches for select using (true);
+create policy "public read chat" on public.chat_messages for select using (true);
+-- inventory stays private: no anon select policy.

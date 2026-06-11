@@ -5,15 +5,34 @@ import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
-import { Sprout, Fish, Users, Sparkles, Coins, MapPin, CheckCircle2, AlertCircle, ArrowRight, Wallet } from "lucide-react";
+import {
+  Sprout,
+  Fish,
+  Users,
+  Sparkles,
+  Coins,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Wallet,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "SawahVerse — Farm, Fish, Chill on Solana" },
-      { name: "description", content: "A relaxing multiplayer Solana village game. Hold the token to unlock farming, fishing, and the village." },
+      {
+        name: "description",
+        content:
+          "A relaxing multiplayer Solana village game. Hold the token to unlock farming, fishing, and the village.",
+      },
       { property: "og:title", content: "SawahVerse — Farm, Fish, Chill on Solana" },
-      { property: "og:description", content: "Connect your wallet, hold the token, and enter a peaceful Indonesian-inspired Web3 village." },
+      {
+        property: "og:description",
+        content:
+          "Connect your wallet, hold the token, and enter a peaceful Indonesian-inspired Web3 village.",
+      },
     ],
   }),
   component: Landing,
@@ -47,14 +66,15 @@ function Hero() {
             <Sparkles className="h-3.5 w-3.5" /> Built on Solana · Token Gated
           </span>
           <h1 className="mt-5 text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-            Farm, Fish,<br />
+            Farm, Fish,
+            <br />
             <span className="bg-[image:var(--gradient-ocean)] bg-clip-text text-transparent">
               Chill on Solana
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            A relaxing multiplayer village game where your wallet unlocks the world.
-            Tend rice fields, cast your line into glowing rivers, and meet friends from across the chain.
+            A relaxing multiplayer village game where your wallet unlocks the world. Tend rice
+            fields, cast your line into glowing rivers, and meet friends from across the chain.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -77,7 +97,17 @@ function Hero() {
   );
 }
 
-function GateBanner({ status, balance, address, connected }: { status: string; balance: number; address: string | null; connected: boolean }) {
+function GateBanner({
+  status,
+  balance,
+  address,
+  connected,
+}: {
+  status: string;
+  balance: number;
+  address: string | null;
+  connected: boolean;
+}) {
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-ocean/15 bg-white/70 p-4 backdrop-blur shadow-soft">
       <div className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-soft text-ocean">
@@ -86,18 +116,24 @@ function GateBanner({ status, balance, address, connected }: { status: string; b
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-muted-foreground">
-            Hold at least <span className="font-semibold text-foreground">{MIN_TOKEN_BALANCE} token</span> to play. Connect a wallet to check.
+            Hold at least{" "}
+            <span className="font-semibold text-foreground">{MIN_TOKEN_BALANCE} token</span> to
+            play. Connect a wallet to check.
           </p>
         )}
-        {connected && status === "loading" && <p className="text-muted-foreground">Checking your balance…</p>}
+        {connected && status === "loading" && (
+          <p className="text-muted-foreground">Checking your balance…</p>
+        )}
         {connected && status === "granted" && (
           <p className="flex items-center gap-1.5 font-medium text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> Access granted — balance {balance.toLocaleString()} · {shortAddress(address)}
+            <CheckCircle2 className="h-4 w-4" /> Access granted — balance {balance.toLocaleString()}{" "}
+            · {shortAddress(address)}
           </p>
         )}
         {connected && status === "insufficient" && (
           <p className="flex items-center gap-1.5 text-foreground">
-            <AlertCircle className="h-4 w-4 text-gold" /> You need at least 1 token to enter SawahVerse. Current: {balance.toLocaleString()}.
+            <AlertCircle className="h-4 w-4 text-gold" /> You need at least 1 token to enter
+            SawahVerse. Current: {balance.toLocaleString()}.
           </p>
         )}
         {connected && status === "error" && (
@@ -105,7 +141,9 @@ function GateBanner({ status, balance, address, connected }: { status: string; b
         )}
       </div>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
-        <Button variant="outline" size="sm" className="rounded-lg">Get Token</Button>
+        <Button variant="outline" size="sm" className="rounded-lg">
+          Get Token
+        </Button>
       </a>
     </div>
   );
@@ -115,8 +153,14 @@ function Clouds() {
   return (
     <>
       <div className="cloud-float absolute left-[8%] top-16 h-16 w-32 rounded-full bg-white/70 blur-xl" />
-      <div className="cloud-float absolute right-[12%] top-28 h-12 w-24 rounded-full bg-white/60 blur-xl" style={{ animationDelay: "-6s" }} />
-      <div className="cloud-float absolute left-[40%] top-10 h-10 w-20 rounded-full bg-white/50 blur-lg" style={{ animationDelay: "-12s" }} />
+      <div
+        className="cloud-float absolute right-[12%] top-28 h-12 w-24 rounded-full bg-white/60 blur-xl"
+        style={{ animationDelay: "-6s" }}
+      />
+      <div
+        className="cloud-float absolute left-[40%] top-10 h-10 w-20 rounded-full bg-white/50 blur-lg"
+        style={{ animationDelay: "-12s" }}
+      />
     </>
   );
 }
@@ -149,15 +193,19 @@ function VillageScene() {
                   isWater
                     ? "water-tile bg-[image:var(--gradient-ocean)]"
                     : isField
-                    ? "bg-leaf/60"
-                    : isHouse
-                    ? "bg-sand"
-                    : "bg-leaf/40"
+                      ? "bg-leaf/60"
+                      : isHouse
+                        ? "bg-sand"
+                        : "bg-leaf/40"
                 }`}
               >
                 {isField && <div className="absolute inset-1 rounded bg-leaf/80" />}
-                {isHouse && <div className="absolute inset-x-2 bottom-2 h-1/2 rounded-t-md bg-gold/80" />}
-                {isBoat && <div className="absolute left-1/2 top-1/2 h-2 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sand shadow" />}
+                {isHouse && (
+                  <div className="absolute inset-x-2 bottom-2 h-1/2 rounded-t-md bg-gold/80" />
+                )}
+                {isBoat && (
+                  <div className="absolute left-1/2 top-1/2 h-2 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sand shadow" />
+                )}
               </div>
             );
           })}
@@ -172,20 +220,41 @@ function VillageScene() {
 
 function Features() {
   const items = [
-    { icon: Sprout, title: "Rice Farming", desc: "Plant, water, and harvest rice on your own paddy. Earn coins, level up your farm." },
-    { icon: Fish, title: "Voxel Fishing", desc: "Cast into rivers and oceans. Hunt for Common to Legendary fish." },
-    { icon: Users, title: "Village Multiplayer", desc: "Visit friends, chat in the global village square, climb the leaderboard." },
-    { icon: Sparkles, title: "Cozy Vibes", desc: "Soft pastel art, gentle sounds. A game you can play while you sip kopi." },
+    {
+      icon: Sprout,
+      title: "Rice Farming",
+      desc: "Plant, water, and harvest rice on your own paddy. Earn coins, level up your farm.",
+    },
+    {
+      icon: Fish,
+      title: "Voxel Fishing",
+      desc: "Cast into rivers and oceans. Hunt for Common to Legendary fish.",
+    },
+    {
+      icon: Users,
+      title: "Village Multiplayer",
+      desc: "Visit friends, chat in the global village square, climb the leaderboard.",
+    },
+    {
+      icon: Sparkles,
+      title: "Cozy Vibes",
+      desc: "Soft pastel art, gentle sounds. A game you can play while you sip kopi.",
+    },
   ];
   return (
     <section id="features" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">A peaceful village. Powered by Solana.</h2>
+        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          A peaceful village. Powered by Solana.
+        </h2>
         <p className="mt-3 text-muted-foreground">Everything you need to slow down and play.</p>
       </div>
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="group rounded-2xl glass-card p-6 transition hover:-translate-y-1 hover:shadow-glow">
+          <div
+            key={title}
+            className="group rounded-2xl glass-card p-6 transition hover:-translate-y-1 hover:shadow-glow"
+          >
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-cyan-soft text-ocean">
               <Icon className="h-5 w-5" />
             </div>
@@ -215,8 +284,8 @@ function TokenSection() {
             </span>
             <h2 className="mt-4 text-3xl font-bold sm:text-4xl">Your key to the village.</h2>
             <p className="mt-4 max-w-md text-white/85">
-              The SawahVerse token unlocks gameplay and shapes future content.
-              We're building this for fun — nothing here is a financial promise or guarantee of profit.
+              The SawahVerse token unlocks gameplay and shapes future content. We're building this
+              for fun — nothing here is a financial promise or guarantee of profit.
             </p>
             <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
               <Button size="lg" className="mt-6 rounded-xl bg-white text-ocean hover:bg-white/90">
@@ -251,7 +320,9 @@ function Roadmap() {
     <section id="roadmap" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Roadmap</h2>
-        <p className="mt-3 text-muted-foreground">The path from cozy MVP to full multiplayer village.</p>
+        <p className="mt-3 text-muted-foreground">
+          The path from cozy MVP to full multiplayer village.
+        </p>
       </div>
       <div className="mt-12 grid gap-4 md:grid-cols-5">
         {phases.map((ph, i) => (

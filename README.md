@@ -2,120 +2,132 @@
 
 A relaxing, token-gated browser game inspired by Indonesian rice-field villages.
 Connect a Solana wallet, hold at least **1 token**, and enter a cozy blue village
-where you plant rice, fish in rivers, level up, and (soon) chat with friends.
+where you plant rice, fish in rivers, level up, chat, and climb the leaderboard.
 
 > **This is a game.** The token is for gameplay access only. Nothing here is an
 > investment, and there is no promise of profit, yield, or returns.
 
 ---
 
-## 1. The MVP architecture (simple version)
+## 1. Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Browser (your players)                         │
-│                                                 │
-│  React + TypeScript + Vite (TanStack Start)     │
-│  Tailwind CSS v4 + shadcn/ui  → the blue UI     │
-│  Solana Wallet Adapter        → connect wallet  │
-│  localStorage                 → game progress   │
-└───────────────┬─────────────────────────────────┘
-                │ read-only RPC call (no signing!)
-                ▼
-┌─────────────────────────────────────────────────┐
-│  Solana mainnet RPC                             │
-│  "Does this wallet hold ≥ 1 token of the mint?" │
-└─────────────────────────────────────────────────┘
-
-Later (schema already prepared in supabase/schema.sql):
-┌─────────────────────────────────────────────────┐
-│  Supabase: users, farms, inventory,             │
-│  fish_catches, leaderboard, chat (Realtime)     │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  Browser                                             │
+│  React 19 + TypeScript (TanStack Start, SSR)         │
+│  Tailwind v4 + shadcn/ui      → blue glass UI        │
+│  Solana Wallet Adapter        → Phantom / Solflare   │
+│  TanStack Query               → live data (polling)  │
+│  localStorage                 → instant local save   │
+└────────┬─────────────────────────────┬───────────────┘
+         │ read-only RPC (no signing)  │ server functions (zod-validated)
+         ▼                             ▼
+┌──────────────────┐   ┌───────────────────────────────┐
+│  Solana mainnet  │   │  Game API (src/lib/api)       │
+│  token balance   │   │  sync · leaderboard · chat ·  │
+│  check for gate  │   │  fish-catch log · rate limit  │
+└──────────────────┘   └──────────┬────────────────────┘
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │  Storage (src/lib/store)    │
+                    │  Supabase  ← if env set     │
+                    │  .data/*.json ← dev default │
+                    └─────────────────────────────┘
 ```
 
-Key idea for the MVP: **no backend yet.** The token check is a read-only
-blockchain query, and game progress lives in the player's browser
-(`localStorage`). That keeps everything simple while you learn. Supabase comes
-next when you want real multiplayer.
+Key design choice: the API works **with zero configuration**. Without env vars
+it persists to a local JSON file; set the two Supabase variables and the same
+code runs against Postgres. Game progress is also mirrored in `localStorage`
+so the player never loses state even if the network drops (the profile card
+shows a `saved / offline` badge).
 
-## 2. Install & run
+## 2. Run it
 
 ```bash
-# 1. install dependencies (bun is used here; npm install also works)
-bun install
+bun install        # or npm install
+bun run dev        # start dev server (URL printed in terminal)
 
-# 2. start the dev server
-bun run dev
-# → open the local URL Vite prints in the terminal
-
-# 3. production build
-bun run build
+bun test           # unit tests (game rules + storage layer)
+bun run lint       # eslint + prettier
+bun run build      # production build
 ```
+
+Optional `.env` (see `.env.example`):
+
+| Variable                                     | What it does                                                                                                           |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `VITE_RPC_ENDPOINT`                          | Custom Solana RPC (Helius/QuickNode). Public endpoint rate-limits.                                                     |
+| `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | Switch the game API from local file storage to Supabase. Run `supabase/schema.sql` first. Server-only — never `VITE_`. |
 
 ## 3. Folder structure
 
 ```
 src/
   routes/
-    __root.tsx        # app shell: fonts, providers, toaster
-    index.tsx         # landing page (hero, features, token, roadmap)
-    game.tsx          # token gate + game dashboard
+    __root.tsx         # app shell, error boundary, 404
+    index.tsx          # landing page
+    game.tsx           # token gate + game dashboard
+    leaderboard.tsx    # full leaderboard page
+    how-to-play.tsx    # guide page
   components/
-    SolanaProvider.tsx # wallet adapter setup (Phantom, Solflare)
-    WalletButton.tsx   # the "Connect Wallet" button
-    Navbar.tsx / Footer.tsx
-    ui/                # shadcn/ui components (button, card, tabs, …)
+    SolanaProvider.tsx # wallet adapter (Phantom, Solflare)
+    WalletButton.tsx / Navbar.tsx / Footer.tsx
+    ui/                # shadcn/ui components
   hooks/
-    useTokenGate.ts    # checks the wallet's token balance (read-only)
-    useGame.ts         # all game logic: farm, fish, inventory, XP
+    useTokenGate.ts    # read-only balance check + retry
+    useGame.ts         # game loop, localStorage, cloud sync
+    useVillage.ts      # leaderboard / chat / activity queries
   lib/
-    solana-config.ts   # token mint address, RPC endpoint
-  styles.css           # the blue theme (Tailwind v4 design tokens)
-supabase/
-  schema.sql           # future backend: tables + RLS policies
+    game-logic.ts      # pure rules (odds, XP) — unit tested
+    solana-config.ts   # token mint + RPC endpoint
+    store.server.ts    # storage layer (Supabase | file) — unit tested
+    api/game.functions.ts  # the server API (zod-validated)
+supabase/schema.sql    # tables, leaderboard view, RLS
 ```
 
-## 4. How the token gate works
+## 4. Token gate
 
-File: `src/hooks/useTokenGate.ts`
+1. Player connects a wallet (Phantom/Solflare).
+2. `useTokenGate` calls `getParsedTokenAccountsByOwner` — **read-only**, the
+   player never signs anything just to be checked.
+3. Balance for mint `Tqj8yFmagrg7oorpQkVGYR52r96RFTamvWfth9bpump` is summed.
+4. ≥ 1 → game unlocks. Otherwise: _“You need at least 1 token to enter
+   SawahVerse.”_ RPC failures show a retry button.
 
-1. Player clicks **Connect Wallet** (Phantom or Solflare).
-2. We call `connection.getParsedTokenAccountsByOwner(wallet, { mint })` —
-   a **read-only** RPC call. The player never signs anything just to be checked.
-3. We sum the balances of all token accounts for the mint
-   `Tqj8yFmagrg7oorpQkVGYR52r96RFTamvWfth9bpump`.
-4. Balance ≥ 1 → the game unlocks. Otherwise the player sees:
-   *“You need at least 1 token to enter SawahVerse.”*
+## 5. Gameplay
 
-Config lives in `src/lib/solana-config.ts`. The default RPC is the public
-mainnet endpoint, which is rate-limited — for production, paste a free endpoint
-from Helius or QuickNode into `RPC_ENDPOINT`.
+- **Farm:** plant (1 seed + 2 energy) → 15s growth → harvest (+1 rice,
+  +2 coins, +10 XP). Expand the paddy for 250 coins.
+- **Fish:** one cast per 5 seconds, 5 energy. Odds: Common 70% · Uncommon 20% ·
+  Rare 7% · Epic 2.5% · Legendary 0.5%. Catches are logged to the village
+  activity feed.
+- **Economy:** rice sells for 8, seeds cost 3. Each level needs `level × 100`
+  XP; energy regenerates 1 per 8s.
+- **Village:** live leaderboard (top coins), global chat (280-char limit,
+  2s rate limit per wallet), recent-catches feed — all polling the game API.
+- **Identity:** click your name on the profile card to set a villager name.
 
-## 5. The gameplay loop (MVP)
+## 6. API endpoints (server functions)
 
-All in `src/hooks/useGame.ts`:
+All in `src/lib/api/game.functions.ts`, callable from the client as typed
+async functions, validated with zod on the server:
 
-- **Farm:** click an empty tile to plant (costs 1 seed + 2 energy). Rice grows
-  for 15 seconds, then turns golden. Harvest → +1 rice, +2 coins, +10 XP.
-- **Sell & shop:** rice sells for 8 coins; seeds cost 3 coins. Expand the paddy
-  for 250 coins.
-- **Fish:** cast once every 5 seconds (costs 5 energy). Rarity odds:
-  Common 70% · Uncommon 20% · Rare 7% · Epic 2.5% · Legendary 0.5%.
-- **Progress:** XP fills a bar; each level needs `level × 100` XP. Energy
-  regenerates 1 point every 8 seconds.
-- **Saved** automatically to `localStorage` under `sawahverse_game_v1`.
+| Function           | Method | Purpose                                             |
+| ------------------ | ------ | --------------------------------------------------- |
+| `syncPlayer`       | POST   | Upsert progress (level, xp, coins, stats, username) |
+| `getLeaderboard`   | GET    | Top players by coins                                |
+| `getChatMessages`  | GET    | Last 50 chat messages                               |
+| `sendChatMessage`  | POST   | Post a message (rate-limited per wallet)            |
+| `logFishCatch`     | POST   | Append to the catch log                             |
+| `getRecentCatches` | GET    | Activity feed                                       |
 
-Leaderboard, online players, activity feed, and chat are **mockups** for now —
-they show the final UI with placeholder data until Supabase is wired up.
+## 7. Going further
 
-## 6. Next steps (in order)
-
-1. **Supabase project** → run `supabase/schema.sql`, add the project URL + anon
-   key to a `.env`, and swap `localStorage` for Supabase reads/writes.
-2. **Sign in with Solana** → a small Edge Function verifies a signed message so
-   players can only write their own rows (the RLS policies are ready).
-3. **Real chat & leaderboard** → Supabase Realtime on `chat_messages`, and the
-   `leaderboard` view replaces the mock list.
-4. **Art pass** → replace the CSS-built village with original voxel/isometric
-   illustrations (no copied game assets).
+1. **Supabase:** create a project, run `supabase/schema.sql`, set the two env
+   vars — done, the API switches over.
+2. **Wallet-signature auth:** today the API trusts the wallet string the
+   client sends (fine for a cozy MVP, not for real money). Add a
+   sign-in-with-Solana message verification step in the server functions
+   before trusting writes.
+3. **Realtime chat:** swap chat polling for Supabase Realtime.
+4. **Art pass:** replace the CSS village with original voxel illustrations.

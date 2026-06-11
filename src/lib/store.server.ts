@@ -1,0 +1,281 @@
+import process from "node:process";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+// Server-only persistence for SawahVerse.
+//
+// Two backends behind one interface:
+//   - SupabaseStore: used when SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are
+//     set (schema in supabase/schema.sql). All writes go through these
+//     trusted server functions, so the service-role key never reaches the
+//     browser and RLS can stay locked down.
+//   - FileStore: zero-config fallback for local dev — persists to
+//     .data/sawahverse.json so the app runs end-to-end without any env vars.
+
+export type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+
+export type PlayerRow = {
+  wallet_address: string;
+  username: string | null;
+  level: number;
+  xp: number;
+  coins: number;
+  rice_harvested: number;
+  fish_caught: number;
+  last_seen_at: string;
+};
+
+export type ChatRow = {
+  id: string;
+  wallet_address: string;
+  display_name: string;
+  body: string;
+  created_at: string;
+};
+
+export type CatchRow = {
+  id: string;
+  wallet_address: string;
+  display_name: string;
+  fish_name: string;
+  rarity: Rarity;
+  value: number;
+  caught_at: string;
+};
+
+export interface GameStore {
+  upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow>;
+  getPlayer(wallet: string): Promise<PlayerRow | null>;
+  topPlayers(limit: number): Promise<PlayerRow[]>;
+  listChat(limit: number): Promise<ChatRow[]>;
+  insertChat(wallet: string, body: string): Promise<ChatRow>;
+  logCatch(c: Omit<CatchRow, "id" | "caught_at" | "display_name">): Promise<void>;
+  recentCatches(limit: number): Promise<CatchRow[]>;
+}
+
+export function displayName(p: { username: string | null; wallet_address: string }) {
+  return p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`;
+}
+
+// ---------------------------------------------------------------- Supabase
+
+class SupabaseStore implements GameStore {
+  constructor(private db: SupabaseClient) {}
+
+  async upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow> {
+    const row = { ...p, last_seen_at: new Date().toISOString() };
+    const { data, error } = await this.db
+      .from("users")
+      .upsert(row, { onConflict: "wallet_address" })
+      .select()
+      .single();
+    if (error) throw new Error(`upsertPlayer: ${error.message}`);
+    return data as PlayerRow;
+  }
+
+  async getPlayer(wallet: string): Promise<PlayerRow | null> {
+    const { data, error } = await this.db
+      .from("users")
+      .select()
+      .eq("wallet_address", wallet)
+      .maybeSingle();
+    if (error) throw new Error(`getPlayer: ${error.message}`);
+    return (data as PlayerRow) ?? null;
+  }
+
+  async topPlayers(limit: number): Promise<PlayerRow[]> {
+    const { data, error } = await this.db
+      .from("users")
+      .select()
+      .order("coins", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(`topPlayers: ${error.message}`);
+    return (data ?? []) as PlayerRow[];
+  }
+
+  async listChat(limit: number): Promise<ChatRow[]> {
+    const { data, error } = await this.db
+      .from("chat_messages")
+      .select("id, wallet_address, body, created_at, users(username)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(`listChat: ${error.message}`);
+    type JoinedChat = ChatRow & { users: { username: string | null } | null };
+    return ((data ?? []) as unknown as JoinedChat[])
+      .map((m) => ({
+        id: m.id,
+        wallet_address: m.wallet_address,
+        display_name: displayName({
+          username: m.users?.username ?? null,
+          wallet_address: m.wallet_address,
+        }),
+        body: m.body,
+        created_at: m.created_at,
+      }))
+      .reverse();
+  }
+
+  async insertChat(wallet: string, body: string): Promise<ChatRow> {
+    const { data, error } = await this.db
+      .from("chat_messages")
+      .insert({ wallet_address: wallet, body })
+      .select()
+      .single();
+    if (error) throw new Error(`insertChat: ${error.message}`);
+    const player = await this.getPlayer(wallet);
+    return {
+      id: data.id,
+      wallet_address: wallet,
+      display_name: displayName({ username: player?.username ?? null, wallet_address: wallet }),
+      body: data.body,
+      created_at: data.created_at,
+    };
+  }
+
+  async logCatch(c: Omit<CatchRow, "id" | "caught_at" | "display_name">): Promise<void> {
+    const { error } = await this.db.from("fish_catches").insert(c);
+    if (error) throw new Error(`logCatch: ${error.message}`);
+  }
+
+  async recentCatches(limit: number): Promise<CatchRow[]> {
+    const { data, error } = await this.db
+      .from("fish_catches")
+      .select("id, wallet_address, fish_name, rarity, value, caught_at, users(username)")
+      .order("caught_at", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(`recentCatches: ${error.message}`);
+    type JoinedCatch = CatchRow & { users: { username: string | null } | null };
+    return ((data ?? []) as unknown as JoinedCatch[]).map((c) => ({
+      id: c.id,
+      wallet_address: c.wallet_address,
+      display_name: displayName({
+        username: c.users?.username ?? null,
+        wallet_address: c.wallet_address,
+      }),
+      fish_name: c.fish_name,
+      rarity: c.rarity,
+      value: c.value,
+      caught_at: c.caught_at,
+    }));
+  }
+}
+
+// -------------------------------------------------------------- File (dev)
+
+type FileData = {
+  players: Record<string, PlayerRow>;
+  chat: ChatRow[];
+  catches: CatchRow[];
+};
+
+const EMPTY: FileData = { players: {}, chat: [], catches: [] };
+const FILE_PATH = ".data/sawahverse.json";
+
+class FileStore implements GameStore {
+  private cache: FileData | null = null;
+
+  private async load(): Promise<FileData> {
+    if (this.cache) return this.cache;
+    try {
+      const { readFile } = await import("node:fs/promises");
+      this.cache = JSON.parse(await readFile(FILE_PATH, "utf8")) as FileData;
+    } catch {
+      this.cache = structuredClone(EMPTY);
+    }
+    return this.cache;
+  }
+
+  private async save(data: FileData) {
+    this.cache = data;
+    try {
+      const { mkdir, writeFile } = await import("node:fs/promises");
+      await mkdir(".data", { recursive: true });
+      await writeFile(FILE_PATH, JSON.stringify(data, null, 2));
+    } catch (e) {
+      // Read-only FS (e.g. serverless preview): keep working from memory.
+      console.warn("FileStore: persist failed, continuing in-memory", e);
+    }
+  }
+
+  async upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow> {
+    const data = await this.load();
+    const row: PlayerRow = {
+      ...data.players[p.wallet_address],
+      ...p,
+      last_seen_at: new Date().toISOString(),
+    };
+    data.players[p.wallet_address] = row;
+    await this.save(data);
+    return row;
+  }
+
+  async getPlayer(wallet: string): Promise<PlayerRow | null> {
+    const data = await this.load();
+    return data.players[wallet] ?? null;
+  }
+
+  async topPlayers(limit: number): Promise<PlayerRow[]> {
+    const data = await this.load();
+    return Object.values(data.players)
+      .sort((a, b) => b.coins - a.coins)
+      .slice(0, limit);
+  }
+
+  async listChat(limit: number): Promise<ChatRow[]> {
+    const data = await this.load();
+    return data.chat.slice(-limit);
+  }
+
+  async insertChat(wallet: string, body: string): Promise<ChatRow> {
+    const data = await this.load();
+    const player = data.players[wallet] ?? null;
+    const row: ChatRow = {
+      id: crypto.randomUUID(),
+      wallet_address: wallet,
+      display_name: displayName({ username: player?.username ?? null, wallet_address: wallet }),
+      body,
+      created_at: new Date().toISOString(),
+    };
+    data.chat = [...data.chat, row].slice(-200);
+    await this.save(data);
+    return row;
+  }
+
+  async logCatch(c: Omit<CatchRow, "id" | "caught_at" | "display_name">): Promise<void> {
+    const data = await this.load();
+    const player = data.players[c.wallet_address] ?? null;
+    data.catches = [
+      {
+        ...c,
+        id: crypto.randomUUID(),
+        display_name: displayName({
+          username: player?.username ?? null,
+          wallet_address: c.wallet_address,
+        }),
+        caught_at: new Date().toISOString(),
+      },
+      ...data.catches,
+    ].slice(0, 200);
+    await this.save(data);
+  }
+
+  async recentCatches(limit: number): Promise<CatchRow[]> {
+    const data = await this.load();
+    return data.catches.slice(0, limit);
+  }
+}
+
+// ----------------------------------------------------------------- Factory
+
+let store: GameStore | null = null;
+
+export function getStore(): GameStore {
+  if (store) return store;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && key) {
+    store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
+  } else {
+    store = new FileStore();
+  }
+  return store;
+}

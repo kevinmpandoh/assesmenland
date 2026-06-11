@@ -5,9 +5,7 @@ export function WalletButton() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) {
-    return (
-      <div className="h-10 w-36 animate-pulse rounded-xl bg-secondary" aria-hidden />
-    );
+    return <div className="h-10 w-36 animate-pulse rounded-xl bg-secondary" aria-hidden />;
   }
   return <WalletMultiButton />;
 }

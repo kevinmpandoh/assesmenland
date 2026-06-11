@@ -6,8 +6,14 @@ import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 import { RPC_ENDPOINT } from "@/lib/solana-config";
 
-if (typeof window !== "undefined" && !(window as any).Buffer) {
-  (window as any).Buffer = Buffer;
+declare global {
+  interface Window {
+    Buffer?: typeof Buffer;
+  }
+}
+
+if (typeof window !== "undefined" && !window.Buffer) {
+  window.Buffer = Buffer;
 }
 
 export function SolanaProvider({ children }: { children: ReactNode }) {

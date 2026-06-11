@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SawahVerse local data + secrets
+.data/
+.env

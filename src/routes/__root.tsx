@@ -80,9 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SawahVerse — Farm, Fish, Chill on Solana" },
-      { name: "description", content: "A relaxing multiplayer Solana village game. Connect your wallet, hold the token, farm rice, fish, and chill." },
+      {
+        name: "description",
+        content:
+          "A relaxing multiplayer Solana village game. Connect your wallet, hold the token, farm rice, fish, and chill.",
+      },
       { property: "og:title", content: "SawahVerse — Farm, Fish, Chill on Solana" },
-      { property: "og:description", content: "A relaxing multiplayer Solana village game where your wallet unlocks the world." },
+      {
+        property: "og:description",
+        content: "A relaxing multiplayer Solana village game where your wallet unlocks the world.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

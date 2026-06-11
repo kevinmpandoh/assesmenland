@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Sprout } from "lucide-react";
 
 export function Footer() {
@@ -18,16 +19,33 @@ export function Footer() {
         <div>
           <h4 className="text-sm font-semibold text-foreground">Game</h4>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            <li><a href="#features" className="hover:text-ocean">Features</a></li>
-            <li><a href="#token" className="hover:text-ocean">Token Utility</a></li>
-            <li><a href="#roadmap" className="hover:text-ocean">Roadmap</a></li>
+            <li>
+              <Link to="/game" className="hover:text-ocean">
+                Play
+              </Link>
+            </li>
+            <li>
+              <Link to="/leaderboard" className="hover:text-ocean">
+                Leaderboard
+              </Link>
+            </li>
+            <li>
+              <Link to="/how-to-play" className="hover:text-ocean">
+                How to Play
+              </Link>
+            </li>
+            <li>
+              <a href="/#token" className="hover:text-ocean">
+                Token Utility
+              </a>
+            </li>
           </ul>
         </div>
         <div>
           <h4 className="text-sm font-semibold text-foreground">Disclaimer</h4>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            SawahVerse is an entertainment experience. Nothing here is investment advice.
-            Token holding only unlocks gameplay; we make no promise of profit or returns.
+            SawahVerse is an entertainment experience. Nothing here is investment advice. Token
+            holding only unlocks gameplay; we make no promise of profit or returns.
           </p>
         </div>
       </div>
