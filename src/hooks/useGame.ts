@@ -1,10 +1,49 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import {
+  GROW_MS,
+  PLANT_COST,
+  SELL_PRICE,
+  SEED_PRICE,
+  UPGRADE_COST,
+  HARVEST_COINS,
+  HARVEST_XP,
+  FISH_COOLDOWN_MS,
+  FISH_ENERGY_COST,
+  MAX_FARM_SIZE,
+  RARITY_ODDS,
+  FISH_TABLE,
+  rollRarity,
+  applyXp,
+  xpForLevel,
+  type Rarity,
+} from "@/lib/game-logic";
+import { syncPlayer, logFishCatch } from "@/lib/api/game.functions";
 
-export type Fish = { id: string; name: string; rarity: Rarity; emoji: string; value: number; caughtAt: number };
-export type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+export {
+  GROW_MS,
+  PLANT_COST,
+  SELL_PRICE,
+  SEED_PRICE,
+  UPGRADE_COST,
+  HARVEST_COINS,
+  FISH_COOLDOWN_MS,
+  RARITY_ODDS,
+  xpForLevel,
+};
+export type { Rarity };
+
+export type Fish = {
+  id: string;
+  name: string;
+  rarity: Rarity;
+  emoji: string;
+  value: number;
+  caughtAt: number;
+};
 export type Tile = { id: number; state: "empty" | "growing" | "ready"; plantedAt: number | null };
 
 export type GameState = {
+  username: string;
   level: number;
   xp: number;
   coins: number;
@@ -12,23 +51,23 @@ export type GameState = {
   seeds: number;
   farmSize: number;
   tiles: Tile[];
+  riceHarvested: number;
+  fishCaught: number;
   inventory: { rice: number; fish: Fish[] };
 };
 
+export type SyncState = "idle" | "syncing" | "synced" | "error";
+
 const DEFAULT_SIZE = 9;
 const KEY = "sawahverse_game_v1";
-
-export const GROW_MS = 15_000;
-export const PLANT_COST = 1; // seed
-export const SELL_PRICE = 8;
-export const SEED_PRICE = 3;
-export const UPGRADE_COST = 250;
+const SYNC_DEBOUNCE_MS = 3_000;
 
 function makeTiles(size: number): Tile[] {
   return Array.from({ length: size }, (_, i) => ({ id: i, state: "empty", plantedAt: null }));
 }
 
 const initial: GameState = {
+  username: "",
   level: 1,
   xp: 0,
   coins: 50,
@@ -36,6 +75,8 @@ const initial: GameState = {
   seeds: 5,
   farmSize: DEFAULT_SIZE,
   tiles: makeTiles(DEFAULT_SIZE),
+  riceHarvested: 0,
+  fishCaught: 0,
   inventory: { rice: 0, fish: [] },
 };
 
@@ -56,13 +97,15 @@ export function saveState(s: GameState) {
   localStorage.setItem(KEY, JSON.stringify(s));
 }
 
-export function xpForLevel(level: number) {
-  return level * 100;
-}
-
-export function useGame() {
+/**
+ * The whole game loop. Progress is saved locally on every change and
+ * pushed to the server (debounced) so the leaderboard stays live.
+ */
+export function useGame(walletAddress: string | null = null) {
   const [state, setState] = useState<GameState>(initial);
   const [mounted, setMounted] = useState(false);
+  const [lastFishAt, setLastFishAt] = useState(0);
+  const [syncState, setSyncState] = useState<SyncState>("idle");
 
   useEffect(() => {
     setState(loadState());
@@ -73,10 +116,67 @@ export function useGame() {
     if (mounted) saveState(state);
   }, [state, mounted]);
 
-  // refresh tile readiness over time
+  // Debounced cloud sync — keeps leaderboard/profile fresh without
+  // hammering the API on every click.
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!mounted || !walletAddress) return;
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(async () => {
+      setSyncState("syncing");
+      try {
+        await syncPlayer({
+          data: {
+            wallet: walletAddress,
+            username: state.username || undefined,
+            level: state.level,
+            xp: state.xp,
+            coins: state.coins,
+            riceHarvested: state.riceHarvested,
+            fishCaught: state.fishCaught,
+          },
+        });
+        setSyncState("synced");
+      } catch (e) {
+        console.warn("cloud sync failed", e);
+        setSyncState("error");
+      }
+    }, SYNC_DEBOUNCE_MS);
+    return () => {
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+    };
+  }, [
+    mounted,
+    walletAddress,
+    state.username,
+    state.level,
+    state.xp,
+    state.coins,
+    state.riceHarvested,
+    state.fishCaught,
+  ]);
+
+  // 1s tick: re-render growth bars/cooldowns and flip grown tiles to ready.
   const [, force] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => force((n) => n + 1), 1000);
+    const t = setInterval(() => {
+      force((n) => n + 1);
+      setState((s) => {
+        let changed = false;
+        const tiles = s.tiles.map((tile) => {
+          if (
+            tile.state === "growing" &&
+            tile.plantedAt &&
+            Date.now() - tile.plantedAt >= GROW_MS
+          ) {
+            changed = true;
+            return { ...tile, state: "ready" as const };
+          }
+          return tile;
+        });
+        return changed ? { ...s, tiles } : s;
+      });
+    }, 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -90,22 +190,23 @@ export function useGame() {
 
   const grant = useCallback((xp: number, coins = 0) => {
     setState((s) => {
-      let newXp = s.xp + xp;
-      let level = s.level;
-      while (newXp >= xpForLevel(level)) {
-        newXp -= xpForLevel(level);
-        level += 1;
-      }
-      return { ...s, xp: newXp, level, coins: s.coins + coins };
+      const leveled = applyXp(s.level, s.xp, xp);
+      return { ...s, xp: leveled.xp, level: leveled.level, coins: s.coins + coins };
     });
   }, []);
+
+  const setUsername = (name: string) => {
+    setState((s) => ({ ...s, username: name.trim().slice(0, 20) }));
+  };
 
   const plant = (idx: number) => {
     setState((s) => {
       if (s.seeds < PLANT_COST || s.energy < 2) return s;
       const tile = s.tiles[idx];
       if (!tile || tile.state !== "empty") return s;
-      const tiles = s.tiles.map((t) => (t.id === idx ? { ...t, state: "growing" as const, plantedAt: Date.now() } : t));
+      const tiles = s.tiles.map((t) =>
+        t.id === idx ? { ...t, state: "growing" as const, plantedAt: Date.now() } : t,
+      );
       return { ...s, tiles, seeds: s.seeds - PLANT_COST, energy: s.energy - 2 };
     });
   };
@@ -114,17 +215,28 @@ export function useGame() {
     setState((s) => {
       const tile = s.tiles[idx];
       if (!tile || tile.state !== "ready") return s;
-      const tiles = s.tiles.map((t) => (t.id === idx ? { ...t, state: "empty" as const, plantedAt: null } : t));
-      return { ...s, tiles, inventory: { ...s.inventory, rice: s.inventory.rice + 1 } };
+      const tiles = s.tiles.map((t) =>
+        t.id === idx ? { ...t, state: "empty" as const, plantedAt: null } : t,
+      );
+      return {
+        ...s,
+        tiles,
+        riceHarvested: s.riceHarvested + 1,
+        inventory: { ...s.inventory, rice: s.inventory.rice + 1 },
+      };
     });
-    grant(10);
+    grant(HARVEST_XP, HARVEST_COINS);
   };
 
   const sellRice = (qty = 1) => {
     setState((s) => {
       const take = Math.min(qty, s.inventory.rice);
       if (take === 0) return s;
-      return { ...s, coins: s.coins + take * SELL_PRICE, inventory: { ...s.inventory, rice: s.inventory.rice - take } };
+      return {
+        ...s,
+        coins: s.coins + take * SELL_PRICE,
+        inventory: { ...s.inventory, rice: s.inventory.rice - take },
+      };
     });
   };
 
@@ -150,30 +262,25 @@ export function useGame() {
 
   const upgradeFarm = () => {
     setState((s) => {
-      if (s.coins < UPGRADE_COST || s.farmSize >= 25) return s;
+      if (s.coins < UPGRADE_COST || s.farmSize >= MAX_FARM_SIZE) return s;
       const newSize = s.farmSize + 4;
-      const extra = makeTiles(newSize).slice(s.farmSize).map((t, i) => ({ ...t, id: s.farmSize + i }));
-      return { ...s, coins: s.coins - UPGRADE_COST, farmSize: newSize, tiles: [...s.tiles, ...extra] };
+      const extra = makeTiles(newSize)
+        .slice(s.farmSize)
+        .map((t, i) => ({ ...t, id: s.farmSize + i }));
+      return {
+        ...s,
+        coins: s.coins - UPGRADE_COST,
+        farmSize: newSize,
+        tiles: [...s.tiles, ...extra],
+      };
     });
   };
 
   const fish = () => {
-    if (state.energy < 5) return null;
-    const roll = Math.random();
-    let rarity: Rarity;
-    if (roll < 0.5) rarity = "Common";
-    else if (roll < 0.8) rarity = "Uncommon";
-    else if (roll < 0.94) rarity = "Rare";
-    else if (roll < 0.99) rarity = "Epic";
-    else rarity = "Legendary";
-    const fishes: Record<Rarity, { name: string; emoji: string; value: number; xp: number }[]> = {
-      Common: [{ name: "Sardine", emoji: "🐟", value: 5, xp: 4 }, { name: "Carp", emoji: "🐠", value: 7, xp: 5 }],
-      Uncommon: [{ name: "Snapper", emoji: "🐡", value: 18, xp: 10 }, { name: "Mackerel", emoji: "🐟", value: 20, xp: 10 }],
-      Rare: [{ name: "Tuna", emoji: "🐠", value: 60, xp: 25 }],
-      Epic: [{ name: "Mahi-Mahi", emoji: "🐡", value: 150, xp: 60 }],
-      Legendary: [{ name: "Golden Koi", emoji: "🪙", value: 500, xp: 200 }],
-    };
-    const pool = fishes[rarity];
+    if (state.energy < FISH_ENERGY_COST) return null;
+    if (Date.now() - lastFishAt < FISH_COOLDOWN_MS) return null;
+    const rarity = rollRarity(Math.random());
+    const pool = FISH_TABLE[rarity];
     const pick = pool[Math.floor(Math.random() * pool.length)];
     const caught: Fish = {
       id: crypto.randomUUID(),
@@ -185,29 +292,40 @@ export function useGame() {
     };
     setState((s) => ({
       ...s,
-      energy: s.energy - 5,
+      energy: s.energy - FISH_ENERGY_COST,
+      fishCaught: s.fishCaught + 1,
       inventory: { ...s.inventory, fish: [caught, ...s.inventory.fish].slice(0, 30) },
     }));
+    setLastFishAt(Date.now());
     grant(pick.xp);
+    if (walletAddress) {
+      logFishCatch({
+        data: {
+          wallet: walletAddress,
+          fishName: caught.name,
+          rarity: caught.rarity,
+          value: caught.value,
+        },
+      }).catch((e) => console.warn("catch log failed", e));
+    }
     return caught;
   };
 
-  // auto-mark ready
-  useEffect(() => {
-    setState((s) => {
-      let changed = false;
-      const tiles = s.tiles.map((t) => {
-        if (t.state === "growing" && t.plantedAt && Date.now() - t.plantedAt >= GROW_MS) {
-          changed = true;
-          return { ...t, state: "ready" as const };
-        }
-        return t;
-      });
-      return changed ? { ...s, tiles } : s;
-    });
-  });
+  const fishCooldownRemaining = Math.max(0, FISH_COOLDOWN_MS - (Date.now() - lastFishAt));
 
-  return { state, plant, harvest, sellRice, sellFish, buySeeds, upgradeFarm, fish };
+  return {
+    state,
+    syncState,
+    setUsername,
+    plant,
+    harvest,
+    sellRice,
+    sellFish,
+    buySeeds,
+    upgradeFarm,
+    fish,
+    fishCooldownRemaining,
+  };
 }
 
 export const rarityColor: Record<Rarity, string> = {

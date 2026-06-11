@@ -1,0 +1,106 @@
+-- ============================================================
+-- SawahVerse — Supabase schema
+-- ============================================================
+-- Run this once in the Supabase SQL editor.
+--
+-- Access model: ALL writes go through the app's server functions
+-- (src/lib/api/game.functions.ts) using the SERVICE ROLE key, which
+-- bypasses RLS. Set these env vars on the server to activate it:
+--
+--   SUPABASE_URL=https://<project>.supabase.co
+--   SUPABASE_SERVICE_ROLE_KEY=<service role key — server only, never VITE_>
+--
+-- Without them the app falls back to a local file store, so dev
+-- works with zero configuration.
+--
+-- RLS below allows public READS only; anon clients can never write.
+-- ============================================================
+
+-- ---------- users ----------
+-- One row per player, keyed by Solana wallet address.
+create table if not exists public.users (
+  wallet_address text primary key,
+  username text,
+  level int not null default 1,
+  xp int not null default 0,
+  coins int not null default 50,
+  rice_harvested int not null default 0,
+  fish_caught int not null default 0,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+create index if not exists users_coins_idx on public.users (coins desc);
+
+-- ---------- farms ----------
+-- Tile layout per player (the client also keeps a local copy).
+create table if not exists public.farms (
+  wallet_address text primary key references public.users(wallet_address) on delete cascade,
+  size int not null default 9,
+  tiles jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+-- ---------- inventory ----------
+create table if not exists public.inventory (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
+  item_type text not null check (item_type in ('rice', 'seed', 'fish', 'rare_item')),
+  item_name text not null,
+  rarity text check (rarity in ('Common', 'Uncommon', 'Rare', 'Epic', 'Legendary')),
+  quantity int not null default 1 check (quantity >= 0),
+  metadata jsonb not null default '{}'::jsonb,
+  acquired_at timestamptz not null default now()
+);
+create index if not exists inventory_wallet_idx on public.inventory (wallet_address);
+
+-- ---------- fish_catches ----------
+-- Append-only log of every catch; powers the activity feed.
+create table if not exists public.fish_catches (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
+  fish_name text not null,
+  rarity text not null check (rarity in ('Common', 'Uncommon', 'Rare', 'Epic', 'Legendary')),
+  value int not null default 0,
+  caught_at timestamptz not null default now()
+);
+create index if not exists fish_catches_time_idx on public.fish_catches (caught_at desc);
+
+-- ---------- chat_messages ----------
+create table if not exists public.chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  wallet_address text not null references public.users(wallet_address) on delete cascade,
+  body text not null check (char_length(body) between 1 and 280),
+  created_at timestamptz not null default now()
+);
+create index if not exists chat_created_idx on public.chat_messages (created_at desc);
+
+-- ---------- leaderboard ----------
+-- A view, not a table: it can never drift out of sync with users.
+create or replace view public.leaderboard as
+select
+  u.wallet_address,
+  coalesce(nullif(trim(u.username), ''),
+           left(u.wallet_address, 4) || '…' || right(u.wallet_address, 4)) as display_name,
+  u.level,
+  u.coins,
+  u.fish_caught,
+  u.last_seen_at
+from public.users u
+order by u.coins desc
+limit 100;
+
+-- ============================================================
+-- Row Level Security: public read, no anon writes.
+-- The server's service-role key bypasses RLS for writes.
+-- ============================================================
+alter table public.users enable row level security;
+alter table public.farms enable row level security;
+alter table public.inventory enable row level security;
+alter table public.fish_catches enable row level security;
+alter table public.chat_messages enable row level security;
+
+create policy "public read users" on public.users for select using (true);
+create policy "public read farms" on public.farms for select using (true);
+create policy "public read catches" on public.fish_catches for select using (true);
+create policy "public read chat" on public.chat_messages for select using (true);
+-- inventory stays private: no anon select policy.

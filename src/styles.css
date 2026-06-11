@@ -96,7 +96,9 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background: var(--gradient-sky);
     background-attachment: fixed;
@@ -104,12 +106,18 @@
     font-family: var(--font-sans);
     min-height: 100vh;
   }
-  h1, h2, h3, .pixel {
+  h1,
+  h2,
+  h3,
+  .pixel {
     font-family: var(--font-pixel);
     letter-spacing: 0.02em;
     line-height: 1.15;
   }
-  ::selection { background: var(--sunset); color: var(--ink); }
+  ::selection {
+    background: var(--sunset);
+    color: var(--ink);
+  }
 }
 
 /* ---- utilities ---- */
@@ -141,9 +149,17 @@
   font-size: 0.875rem;
   color: var(--ink);
   box-shadow: var(--shadow-chunky-sm);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  &:hover { transform: translateY(-1px); box-shadow: 0 4px 0 0 var(--ink); }
-  &:active { transform: translateY(2px); box-shadow: 0 1px 0 0 var(--ink); }
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 0 0 var(--ink);
+  }
+  &:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 var(--ink);
+  }
 }
 
 @utility chunky-btn {
@@ -159,9 +175,17 @@
   border: 2px solid var(--ink);
   border-radius: 1rem;
   box-shadow: 0 5px 0 0 var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  &:hover { transform: translateY(-1px); box-shadow: 0 6px 0 0 var(--ink); }
-  &:active { transform: translateY(3px); box-shadow: 0 2px 0 0 var(--ink); }
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 0 0 var(--ink);
+  }
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 0 var(--ink);
+  }
 }
 
 @utility chunky-btn-sky {
@@ -183,25 +207,46 @@
 }
 
 @keyframes cloud-drift {
-  0%,100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(30px) translateY(-10px); }
+  0%,
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(30px) translateY(-10px);
+  }
 }
 
 @keyframes boat-bob {
-  0%,100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes water-shimmer {
-  0%,100% { opacity: 0.7; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
-.water-tile { animation: water-shimmer 3s ease-in-out infinite; }
+.water-tile {
+  animation: water-shimmer 3s ease-in-out infinite;
+}
 
 /* pixel-style cloud (pure CSS) */
 .pixel-cloud {
@@ -217,7 +262,7 @@
     14px -12px 0 0 #ffffff,
     0 -16px 0 0 #ffffff;
   opacity: 0.92;
-  filter: drop-shadow(0 2px 0 rgba(27,34,64,0.08));
+  filter: drop-shadow(0 2px 0 rgba(27, 34, 64, 0.08));
 }
 
 /* wallet adapter overrides — chunky sunset */
@@ -237,4 +282,6 @@
   filter: brightness(1.04);
   transform: translateY(-1px);
 }
-.wallet-adapter-modal-wrapper { border-radius: 1rem !important; }
+.wallet-adapter-modal-wrapper {
+  border-radius: 1rem !important;
+}
