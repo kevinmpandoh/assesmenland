@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useEffect, useState, type ComponentType } from "react";
 
 export function WalletButton() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) {
-    return (
-      <div className="h-10 w-36 animate-pulse rounded-xl bg-secondary" aria-hidden />
+  const [Btn, setBtn] = useState<ComponentType | null>(null);
+  useEffect(() => {
+    if (import.meta.env.SSR) return;
+    import("@solana/wallet-adapter-react-ui").then((m) =>
+      setBtn(() => m.WalletMultiButton as unknown as ComponentType),
     );
+  }, []);
+  if (!Btn) {
+    return <div className="h-10 w-36 animate-pulse rounded-xl bg-secondary" aria-hidden />;
   }
-  return <WalletMultiButton />;
+  return <Btn />;
 }
