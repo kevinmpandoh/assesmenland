@@ -5,12 +5,14 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    plugins: [
-      nodePolyfills({
-        include: ["buffer", "process", "util", "stream", "events"],
-        globals: { Buffer: true, global: true, process: true },
-      }),
-    ],
-  },
+  plugins: [
+    nodePolyfills({
+      // Only polyfill what Solana wallet libs need on the CLIENT. Polyfilling
+      // `process` breaks TanStack Start's `process.env.TSS_*` server-fn base
+      // URL injection (URLs become "/undefined<id>").
+      include: ["buffer", "util", "stream", "events"],
+      globals: { Buffer: true },
+      protocolImports: true,
+    }),
+  ],
 });
