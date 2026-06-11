@@ -17,8 +17,8 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Play SawahVerse — The Village" },
-      { name: "description", content: "Enter the SawahVerse village. Farm, fish, and chill — wallet required." },
+      { title: "Play Sawah Voyages — Set Sail" },
+      { name: "description", content: "Masuk pelabuhan Sawah Voyages. Naik perahu, mancing, dan chill — wallet diperlukan." },
     ],
   }),
   component: GamePage,
@@ -43,14 +43,14 @@ function GamePage() {
 
 function GateShell({ icon: Icon, title, children, tone = "ocean" }: any) {
   return (
-    <div className="mx-auto mt-8 max-w-xl rounded-3xl glass-card p-10 text-center">
-      <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${tone === "ocean" ? "bg-[image:var(--gradient-ocean)] text-white" : "bg-gold/20 text-gold"}`}>
+    <div className="mx-auto mt-8 max-w-xl card-pop p-10 text-center">
+      <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ink-border ${tone === "ocean" ? "bg-sky-deep text-ink" : "bg-sunset text-ink"}`}>
         <Icon className="h-7 w-7" />
       </div>
-      <h2 className="mt-5 text-2xl font-bold">{title}</h2>
+      <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
       {children}
       <div className="mt-6 flex justify-center">
-        <Link to="/"><Button variant="ghost"><ArrowLeft className="mr-1 h-4 w-4" /> Back to landing</Button></Link>
+        <Link to="/" className="pill text-xs"><ArrowLeft className="h-4 w-4" /> Balik ke beranda</Link>
       </div>
     </div>
   );
@@ -58,9 +58,9 @@ function GateShell({ icon: Icon, title, children, tone = "ocean" }: any) {
 
 function ConnectGate() {
   return (
-    <GateShell icon={Wallet} title="Connect your wallet to enter">
-      <p className="mt-3 text-muted-foreground">
-        Hold at least {MIN_TOKEN_BALANCE} SawahVerse token to access the village.
+    <GateShell icon={Wallet} title="Connect wallet buat masuk">
+      <p className="mt-3 text-ink/70">
+        Pegang minimal {MIN_TOKEN_BALANCE} token Sawah Voyages buat masuk pelabuhan.
       </p>
       <div className="mt-6 flex justify-center"><WalletButton /></div>
     </GateShell>
@@ -69,21 +69,21 @@ function ConnectGate() {
 
 function LoadingGate() {
   return (
-    <GateShell icon={Sparkles} title="Checking your wallet…">
-      <p className="mt-3 text-muted-foreground">Reading your token balance on Solana.</p>
+    <GateShell icon={Sparkles} title="Lagi ngecek wallet…">
+      <p className="mt-3 text-ink/70">Bentar, lagi baca saldo token kamu di Solana.</p>
     </GateShell>
   );
 }
 
 function InsufficientGate({ balance }: { balance: number }) {
   return (
-    <GateShell icon={Lock} title="You need at least 1 token" tone="gold">
-      <p className="mt-3 text-muted-foreground">
-        Current balance: <span className="font-semibold text-foreground">{balance.toLocaleString()}</span>.
-        Grab a token to unlock the village.
+    <GateShell icon={Lock} title="Butuh minimal 1 token" tone="gold">
+      <p className="mt-3 text-ink/70">
+        Saldo sekarang: <span className="font-semibold text-ink">{balance.toLocaleString()}</span>.
+        Ambil 1 token dulu buat buka pelabuhan.
       </p>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
-        <Button size="lg" className="mt-6 btn-glossy rounded-xl">Get Token</Button>
+        <Button size="lg" className="mt-6 chunky-btn">🪙 Beli Token</Button>
       </a>
     </GateShell>
   );
@@ -91,8 +91,8 @@ function InsufficientGate({ balance }: { balance: number }) {
 
 function ErrorGate() {
   return (
-    <GateShell icon={AlertCircle} title="Network hiccup" tone="gold">
-      <p className="mt-3 text-muted-foreground">We couldn't reach Solana RPC. Refresh and try again.</p>
+    <GateShell icon={AlertCircle} title="Jaringan lagi nyendat" tone="gold">
+      <p className="mt-3 text-ink/70">Kami nggak bisa ngubungin RPC Solana. Coba refresh sebentar.</p>
     </GateShell>
   );
 }
@@ -105,11 +105,11 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
       <div className="space-y-6">
         <ProfileCard address={address} balance={balance} state={state} />
         <Tabs defaultValue="farm" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam/70 p-1">
-            <TabsTrigger value="farm" className="rounded-lg"><Sprout className="mr-1.5 h-4 w-4" />Farm</TabsTrigger>
-            <TabsTrigger value="fish" className="rounded-lg"><Fish className="mr-1.5 h-4 w-4" />Fish</TabsTrigger>
-            <TabsTrigger value="inventory" className="rounded-lg"><ShoppingBag className="mr-1.5 h-4 w-4" />Inventory</TabsTrigger>
-            <TabsTrigger value="shop" className="rounded-lg"><Coins className="mr-1.5 h-4 w-4" />Shop</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
+            <TabsTrigger value="farm" className="rounded-lg"><Sprout className="mr-1.5 h-4 w-4" />Dermaga</TabsTrigger>
+            <TabsTrigger value="fish" className="rounded-lg"><Fish className="mr-1.5 h-4 w-4" />Mancing</TabsTrigger>
+            <TabsTrigger value="inventory" className="rounded-lg"><ShoppingBag className="mr-1.5 h-4 w-4" />Tas</TabsTrigger>
+            <TabsTrigger value="shop" className="rounded-lg"><Coins className="mr-1.5 h-4 w-4" />Toko</TabsTrigger>
           </TabsList>
           <TabsContent value="farm" className="mt-4"><FarmPanel game={game} /></TabsContent>
           <TabsContent value="fish" className="mt-4"><FishingPanel game={game} /></TabsContent>
@@ -130,22 +130,22 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
 function ProfileCard({ address, balance, state }: any) {
   const xpNeeded = state.level * 100;
   return (
-    <div className="rounded-3xl glass-card p-6">
+    <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[image:var(--gradient-ocean)] text-2xl text-white shadow-soft">
-          🌾
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
+          ⛵
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold">Villager</h3>
-            <Badge className="bg-leaf/15 text-leaf hover:bg-leaf/20"><Sparkles className="mr-1 h-3 w-3" /> Access Granted</Badge>
+            <h3 className="pixel text-base text-ink">Kapten</h3>
+            <Badge className="bg-leaf/20 text-ink hover:bg-leaf/30"><Sparkles className="mr-1 h-3 w-3" /> Akses Terbuka</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">{shortAddress(address)} · {balance.toLocaleString()} tokens</p>
+          <p className="text-xs text-muted-foreground">{shortAddress(address)} · {balance.toLocaleString()} token</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Stat label="Level" value={state.level} icon={Trophy} />
-          <Stat label="Coins" value={state.coins} icon={Coins} />
-          <Stat label="Seeds" value={state.seeds} icon={Sprout} />
+          <Stat label="Koin" value={state.coins} icon={Coins} />
+          <Stat label="Umpan" value={state.seeds} icon={Sprout} />
         </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -154,7 +154,7 @@ function ProfileCard({ address, balance, state }: any) {
           <Progress value={(state.xp / xpNeeded) * 100} className="h-2" />
         </div>
         <div>
-          <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span className="flex items-center gap-1"><Zap className="h-3 w-3" />Energy</span><span>{state.energy} / 100</span></div>
+          <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span className="flex items-center gap-1"><Zap className="h-3 w-3" />Energi</span><span>{state.energy} / 100</span></div>
           <Progress value={state.energy} className="h-2" />
         </div>
       </div>
@@ -175,14 +175,14 @@ function FarmPanel({ game }: any) {
   const { state, plant, harvest, upgradeFarm } = game;
   const cols = Math.ceil(Math.sqrt(state.farmSize));
   return (
-    <div className="rounded-3xl glass-card p-6">
+    <div className="card-pop p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-bold">Rice Paddy</h3>
-          <p className="text-xs text-muted-foreground">Click empty tiles to plant. Harvest when golden.</p>
+          <h3 className="pixel text-sm text-ink">Dermaga</h3>
+          <p className="text-xs text-muted-foreground">Klik petak kosong buat pasang jala. Tarik pas berisi.</p>
         </div>
-        <Button onClick={() => { upgradeFarm(); toast.success("Farm expanded!"); }} disabled={state.coins < UPGRADE_COST || state.farmSize >= 25} variant="outline" className="rounded-lg">
-          <ArrowUpCircle className="mr-1 h-4 w-4" /> Upgrade ({UPGRADE_COST} coins)
+        <Button onClick={() => { upgradeFarm(); toast.success("Dermaga diperluas!"); }} disabled={state.coins < UPGRADE_COST || state.farmSize >= 25} variant="outline" className="rounded-lg ink-border">
+          <ArrowUpCircle className="mr-1 h-4 w-4" /> Perluas ({UPGRADE_COST} koin)
         </Button>
       </div>
       <div className="grid gap-2 mx-auto max-w-md" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
@@ -193,16 +193,16 @@ function FarmPanel({ game }: any) {
           return (
             <button
               key={t.id}
-              onClick={() => ready ? (harvest(t.id), toast.success("+1 rice +10 XP")) : plant(t.id)}
+              onClick={() => ready ? (harvest(t.id), toast.success("+1 hasil +10 XP")) : plant(t.id)}
               className={`relative aspect-square rounded-xl border-2 transition active:scale-95 ${
                 ready
-                  ? "border-gold/40 bg-gold/30 hover:bg-gold/40"
+                  ? "border-sunset bg-sunset/40 hover:bg-sunset/60"
                   : growing
-                  ? "border-leaf/40 bg-leaf/20"
-                  : "border-dashed border-ocean/30 bg-foam/50 hover:bg-cyan-soft"
+                  ? "border-leaf bg-leaf/20"
+                  : "border-dashed border-ink/40 bg-foam hover:bg-sky"
               }`}
             >
-              <span className="text-2xl">{ready ? "🌾" : growing ? "🌱" : ""}</span>
+              <span className="text-2xl">{ready ? "🐟" : growing ? "🪝" : ""}</span>
               {growing && (
                 <div className="absolute inset-x-1 bottom-1 h-1 rounded-full bg-foam">
                   <div className="h-full rounded-full bg-leaf transition-all" style={{ width: `${progress * 100}%` }} />
@@ -219,16 +219,16 @@ function FarmPanel({ game }: any) {
 function FishingPanel({ game }: any) {
   const [casting, setCasting] = useState(false);
   const cast = () => {
-    if (game.state.energy < 5) { toast.error("Not enough energy"); return; }
+    if (game.state.energy < 5) { toast.error("Energi nggak cukup"); return; }
     setCasting(true);
     setTimeout(() => {
       const caught = game.fish();
       setCasting(false);
-      if (caught) toast.success(`Caught a ${caught.rarity} ${caught.name}!`);
+      if (caught) toast.success(`Dapat ${caught.rarity} ${caught.name}!`);
     }, 1200);
   };
   return (
-    <div className="rounded-3xl glass-card overflow-hidden">
+    <div className="card-pop overflow-hidden">
       <div className="relative h-56 bg-[image:var(--gradient-ocean)] p-6 text-white">
         <div className="absolute inset-0 opacity-40">
           {Array.from({ length: 30 }).map((_, i) => (
@@ -236,17 +236,17 @@ function FishingPanel({ game }: any) {
           ))}
         </div>
         <div className="relative">
-          <h3 className="text-xl font-bold">Riverbank</h3>
-          <p className="text-sm text-white/85">Cast your line. Costs 5 energy.</p>
-          <Button onClick={cast} disabled={casting} size="lg" className="mt-6 rounded-xl bg-white text-ocean hover:bg-white/90">
-            {casting ? "Reeling…" : "🎣 Cast Line"}
+          <h3 className="pixel text-base text-white">Tepi Laut</h3>
+          <p className="text-sm text-white/85">Lempar pancing. Habis 5 energi.</p>
+          <Button onClick={cast} disabled={casting} size="lg" className="mt-6 chunky-btn">
+            {casting ? "Lagi narik…" : "🎣 Lempar Pancing"}
           </Button>
         </div>
         {casting && <div className="absolute bottom-4 right-4 text-3xl animate-bounce">🎣</div>}
       </div>
       <div className="grid grid-cols-2 gap-2 p-4 text-xs sm:grid-cols-5">
         {(["Common","Uncommon","Rare","Epic","Legendary"] as const).map((r) => (
-          <div key={r} className="rounded-lg bg-foam p-2 text-center">
+          <div key={r} className="rounded-lg bg-foam p-2 text-center ink-border">
             <div className={`font-bold ${rarityColor[r]}`}>{r}</div>
             <div className="text-muted-foreground">{["50%","30%","14%","5%","1%"][["Common","Uncommon","Rare","Epic","Legendary"].indexOf(r)]}</div>
           </div>
@@ -259,28 +259,28 @@ function FishingPanel({ game }: any) {
 function InventoryPanel({ game }: any) {
   const { state, sellRice, sellFish } = game;
   return (
-    <div className="rounded-3xl glass-card p-6">
-      <h3 className="font-bold">Inventory</h3>
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-foam p-4">
+    <div className="card-pop p-6">
+      <h3 className="pixel text-sm text-ink">Tas</h3>
+      <div className="mt-4 flex items-center justify-between rounded-xl bg-foam p-4 ink-border">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🌾</span>
+          <span className="text-2xl">🐟</span>
           <div>
-            <div className="font-semibold">Rice</div>
-            <div className="text-xs text-muted-foreground">Sells for {SELL_PRICE} coins each</div>
+            <div className="font-semibold">Hasil Pancing</div>
+            <div className="text-xs text-muted-foreground">Laku {SELL_PRICE} koin per ekor</div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold">{state.inventory.rice}</span>
-          <Button size="sm" disabled={state.inventory.rice === 0} onClick={() => { const q = state.inventory.rice; sellRice(q); toast.success(`+${q * SELL_PRICE} coins`); }} className="rounded-lg">Sell all</Button>
+          <Button size="sm" disabled={state.inventory.rice === 0} onClick={() => { const q = state.inventory.rice; sellRice(q); toast.success(`+${q * SELL_PRICE} koin`); }} className="rounded-lg">Jual semua</Button>
         </div>
       </div>
-      <h4 className="mt-6 mb-2 text-sm font-semibold">Fish ({state.inventory.fish.length})</h4>
+      <h4 className="mt-6 mb-2 text-sm font-semibold">Ikan langka ({state.inventory.fish.length})</h4>
       {state.inventory.fish.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No catch yet. Head to the river!</p>
+        <p className="text-sm text-muted-foreground">Belum dapat apa-apa. Coba ke tepi laut!</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {state.inventory.fish.map((f: any) => (
-            <li key={f.id} className="flex items-center justify-between rounded-xl bg-foam p-3">
+            <li key={f.id} className="flex items-center justify-between rounded-xl bg-foam p-3 ink-border">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{f.emoji}</span>
                 <div>
@@ -288,7 +288,7 @@ function InventoryPanel({ game }: any) {
                   <div className={`text-xs ${rarityColor[f.rarity as keyof typeof rarityColor]}`}>{f.rarity}</div>
                 </div>
               </div>
-              <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { sellFish(f.id); toast.success(`+${f.value} coins`); }}>Sell {f.value}</Button>
+              <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { sellFish(f.id); toast.success(`+${f.value} koin`); }}>Jual {f.value}</Button>
             </li>
           ))}
         </ul>
@@ -300,23 +300,23 @@ function InventoryPanel({ game }: any) {
 function ShopPanel({ game }: any) {
   const { state, buySeeds } = game;
   return (
-    <div className="rounded-3xl glass-card p-6">
-      <h3 className="font-bold">Village Shop</h3>
+    <div className="card-pop p-6">
+      <h3 className="pixel text-sm text-ink">Toko Pelabuhan</h3>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl bg-foam p-4">
-          <div className="flex items-center gap-2"><Sprout className="h-4 w-4 text-leaf" /><span className="font-semibold">Rice Seeds</span></div>
-          <p className="mt-1 text-xs text-muted-foreground">{SEED_PRICE} coins each</p>
+        <div className="rounded-xl bg-foam p-4 ink-border">
+          <div className="flex items-center gap-2"><Sprout className="h-4 w-4 text-leaf" /><span className="font-semibold">Umpan</span></div>
+          <p className="mt-1 text-xs text-muted-foreground">{SEED_PRICE} koin per biji</p>
           <div className="mt-3 flex gap-2">
             {[5, 10, 25].map((q) => (
-              <Button key={q} size="sm" variant="outline" className="rounded-lg" disabled={state.coins < q * SEED_PRICE} onClick={() => { buySeeds(q); toast.success(`+${q} seeds`); }}>
-                Buy {q}
+              <Button key={q} size="sm" variant="outline" className="rounded-lg" disabled={state.coins < q * SEED_PRICE} onClick={() => { buySeeds(q); toast.success(`+${q} umpan`); }}>
+                Beli {q}
               </Button>
             ))}
           </div>
         </div>
-        <div className="rounded-xl bg-cyan-soft p-4">
-          <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-ocean" /><span className="font-semibold">More coming soon</span></div>
-          <p className="mt-1 text-xs text-muted-foreground">Cosmetics, land plots, and crafting are on the roadmap.</p>
+        <div className="rounded-xl bg-cyan-soft p-4 ink-border">
+          <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-ocean" /><span className="font-semibold">Segera hadir</span></div>
+          <p className="mt-1 text-xs text-muted-foreground">Kosmetik, kapal baru, dan crafting masih dirakit.</p>
         </div>
       </div>
     </div>
@@ -333,8 +333,8 @@ const MOCK_PLAYERS = [
 
 function OnlinePlayers() {
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-ocean" /> Online · 24</h4>
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink"><Users className="h-4 w-4 text-ocean" /> Online · 24</h4>
       <ul className="mt-3 space-y-2">
         {MOCK_PLAYERS.slice(0, 4).map((p) => (
           <li key={p.name} className="flex items-center justify-between rounded-lg bg-foam p-2 text-sm">
@@ -342,7 +342,7 @@ function OnlinePlayers() {
               <span className="h-2 w-2 rounded-full bg-leaf" />
               <span className="font-medium">{p.name}</span>
             </div>
-            <Button size="sm" variant="ghost" className="h-7 rounded-lg text-xs">Visit</Button>
+            <Button size="sm" variant="ghost" className="h-7 rounded-lg text-xs">Sapa</Button>
           </li>
         ))}
       </ul>
@@ -353,14 +353,14 @@ function OnlinePlayers() {
 function Leaderboard({ meCoins, meAddress }: { meCoins: number; meAddress: string }) {
   const rows = [...MOCK_PLAYERS, { name: "You", coins: meCoins, addr: shortAddress(meAddress) }].sort((a, b) => b.coins - a.coins);
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-gold" /> Village Leaderboard</h4>
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink"><Trophy className="h-4 w-4 text-sunset-deep" /> Papan Skor</h4>
       <ol className="mt-3 space-y-1.5 text-sm">
         {rows.map((r, i) => (
-          <li key={r.name + r.addr} className={`flex items-center justify-between rounded-lg px-2 py-1.5 ${r.name === "You" ? "bg-[image:var(--gradient-ocean)] text-white" : ""}`}>
+          <li key={r.name + r.addr} className={`flex items-center justify-between rounded-lg px-2 py-1.5 ${r.name === "You" ? "bg-sunset text-ink" : ""}`}>
             <div className="flex items-center gap-2">
               <span className="w-4 text-xs opacity-70">#{i + 1}</span>
-              <span className="font-medium">{r.name}</span>
+              <span className="font-medium">{r.name === "You" ? "Kamu" : r.name}</span>
             </div>
             <span className="text-xs">{r.coins.toLocaleString()} 🪙</span>
           </li>
@@ -372,14 +372,14 @@ function Leaderboard({ meCoins, meAddress }: { meCoins: number; meAddress: strin
 
 function ActivityFeed() {
   const items = [
-    "Sari caught a Legendary Golden Koi 🪙",
-    "Budi harvested 12 rice 🌾",
-    "Wayan upgraded their farm",
-    "Putri visited Eko's village",
+    "Sari dapat Mythical Naga Belut ✨",
+    "Budi narik 12 ikan sekaligus 🐟",
+    "Wayan upgrade kapal ke level 3 ⛵",
+    "Putri singgah di dermaga Eko",
   ];
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="font-bold">Recent Activity</h4>
+    <div className="card-pop p-5">
+      <h4 className="pixel text-xs text-ink">Aktivitas Terbaru</h4>
       <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
         {items.map((t, i) => <li key={i} className="rounded-lg bg-foam px-3 py-2">{t}</li>)}
       </ul>
@@ -389,13 +389,13 @@ function ActivityFeed() {
 
 function ChatPanel({ address }: { address: string }) {
   const [msgs, setMsgs] = useState([
-    { who: "Sari", text: "Selamat pagi! Anyone fishing?" },
-    { who: "Budi", text: "My rice is almost ready 🌾" },
+    { who: "Sari", text: "Pagi! Ada yang mancing bareng?" },
+    { who: "Budi", text: "Kapalku hampir naik level 🚤" },
   ]);
   const [input, setInput] = useState("");
   return (
-    <div className="rounded-3xl glass-card p-5">
-      <h4 className="flex items-center gap-2 font-bold"><MessageCircle className="h-4 w-4 text-ocean" /> Village Chat</h4>
+    <div className="card-pop p-5">
+      <h4 className="pixel flex items-center gap-2 text-xs text-ink"><MessageCircle className="h-4 w-4 text-ocean" /> Obrolan Pelabuhan</h4>
       <div className="mt-3 max-h-48 space-y-2 overflow-y-auto pr-1 text-sm">
         {msgs.map((m, i) => (
           <div key={i} className="rounded-lg bg-foam px-3 py-1.5">
@@ -416,10 +416,11 @@ function ChatPanel({ address }: { address: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Say hi…"
-          className="flex-1 rounded-lg border border-border bg-foam px-3 py-1.5 text-sm outline-none focus:border-ocean"
+          placeholder="Sapa kapten lain…"
+          className="flex-1 rounded-lg border-2 border-ink bg-foam px-3 py-1.5 text-sm outline-none focus:border-sunset-deep"
+          aria-label="Pesan chat"
         />
-        <Button type="submit" size="sm" className="rounded-lg">Send</Button>
+        <Button type="submit" size="sm" className="rounded-lg">Kirim</Button>
       </form>
     </div>
   );
