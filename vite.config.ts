@@ -11,7 +11,7 @@ export default defineConfig({
       // `process` breaks TanStack Start's `process.env.TSS_*` server-fn base
       // URL injection (URLs become "/undefined<id>").
       include: ["buffer", "util", "stream", "events"],
-      globals: { Buffer: true },
+      globals: { Buffer: true, global: true, process: false },
       protocolImports: true,
     }),
   ],
