@@ -10,6 +10,12 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+// Wallet adapter base styles, vendored into src/wallet-adapter.css. The
+// package's own styles.css starts with a remote Google Fonts @import that
+// lightningcss can't resolve (the old "Vite 500 CSS error"), so we keep a
+// copy without it. Without these styles the wallet modal renders unstyled
+// and locks page scroll, freezing the whole app.
+import walletAdapterCss from "../wallet-adapter.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SolanaProvider } from "@/components/SolanaProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -97,6 +103,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "stylesheet",
+        href: walletAdapterCss,
       },
     ],
   }),
