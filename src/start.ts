@@ -2,6 +2,18 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 
+const SERVER_FN_BASE = "/_serverFn/";
+
+function serverFnFetch(url: string, init: RequestInit) {
+  const normalizedUrl = url.startsWith("undefined")
+    ? `${SERVER_FN_BASE}${url.slice("undefined".length)}`
+    : url.startsWith("eyJ")
+      ? `${SERVER_FN_BASE}${url}`
+      : url;
+
+  return fetch(normalizedUrl, init);
+}
+
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
@@ -19,4 +31,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [errorMiddleware],
+  serverFns: {
+    fetch: serverFnFetch,
+  },
 }));
