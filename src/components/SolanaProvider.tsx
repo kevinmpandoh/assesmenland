@@ -1,11 +1,7 @@
 import { useEffect, useState, type ReactNode, type ComponentType } from "react";
 import { TokenGateContext, defaultGateState, type GateState } from "@/hooks/useTokenGate";
 
-if (typeof window !== "undefined") {
-  import("buffer").then(({ Buffer }) => {
-    if (!(window as any).Buffer) (window as any).Buffer = Buffer;
-  });
-}
+// Buffer global is provided by vite-plugin-node-polyfills on the client.
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
   const [Inner, setInner] = useState<ComponentType<{ children: ReactNode }> | null>(null);
