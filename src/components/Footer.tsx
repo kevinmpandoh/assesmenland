@@ -7,8 +7,8 @@ export function Footer() {
           <span className="pixel text-xs text-ink">SAWAHVOY</span>
         </div>
         <p className="max-w-md text-sm text-muted-foreground">
-          Sebuah dunia kecil di tengah laut. Dibikin pelan-pelan, dimainkan santai.
-          Bukan saran finansial — token cuma kunci masuk dermaga.
+          A tiny world out at sea. Built slowly, played calmly.
+          Not financial advice — the token is just a key to the harbor.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <a href="https://x.com" target="_blank" rel="noreferrer" className="pill text-xs"><span>𝕏</span> X</a>
