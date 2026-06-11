@@ -104,3 +104,18 @@ create policy "public read farms" on public.farms for select using (true);
 create policy "public read catches" on public.fish_catches for select using (true);
 create policy "public read chat" on public.chat_messages for select using (true);
 -- inventory stays private: no anon select policy.
+
+-- ---------- world_presence ----------
+-- Live player positions in the explorable world. Rows older than ~12s
+-- are treated as offline by the API; this table stays tiny.
+create table if not exists public.world_presence (
+  wallet_address text primary key,
+  name text not null,
+  x numeric not null default 0,
+  y numeric not null default 0,
+  updated_at timestamptz not null default now()
+);
+create index if not exists world_presence_time_idx on public.world_presence (updated_at desc);
+
+alter table public.world_presence enable row level security;
+create policy "public read presence" on public.world_presence for select using (true);

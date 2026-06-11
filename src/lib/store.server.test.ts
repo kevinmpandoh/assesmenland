@@ -70,3 +70,19 @@ describe("displayName", () => {
     expect(displayName({ username: "Budi", wallet_address: WALLET })).toBe("Budi");
   });
 });
+
+describe("presence", () => {
+  test("upserts and lists active players", async () => {
+    await store.upsertPresence({ wallet_address: WALLET, name: "Tester", x: 14, y: 12.5 });
+    const list = await store.listPresence(12_000);
+    const me = list.find((p) => p.wallet_address === WALLET);
+    expect(me?.x).toBe(14);
+    expect(me?.name).toBe("Tester");
+  });
+
+  test("expires stale players", async () => {
+    await new Promise((r) => setTimeout(r, 10));
+    const list = await store.listPresence(5);
+    expect(list.find((p) => p.wallet_address === WALLET)).toBeUndefined();
+  });
+});

@@ -168,6 +168,23 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">
         <ProfileCard address={address} balance={balance} game={game} />
+        <Link
+          to="/world"
+          className="card-pop flex items-center justify-between gap-3 bg-sky-deep/40 p-4 transition hover:-translate-y-0.5"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-3xl" aria-hidden>
+              🌍
+            </span>
+            <div>
+              <div className="pixel text-xs text-ink">Explore the Island</div>
+              <p className="text-xs text-muted-foreground">
+                Walk around, meet other captains, and fish from the shore — live.
+              </p>
+            </div>
+          </div>
+          <span className="pill text-xs">Enter ➜</span>
+        </Link>
         <Tabs defaultValue="farm" className="w-full">
           <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
             <TabsTrigger value="farm" className="rounded-lg">
