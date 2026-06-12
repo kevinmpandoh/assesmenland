@@ -62,7 +62,7 @@ export const syncPlayer = createServerFn({ method: "POST" })
  *    so the podium always rotates to new farmers.
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
-  const { currentEpochStart, REWARD_INTERVAL_MS, REWARD_TOP_N } = await import("../game-logic");
+  const { REWARD_TOP_N } = await import("../game-logic");
   const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
   const latest = await store.latestWinnerEpoch();
   if (latest && latest >= epochIso) return; // today's round already settled
@@ -89,7 +89,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
-    const { currentEpochStart } = await import("../game-logic");
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
     // Today's champions rest until the next 00:00 UTC reset.
