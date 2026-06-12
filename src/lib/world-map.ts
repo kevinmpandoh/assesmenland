@@ -75,10 +75,13 @@ export function buildMap(): { tiles: TileKind[][]; objects: WorldObject[] } {
   // Central plaza with fountain.
   stampRect(tiles, "stone", 19, 19, 12, 12);
 
-  // Farm fields (south-west district), tilled soil with fences around.
-  stampRect(tiles, "soil", 5, 28, 8, 6);
-  stampRect(tiles, "soil", 5, 41, 8, 5);
-  stampRect(tiles, "soil", 15, 41, 7, 5);
+  // Farm fields — six of them so plenty of farmers can plant at once.
+  stampRect(tiles, "soil", 5, 28, 8, 6); // west, fenced
+  stampRect(tiles, "soil", 5, 41, 8, 5); // south-west
+  stampRect(tiles, "soil", 15, 41, 7, 5); // south
+  stampRect(tiles, "soil", 5, 18, 4, 5); // north-west meadow
+  stampRect(tiles, "soil", 41, 17, 5, 4); // east, by the lake
+  stampRect(tiles, "soil", 26, 32, 6, 4); // below the plaza
 
   // Orchard clearing (north-west) keeps its grass.
 
@@ -112,6 +115,9 @@ export function buildMap(): { tiles: TileKind[][]; objects: WorldObject[] } {
     { kind: "crate", x: 14, y: 31 },
     { kind: "sign", x: 4, y: 27, label: "FARMLAND" },
     { kind: "well", x: 14, y: 34 },
+    { kind: "sign", x: 4, y: 17, label: "FARMLAND" },
+    { kind: "sign", x: 40, y: 16, label: "FARMLAND" },
+    { kind: "sign", x: 25, y: 31, label: "FARMLAND" },
   ];
 
   // Fences around the big farm field.
