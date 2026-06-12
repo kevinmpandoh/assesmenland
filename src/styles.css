@@ -56,43 +56,43 @@
 :root {
   --radius: 1rem;
 
-  /* Sawah Voxel palette — agri greens */
-  --sky: #cdebb0;
-  --sky-deep: #9ed87a;
-  --ocean: #4ca64c;
-  --foam: #eef9e2;
-  --sunset: #ffb05a;
-  --sunset-deep: #f48b2a;
-  --ink: #1f3320;
-  --leaf: #6cc26a;
-  --gold: #ffd166;
-  --sand: #fff1d6;
-  --cyan-soft: #def5c4;
+  /* Agri Land palette — warm harvest (wheat, terracotta, sage) */
+  --sky: #ffe9c2;
+  --sky-deep: #f6c98a;
+  --ocean: #8a6a3b;
+  --foam: #fff5e1;
+  --sunset: #e0743a;
+  --sunset-deep: #b8501e;
+  --ink: #3a2418;
+  --leaf: #7a9457;
+  --gold: #e8b04b;
+  --sand: #f3e2b8;
+  --cyan-soft: #d9c7a3;
 
-  --background: #f3fbe8;
+  --background: #fdf5e3;
   --foreground: var(--ink);
-  --card: #ffffff;
+  --card: #fffaf0;
   --card-foreground: var(--ink);
-  --popover: #ffffff;
+  --popover: #fffaf0;
   --popover-foreground: var(--ink);
   --primary: var(--sunset);
-  --primary-foreground: var(--ink);
+  --primary-foreground: #fffaf0;
   --secondary: var(--foam);
   --secondary-foreground: var(--ink);
-  --muted: #ecf6df;
-  --muted-foreground: #5a6a4a;
-  --accent: var(--sky-deep);
-  --accent-foreground: var(--ink);
-  --destructive: #e84a4a;
+  --muted: #f5e8cf;
+  --muted-foreground: #6b4a32;
+  --accent: var(--leaf);
+  --accent-foreground: #fffaf0;
+  --destructive: #c0392b;
   --destructive-foreground: #ffffff;
-  --border: #cfe6b3;
-  --input: #e2efce;
+  --border: #e2c9a0;
+  --input: #ecd9b3;
   --ring: var(--sunset-deep);
 
-  --gradient-sky: linear-gradient(180deg, #cdebb0 0%, #e8f6d2 60%, #fff7e6 100%);
-  --gradient-ocean: linear-gradient(135deg, #4ca64c, #9ed87a);
-  --gradient-sunset: linear-gradient(180deg, #ffc481, #ffb05a 60%, #f48b2a);
-  --gradient-hero: radial-gradient(ellipse at 50% 0%, #cdebb0 0%, #e8f6d2 55%, #fff5e2 100%);
+  --gradient-sky: linear-gradient(180deg, #ffe9c2 0%, #fff5e1 55%, #fffaf0 100%);
+  --gradient-ocean: linear-gradient(135deg, #b8501e, #e0743a);
+  --gradient-sunset: linear-gradient(180deg, #f1a96b, #e0743a 60%, #b8501e);
+  --gradient-hero: radial-gradient(ellipse at 80% -10%, #ffd58a 0%, #ffe9c2 40%, #fff5e1 75%, #fffaf0 100%);
 }
 
 @layer base {
@@ -189,15 +189,15 @@
 }
 
 @utility chunky-btn-sky {
-  background: linear-gradient(180deg, #e1f3c9, #b3e08a);
+  background: linear-gradient(180deg, #fff1cf, #f3d28a);
 }
 
 @utility cloud-float {
-  animation: cloud-drift 22s ease-in-out infinite;
+  animation: leaf-sway 6s ease-in-out infinite;
 }
 
 @utility boat-bob {
-  animation: boat-bob 4s ease-in-out infinite;
+  animation: leaf-sway 5s ease-in-out infinite;
 }
 
 @utility marquee {
@@ -206,23 +206,25 @@
   animation: marquee 38s linear infinite;
 }
 
-@keyframes cloud-drift {
+@keyframes leaf-sway {
   0%,
   100% {
-    transform: translateX(0) translateY(0);
+    transform: translateY(0) rotate(-3deg);
   }
   50% {
-    transform: translateX(30px) translateY(-10px);
+    transform: translateY(-6px) rotate(3deg);
   }
 }
 
-@keyframes boat-bob {
+@keyframes sun-pulse {
   0%,
   100% {
-    transform: translateY(0) rotate(-2deg);
+    transform: scale(1);
+    opacity: 0.85;
   }
   50% {
-    transform: translateY(-10px) rotate(2deg);
+    transform: scale(1.04);
+    opacity: 1;
   }
 }
 
@@ -248,21 +250,23 @@
   animation: water-shimmer 3s ease-in-out infinite;
 }
 
-/* pixel-style cloud (pure CSS) */
+/* pixel-style wheat sprig (pure CSS) — replaces the old cloud decoration */
 .pixel-cloud {
   position: absolute;
-  width: 90px;
-  height: 36px;
-  background: #ffffff;
-  border-radius: 6px;
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  border-radius: 2px;
   box-shadow:
-    -18px 0 0 0 #ffffff,
-    18px 0 0 0 #ffffff,
-    -36px -10px 0 0 #ffffff,
-    14px -12px 0 0 #ffffff,
-    0 -16px 0 0 #ffffff;
-  opacity: 0.92;
-  filter: drop-shadow(0 2px 0 rgba(27, 34, 64, 0.08));
+    0 -14px 0 0 var(--gold),
+    14px -7px 0 0 var(--sunset),
+    -14px -7px 0 0 var(--sunset),
+    0 14px 0 0 var(--leaf),
+    14px 7px 0 0 var(--gold),
+    -14px 7px 0 0 var(--gold),
+    0 28px 0 0 var(--leaf);
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 0 rgba(58, 36, 24, 0.15));
 }
 
 /* wallet adapter overrides — chunky sunset */
