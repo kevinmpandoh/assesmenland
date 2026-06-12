@@ -86,13 +86,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { title: "Agri Land" },
       {
         name: "description",
         content:
           "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { property: "og:title", content: "Agri Land" },
       {
         property: "og:description",
         content:
@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { name: "twitter:title", content: "Agri Land" },
       {
         name: "twitter:description",
         content:
@@ -114,6 +114,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "twitter:image",
         content: logoAsset.url,
       },
+      { name: "description", content: "SawahVerse is a relaxing multiplayer Solana farming and fishing game." },
+      { property: "og:description", content: "SawahVerse is a relaxing multiplayer Solana farming and fishing game." },
+      { name: "twitter:description", content: "SawahVerse is a relaxing multiplayer Solana farming and fishing game." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e2d7ced5-79fe-4518-b764-4ef7806a25a2/id-preview-2185721f--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781240948226.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e2d7ced5-79fe-4518-b764-4ef7806a25a2/id-preview-2185721f--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781240948226.png" },
     ],
     links: [
       { rel: "icon", type: "image/png", href: logoAsset.url },
