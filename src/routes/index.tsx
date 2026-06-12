@@ -233,20 +233,6 @@ function HowItWorks() {
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs">
-        {[
-          "🍅 Lv1 Tomato",
-          "🌽 Lv3 Corn",
-          "🍈 Lv6 Melon",
-          "🍓 Lv8 Strawberry",
-          "🌾 Lv10 Golden Rice",
-        ].map((r) => (
-          <span key={r} className="pill text-xs">
-            {r}
-          </span>
-        ))}
-      </div>
-
       <div className="mt-8 text-center">
         <Link to="/docs" className="pill text-xs">
           📚 Read the full docs. Crops, prices, equipment, FAQ
