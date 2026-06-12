@@ -105,11 +105,11 @@ function Hero() {
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-3">
-          <WalletButton />
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
             START FARMING →
           </Link>
-          <p className="mt-1 text-sm text-ink/70">Connect your Solana wallet to claim your field</p>
+          <WalletButton />
+          <p className="mt-1 text-sm text-ink/70">Sign in with your Solana wallet to join the town</p>
           <ArrowDown className="mt-2 h-5 w-5 animate-bounce text-ink/50" />
         </div>
 
@@ -138,21 +138,20 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to claim
-            a field. Connect your wallet first.
+            Sign in with your Solana wallet to join the town and start farming.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
         {connected && status === "granted" && (
           <p className="flex items-center gap-1.5 font-semibold text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> Access granted — balance {balance.toLocaleString()}{" "}
-            · {shortAddress(address)}
+            <CheckCircle2 className="h-4 w-4" /> You're in — balance {balance.toLocaleString()} ·{" "}
+            {shortAddress(address)}
           </p>
         )}
         {connected && status === "insufficient" && (
           <p className="flex items-center gap-1.5 text-ink">
-            <AlertCircle className="h-4 w-4 text-sunset-deep" /> You need at least 1 token. Current
-            balance: {balance.toLocaleString()}.
+            <AlertCircle className="h-4 w-4 text-sunset-deep" /> Your balance is{" "}
+            {balance.toLocaleString()}. Learn more about the project token below.
           </p>
         )}
         {connected && status === "error" && (
@@ -160,7 +159,7 @@ function GateBanner({
         )}
       </div>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="pill text-xs">
-        🪙 Get Token
+        🪙 Learn more
       </a>
     </div>
   );
@@ -262,17 +261,17 @@ function TokenSection() {
         <div className="grid gap-0 md:grid-cols-[1fr_360px]">
           <div className="p-8 sm:p-10">
             <span className="pill text-xs">
-              <span>🪙</span> TOKEN
+              <span>🪙</span> PROJECT TOKEN
             </span>
-            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
+            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">A SMALL PART OF THE WORLD</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town. The
-              token is just a key for access, cosmetics, and seasonal events. Not a promise of
-              returns, not an investment pitch. Farm slowly, enjoy the seasons.
+              Agri Land has a community token used for cosmetics, seasonal events, and town
+              features. It is not an investment, not a promise of returns, and not financial advice.
+              You can enjoy the game without it — farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="chunky-btn">
-                🪙 VIEW TOKEN
+                🪙 LEARN MORE
               </a>
               <Link to="/game" className="chunky-btn chunky-btn-sky">
                 🌱 TRY THE GAME
