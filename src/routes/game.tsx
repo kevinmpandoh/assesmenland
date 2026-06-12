@@ -10,22 +10,22 @@ import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
 import {
   useGame,
-  GROW_MS,
-  SEED_PRICE,
-  SELL_PRICE,
-  UPGRADE_COST,
-  HARVEST_COINS,
-  RARITY_ODDS,
-  rarityColor,
+  CROPS,
+  EQUIPMENT,
+  MAX_LEVEL,
+  UPGRADE_PLOT_COST,
+  cropsUnlockedAt,
+  effectiveGrowMs,
+  effectiveSellPrice,
   xpForLevel,
 } from "@/hooks/useGame";
+import { cropById, rarityColor } from "@/lib/game-logic";
 import { useLeaderboard, useChat, useRecentCatches } from "@/hooks/useVillage";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { toast } from "sonner";
 import {
   Coins,
   Sprout,
-  Fish,
   Zap,
   Trophy,
   MessageCircle,
@@ -41,6 +41,8 @@ import {
   Cloud,
   CloudOff,
   RefreshCw,
+  Warehouse,
+  Wrench,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -51,11 +53,10 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Play Sawah Voyages — Set Sail" },
+      { title: "My Farm — Agri Land" },
       {
         name: "description",
-        content:
-          "Enter the Sawah Voyages harbor. Hop on a boat, cast your line, and chill — wallet required.",
+        content: "Plant, grow, harvest, and sell. Build your farm in Agri Land — wallet required.",
       },
     ],
   }),
@@ -114,9 +115,9 @@ function GateShell({
 
 function ConnectGate() {
   return (
-    <GateShell icon={Wallet} title="Connect wallet to come aboard">
+    <GateShell icon={Wallet} title="Connect wallet to start farming">
       <p className="mt-3 text-ink/70">
-        Hold at least {MIN_TOKEN_BALANCE} Sawah Voyages token to enter the harbor.
+        Hold at least {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
       </p>
       <div className="mt-6 flex justify-center">
         <WalletButton />
@@ -138,7 +139,7 @@ function InsufficientGate({ balance }: { balance: number }) {
     <GateShell icon={Lock} title="At least 1 token needed" tone="gold">
       <p className="mt-3 text-ink/70">
         Current balance: <span className="font-semibold text-ink">{balance.toLocaleString()}</span>.
-        Grab 1 token first to unlock the harbor.
+        Grab 1 token first to unlock your farm.
       </p>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer">
         <Button size="lg" className="mt-6 chunky-btn">
@@ -151,7 +152,7 @@ function InsufficientGate({ balance }: { balance: number }) {
 
 function ErrorGate({ onRetry }: { onRetry: () => void }) {
   return (
-    <GateShell icon={AlertCircle} title="Network is choppy" tone="gold">
+    <GateShell icon={AlertCircle} title="Network is muddy" tone="gold">
       <p className="mt-3 text-ink/70">
         We couldn't reach the Solana RPC. Give it another try in a moment.
       </p>
@@ -177,41 +178,34 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
               🌍
             </span>
             <div>
-              <div className="pixel text-xs text-ink">Explore the Island</div>
+              <div className="pixel text-xs text-ink">Visit the Town</div>
               <p className="text-xs text-muted-foreground">
-                Walk around, meet other captains, and fish from the shore — live.
+                Walk around, meet other farmers — everyone shares one live map.
               </p>
             </div>
           </div>
           <span className="pill text-xs">Enter ➜</span>
         </Link>
         <Tabs defaultValue="farm" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl bg-foam p-1 ink-border">
             <TabsTrigger value="farm" className="rounded-lg">
               <Sprout className="mr-1.5 h-4 w-4" />
-              Dock
+              Farm
             </TabsTrigger>
-            <TabsTrigger value="fish" className="rounded-lg">
-              <Fish className="mr-1.5 h-4 w-4" />
-              Fishing
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="rounded-lg">
-              <ShoppingBag className="mr-1.5 h-4 w-4" />
-              Bag
+            <TabsTrigger value="barn" className="rounded-lg">
+              <Warehouse className="mr-1.5 h-4 w-4" />
+              Barn
             </TabsTrigger>
             <TabsTrigger value="shop" className="rounded-lg">
-              <Coins className="mr-1.5 h-4 w-4" />
+              <ShoppingBag className="mr-1.5 h-4 w-4" />
               Shop
             </TabsTrigger>
           </TabsList>
           <TabsContent value="farm" className="mt-4">
             <FarmPanel game={game} />
           </TabsContent>
-          <TabsContent value="fish" className="mt-4">
-            <FishingPanel game={game} />
-          </TabsContent>
-          <TabsContent value="inventory" className="mt-4">
-            <InventoryPanel game={game} />
+          <TabsContent value="barn" className="mt-4">
+            <BarnPanel game={game} />
           </TabsContent>
           <TabsContent value="shop" className="mt-4">
             <ShopPanel game={game} />
@@ -258,6 +252,7 @@ function ProfileCard({
   game: GameApi;
 }) {
   const { state, setUsername, syncState } = game;
+  const atCap = state.level >= MAX_LEVEL;
   const xpNeeded = xpForLevel(state.level);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -276,7 +271,7 @@ function ProfileCard({
     <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
         <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
-          ⛵
+          🧑‍🌾
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -293,7 +288,7 @@ function ProfileCard({
                   onChange={(e) => setDraft(e.target.value)}
                   maxLength={20}
                   autoFocus
-                  placeholder="Your captain name"
+                  placeholder="Your farmer name"
                   className="h-8 w-40 rounded-lg border-2 border-ink bg-foam px-2 text-sm outline-none focus:border-sunset-deep"
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -302,7 +297,7 @@ function ProfileCard({
               </form>
             ) : (
               <button onClick={startEdit} className="group flex items-center gap-1.5">
-                <h3 className="pixel text-base text-ink">{state.username || "Captain"}</h3>
+                <h3 className="pixel text-base text-ink">{state.username || "Farmer"}</h3>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
               </button>
             )}
@@ -317,19 +312,17 @@ function ProfileCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <Stat label="Level" value={state.level} icon={Trophy} />
-          <Stat label="Coins" value={state.coins} icon={Coins} />
-          <Stat label="Bait" value={state.seeds} icon={Sprout} />
+          <Stat label="Gold" value={state.gold} icon={Coins} />
+          <Stat label="Harvests" value={state.harvests} icon={Sprout} />
         </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
             <span>XP</span>
-            <span>
-              {state.xp} / {xpNeeded}
-            </span>
+            <span>{atCap ? "MAX LEVEL" : `${state.xp} / ${xpNeeded}`}</span>
           </div>
-          <Progress value={(state.xp / xpNeeded) * 100} className="h-2" />
+          <Progress value={atCap ? 100 : (state.xp / xpNeeded) * 100} className="h-2" />
         </div>
         <div>
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
@@ -360,28 +353,64 @@ function Stat({ label, value, icon: Icon }: { label: string; value: number; icon
 
 function FarmPanel({ game }: { game: GameApi }) {
   const { state, plant, harvest, upgradeFarm } = game;
+  const unlocked = cropsUnlockedAt(state.level);
+  const [selected, setSelected] = useState(unlocked[unlocked.length - 1].id);
+  const selectedCrop = cropById(selected) ?? unlocked[0];
   const cols = Math.ceil(Math.sqrt(state.farmSize));
+
+  // If a save loads at a lower level than the previous selection, snap back.
+  useEffect(() => {
+    if (!unlocked.some((c) => c.id === selected)) setSelected(unlocked[unlocked.length - 1].id);
+  }, [unlocked, selected]);
+
   return (
     <div className="card-pop p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="pixel text-sm text-ink">Dock</h3>
+          <h3 className="pixel text-sm text-ink">My Field</h3>
           <p className="text-xs text-muted-foreground">
-            Click an empty slot to drop a net. Pull it up when it's full.
+            Pick a seed, click an empty plot to plant. Harvest when it sparkles.
           </p>
         </div>
         <Button
           onClick={() => {
             upgradeFarm();
-            toast.success("Dock expanded!");
+            toast.success("Field expanded!");
           }}
-          disabled={state.coins < UPGRADE_COST || state.farmSize >= 25}
+          disabled={state.gold < UPGRADE_PLOT_COST || state.farmSize >= 25}
           variant="outline"
           className="rounded-lg ink-border"
         >
-          <ArrowUpCircle className="mr-1 h-4 w-4" /> Expand ({UPGRADE_COST} coins)
+          <ArrowUpCircle className="mr-1 h-4 w-4" /> Expand ({UPGRADE_PLOT_COST}g)
         </Button>
       </div>
+
+      {/* Seed selector */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {CROPS.map((c) => {
+          const locked = c.unlockLevel > state.level;
+          const isSel = c.id === selected;
+          return (
+            <button
+              key={c.id}
+              disabled={locked}
+              onClick={() => setSelected(c.id)}
+              title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${c.seedCost}g`}
+              className={`flex items-center gap-1 rounded-xl border-2 px-2.5 py-1.5 text-xs font-semibold transition ${
+                isSel
+                  ? "border-ink bg-sunset text-ink"
+                  : locked
+                    ? "border-dashed border-ink/30 bg-foam text-ink/40"
+                    : "border-ink/60 bg-foam text-ink hover:bg-cyan-soft"
+              }`}
+            >
+              <span className="text-base">{locked ? "🔒" : c.emoji}</span>
+              {locked ? `Lv ${c.unlockLevel}` : `${c.seedCost}g`}
+            </button>
+          );
+        })}
+      </div>
+
       <div
         className="grid gap-2 mx-auto max-w-md"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
@@ -389,15 +418,28 @@ function FarmPanel({ game }: { game: GameApi }) {
         {state.tiles.map((t) => {
           const ready = t.state === "ready";
           const growing = t.state === "growing";
+          const crop = t.crop ? cropById(t.crop) : null;
           const progress =
-            growing && t.plantedAt ? Math.min(1, (Date.now() - t.plantedAt) / GROW_MS) : 0;
+            growing && t.plantedAt && t.growMs
+              ? Math.min(1, (Date.now() - t.plantedAt) / t.growMs)
+              : 0;
           return (
             <button
               key={t.id}
-              onClick={() =>
+              onClick={() => {
+                if (ready) {
+                  const got = harvest(t.id);
+                  if (got) toast.success(`+1 ${got.name} ${got.emoji} +${got.xp} XP`);
+                } else if (t.state === "empty") {
+                  plant(t.id, selected);
+                }
+              }}
+              title={
                 ready
-                  ? (harvest(t.id), toast.success(`+1 catch +${HARVEST_COINS} coins +10 XP`))
-                  : plant(t.id)
+                  ? `Harvest ${crop?.name}`
+                  : growing
+                    ? `${crop?.name} growing…`
+                    : `Plant ${selectedCrop.name} (${selectedCrop.seedCost}g)`
               }
               className={`relative aspect-square rounded-xl border-2 transition active:scale-95 ${
                 ready
@@ -407,7 +449,8 @@ function FarmPanel({ game }: { game: GameApi }) {
                     : "border-dashed border-ink/40 bg-foam hover:bg-sky"
               }`}
             >
-              <span className="text-2xl">{ready ? "🐟" : growing ? "🪝" : ""}</span>
+              <span className="text-2xl">{ready ? crop?.emoji : growing ? "🌱" : ""}</span>
+              {ready && <span className="absolute right-0.5 top-0.5 text-xs">✨</span>}
               {growing && (
                 <div className="absolute inset-x-1 bottom-1 h-1 rounded-full bg-foam">
                   <div
@@ -420,134 +463,79 @@ function FarmPanel({ game }: { game: GameApi }) {
           );
         })}
       </div>
+
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        {selectedCrop.emoji} {selectedCrop.name}: {selectedCrop.seedCost}g seed · grows in{" "}
+        {Math.round(effectiveGrowMs(selectedCrop, state.equipment) / 1000)}s · sells for{" "}
+        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP
+      </p>
     </div>
   );
 }
 
-function FishingPanel({ game }: { game: GameApi }) {
-  const [casting, setCasting] = useState(false);
-  const cooldownLeft = game.fishCooldownRemaining;
-  const onCooldown = cooldownLeft > 0;
-  const cast = () => {
-    if (game.state.energy < 5) {
-      toast.error("Not enough energy");
-      return;
-    }
-    if (onCooldown) return;
-    setCasting(true);
-    setTimeout(() => {
-      const caught = game.fish();
-      setCasting(false);
-      if (caught) toast.success(`Caught a ${caught.rarity} ${caught.name}!`);
-    }, 1200);
-  };
-  return (
-    <div className="card-pop overflow-hidden">
-      <div className="relative h-56 bg-[image:var(--gradient-ocean)] p-6 text-white">
-        <div className="absolute inset-0 opacity-40">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <span
-              key={i}
-              className="absolute text-xs water-tile"
-              style={{
-                left: `${(i * 13) % 100}%`,
-                top: `${(i * 31) % 100}%`,
-                animationDelay: `${i * 0.1}s`,
-              }}
-            >
-              ~
-            </span>
-          ))}
-        </div>
-        <div className="relative">
-          <h3 className="pixel text-base text-white">Open Water</h3>
-          <p className="text-sm text-white/85">Cast your line. Costs 5 energy.</p>
-          <Button
-            onClick={cast}
-            disabled={casting || onCooldown}
-            size="lg"
-            className="mt-6 chunky-btn"
-          >
-            {casting
-              ? "Reeling in…"
-              : onCooldown
-                ? `Wait ${Math.ceil(cooldownLeft / 1000)}s…`
-                : "🎣 Cast Line"}
-          </Button>
-        </div>
-        {casting && <div className="absolute bottom-4 right-4 text-3xl animate-bounce">🎣</div>}
-      </div>
-      <div className="grid grid-cols-2 gap-2 p-4 text-xs sm:grid-cols-5">
-        {RARITY_ODDS.map(({ rarity, chance }) => (
-          <div key={rarity} className="rounded-lg bg-foam p-2 text-center ink-border">
-            <div className={`font-bold ${rarityColor[rarity]}`}>{rarity}</div>
-            <div className="text-muted-foreground">{(chance * 100).toLocaleString()}%</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+function BarnPanel({ game }: { game: GameApi }) {
+  const { state, sellCrop } = game;
+  const entries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
+  const total = entries.reduce((sum, [id, qty]) => {
+    const crop = cropById(id);
+    return crop ? sum + qty * effectiveSellPrice(crop, state.equipment) : sum;
+  }, 0);
 
-function InventoryPanel({ game }: { game: GameApi }) {
-  const { state, sellRice, sellFish } = game;
   return (
     <div className="card-pop p-6">
-      <h3 className="pixel text-sm text-ink">Bag</h3>
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-foam p-4 ink-border">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🐟</span>
-          <div>
-            <div className="font-semibold">Net Catch</div>
-            <div className="text-xs text-muted-foreground">Sells for {SELL_PRICE} coins each</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-bold">{state.inventory.rice}</span>
+      <div className="flex items-center justify-between">
+        <h3 className="pixel text-sm text-ink">Barn</h3>
+        {entries.length > 0 && (
           <Button
             size="sm"
-            disabled={state.inventory.rice === 0}
-            onClick={() => {
-              const q = state.inventory.rice;
-              sellRice(q);
-              toast.success(`+${q * SELL_PRICE} coins`);
-            }}
             className="rounded-lg"
+            onClick={() => {
+              let earned = 0;
+              for (const [id] of entries) earned += sellCrop(id);
+              toast.success(`Sold everything for ${earned}g!`);
+            }}
           >
-            Sell all
+            Sell all ({total.toLocaleString()}g)
           </Button>
-        </div>
+        )}
       </div>
-      <h4 className="mt-6 mb-2 text-sm font-semibold">Rare fish ({state.inventory.fish.length})</h4>
-      {state.inventory.fish.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nothing yet. Try the open water!</p>
+      {entries.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          The barn is empty — go harvest something! 🌱
+        </p>
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {state.inventory.fish.map((f) => (
-            <li
-              key={f.id}
-              className="flex items-center justify-between rounded-xl bg-foam p-3 ink-border"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{f.emoji}</span>
-                <div>
-                  <div className="text-sm font-semibold">{f.name}</div>
-                  <div className={`text-xs ${rarityColor[f.rarity]}`}>{f.rarity}</div>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-lg"
-                onClick={() => {
-                  sellFish(f.id);
-                  toast.success(`+${f.value} coins`);
-                }}
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {entries.map(([id, qty]) => {
+            const crop = cropById(id)!;
+            const price = effectiveSellPrice(crop, state.equipment);
+            return (
+              <li
+                key={id}
+                className="flex items-center justify-between rounded-xl bg-foam p-3 ink-border"
               >
-                Sell {f.value}
-              </Button>
-            </li>
-          ))}
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{crop.emoji}</span>
+                  <div>
+                    <div className="text-sm font-semibold">
+                      {crop.name} × {qty}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{price}g each</div>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-lg"
+                  onClick={() => {
+                    const earned = sellCrop(id);
+                    if (earned) toast.success(`+${earned}g`);
+                  }}
+                >
+                  Sell {(qty * price).toLocaleString()}g
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -555,45 +543,53 @@ function InventoryPanel({ game }: { game: GameApi }) {
 }
 
 function ShopPanel({ game }: { game: GameApi }) {
-  const { state, buySeeds } = game;
+  const { state, buyEquipment } = game;
   return (
     <div className="card-pop p-6">
-      <h3 className="pixel text-sm text-ink">Harbor Shop</h3>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl bg-foam p-4 ink-border">
-          <div className="flex items-center gap-2">
-            <Sprout className="h-4 w-4 text-leaf" />
-            <span className="font-semibold">Bait</span>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">{SEED_PRICE} coins each</p>
-          <div className="mt-3 flex gap-2">
-            {[5, 10, 25].map((q) => (
-              <Button
-                key={q}
-                size="sm"
-                variant="outline"
-                className="rounded-lg"
-                disabled={state.coins < q * SEED_PRICE}
-                onClick={() => {
-                  buySeeds(q);
-                  toast.success(`+${q} bait`);
-                }}
-              >
-                Buy {q}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl bg-cyan-soft p-4 ink-border">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-ocean" />
-            <span className="font-semibold">Coming soon</span>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Cosmetics, new boats, and crafting are still being assembled.
-          </p>
-        </div>
-      </div>
+      <h3 className="pixel flex items-center gap-2 text-sm text-ink">
+        <Wrench className="h-4 w-4" /> Equipment Shop
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Permanent upgrades. Speed gear stacks up to 55% faster growth; market gear up to +15% sell
+        price.
+      </p>
+      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+        {EQUIPMENT.map((e) => {
+          const owned = state.equipment.includes(e.id);
+          return (
+            <li
+              key={e.id}
+              className={`flex items-center justify-between rounded-xl p-3 ink-border ${owned ? "bg-leaf/15" : "bg-foam"}`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{e.emoji}</span>
+                <div>
+                  <div className="text-sm font-semibold">{e.name}</div>
+                  <div className="text-xs text-muted-foreground">{e.desc}</div>
+                </div>
+              </div>
+              {owned ? (
+                <Badge className="bg-leaf/30 text-ink hover:bg-leaf/30">Owned</Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-lg"
+                  disabled={state.gold < e.cost}
+                  onClick={() => {
+                    if (buyEquipment(e.id)) toast.success(`${e.name} purchased!`);
+                  }}
+                >
+                  {e.cost.toLocaleString()}g
+                </Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-4 text-xs text-muted-foreground">
+        Need seeds? Pick them right on the Farm tab — planting buys the seed automatically.
+      </p>
     </div>
   );
 }
@@ -627,7 +623,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          No captains ranked yet — keep playing, your progress syncs automatically.
+          No farmers ranked yet — keep playing, your progress syncs automatically.
         </p>
       )}
       {data && data.length > 0 && (
@@ -644,7 +640,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
                   <span className="truncate font-medium">{isMe ? "You" : r.name}</span>
                   <span className="shrink-0 text-[10px] text-muted-foreground">lv {r.level}</span>
                 </div>
-                <span className="shrink-0 text-xs">{r.coins.toLocaleString()} 🪙</span>
+                <span className="shrink-0 text-xs">{r.coins.toLocaleString()}g</span>
               </li>
             );
           })}
@@ -659,7 +655,7 @@ function ActivityFeed() {
   return (
     <div className="card-pop p-5">
       <h4 className="pixel flex items-center gap-2 text-xs text-ink">
-        <Fish className="h-4 w-4 text-ocean" /> Recent Catches
+        <Sprout className="h-4 w-4 text-leaf" /> Recent Harvests
       </h4>
       {isLoading && (
         <div className="mt-3 space-y-2">
@@ -670,17 +666,15 @@ function ActivityFeed() {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          The water is calm… be the first to catch something!
+          The fields are quiet… harvest a level 5+ crop to make the news!
         </p>
       )}
       {data && data.length > 0 && (
         <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
           {data.map((c) => (
             <li key={c.id} className="rounded-lg bg-foam px-3 py-2">
-              <span className="font-semibold text-foreground">{c.display_name}</span> caught a{" "}
-              <span className={`font-semibold ${rarityColor[c.rarity]}`}>
-                {c.rarity} {c.fish_name}
-              </span>
+              <span className="font-semibold text-foreground">{c.display_name}</span> harvested a{" "}
+              <span className={`font-semibold ${rarityColor[c.rarity]}`}>{c.fish_name}</span>
             </li>
           ))}
         </ul>
@@ -718,7 +712,7 @@ function ChatPanel({ address }: { address: string }) {
   return (
     <div className="card-pop p-5">
       <h4 className="pixel flex items-center gap-2 text-xs text-ink">
-        <MessageCircle className="h-4 w-4 text-ocean" /> Harbor Chat
+        <MessageCircle className="h-4 w-4 text-ocean" /> Village Chat
       </h4>
       <div ref={scrollRef} className="mt-3 max-h-48 space-y-2 overflow-y-auto pr-1 text-sm">
         {messages.isLoading && (
@@ -732,7 +726,7 @@ function ChatPanel({ address }: { address: string }) {
           <p className="text-xs text-muted-foreground">Chat is unreachable right now.</p>
         )}
         {messages.data && messages.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet — say hi, captain! 👋</p>
+          <p className="text-xs text-muted-foreground">No messages yet — say hi, farmer! 👋</p>
         )}
         {messages.data?.map((m) => (
           <div key={m.id} className="rounded-lg bg-foam px-3 py-1.5">
@@ -747,7 +741,7 @@ function ChatPanel({ address }: { address: string }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Say hi to other captains…"
+          placeholder="Say hi…"
           maxLength={280}
           className="flex-1 rounded-lg border-2 border-ink bg-foam px-3 py-1.5 text-sm outline-none focus:border-sunset-deep"
           aria-label="Chat message"

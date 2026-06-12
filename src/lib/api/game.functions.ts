@@ -55,7 +55,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       name: p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`,
       level: p.level,
       coins: p.coins,
-      fishCaught: p.fish_caught,
+      harvests: p.rice_harvested,
       lastSeenAt: p.last_seen_at,
     }));
   });
@@ -118,6 +118,7 @@ export const pingWorld = createServerFn({ method: "POST" })
     z.object({
       wallet: wallet,
       name: z.string().trim().min(1).max(20),
+      level: z.number().int().min(1).max(100).default(1),
       x: z.number().min(0).max(200),
       y: z.number().min(0).max(200),
     }),
@@ -127,6 +128,7 @@ export const pingWorld = createServerFn({ method: "POST" })
     await store.upsertPresence({
       wallet_address: data.wallet,
       name: data.name,
+      level: data.level,
       x: Math.round(data.x * 100) / 100,
       y: Math.round(data.y * 100) / 100,
     });

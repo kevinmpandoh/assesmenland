@@ -6,13 +6,13 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:px-6">
         <div className="flex items-center gap-2">
           <span className="text-xl" aria-hidden>
-            ⛵
+            🧑‍🌾
           </span>
-          <span className="pixel text-xs text-ink">SAWAHVOY</span>
+          <span className="pixel text-xs text-ink">AGRI LAND</span>
         </div>
         <p className="max-w-md text-sm text-muted-foreground">
-          A tiny world out at sea. Built slowly, played calmly. Not financial advice — the token is
-          just a key to the harbor.
+          A tiny farming world on Solana. Built slowly, played calmly. Not financial advice — the
+          token is just a key to the land.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <a href="https://x.com" target="_blank" rel="noreferrer" className="pill text-xs">
@@ -24,9 +24,12 @@ export function Footer() {
           <Link to="/leaderboard" className="pill text-xs">
             <span>🏆</span> Leaderboard
           </Link>
+          <Link to="/docs" className="pill text-xs">
+            <span>📚</span> Docs
+          </Link>
         </div>
         <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Sawah Voyages · Open Beta on Solana
+          © {new Date().getFullYear()} Agri Land · Open Beta on Solana
         </div>
       </div>
     </footer>

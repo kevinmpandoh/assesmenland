@@ -7,16 +7,19 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-2xl boat-bob" aria-hidden>
-            ⛵
+            🧑‍🌾
           </span>
           <span className="pixel text-sm text-ink sm:text-base">
-            SAWAH<span className="text-sunset-deep">VOY</span>
+            AGRI<span className="text-sunset-deep">LAND</span>
           </span>
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
           <a href="/#species" className="pill">
-            <span>📊</span> Species
+            <span>🌽</span> Crops
           </a>
+          <Link to="/docs" className="pill">
+            <span>📚</span> Docs
+          </Link>
           <Link to="/how-to-play" className="pill">
             <span>📖</span> How to Play
           </Link>

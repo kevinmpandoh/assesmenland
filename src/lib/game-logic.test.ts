@@ -1,43 +1,70 @@
 import { describe, expect, test } from "bun:test";
-import { RARITY_ODDS, applyXp, rollRarity, xpForLevel } from "./game-logic";
+import {
+  CROPS,
+  EQUIPMENT,
+  MAX_LEVEL,
+  applyXp,
+  cropTier,
+  cropsUnlockedAt,
+  effectiveGrowMs,
+  effectiveSellPrice,
+  xpForLevel,
+} from "./game-logic";
 
-describe("rollRarity", () => {
-  test("odds sum to exactly 100%", () => {
-    const total = RARITY_ODDS.reduce((s, r) => s + r.chance, 0);
-    expect(total).toBeCloseTo(1, 10);
+describe("crops", () => {
+  test("there are 10 crops, one unlocking per level", () => {
+    expect(CROPS.length).toBe(10);
+    const levels = CROPS.map((c) => c.unlockLevel);
+    expect(levels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
-  test("maps rolls to the spec rarities (70/20/7/2.5/0.5)", () => {
-    expect(rollRarity(0)).toBe("Common");
-    expect(rollRarity(0.699)).toBe("Common");
-    expect(rollRarity(0.7)).toBe("Uncommon");
-    expect(rollRarity(0.899)).toBe("Uncommon");
-    expect(rollRarity(0.9)).toBe("Rare");
-    expect(rollRarity(0.969)).toBe("Rare");
-    expect(rollRarity(0.97)).toBe("Epic");
-    expect(rollRarity(0.994)).toBe("Epic");
-    expect(rollRarity(0.995)).toBe("Legendary");
-    expect(rollRarity(0.9999)).toBe("Legendary");
+  test("every crop is profitable per seed", () => {
+    for (const c of CROPS) expect(c.sellPrice).toBeGreaterThan(c.seedCost);
+  });
+
+  test("level gates which crops can be planted", () => {
+    expect(cropsUnlockedAt(1).map((c) => c.id)).toEqual(["tomato"]);
+    expect(cropsUnlockedAt(3).length).toBe(3);
+    expect(cropsUnlockedAt(MAX_LEVEL).length).toBe(10);
+  });
+
+  test("activity tiers span common to legendary", () => {
+    expect(cropTier(CROPS[0])).toBe("Common");
+    expect(cropTier(CROPS[9])).toBe("Legendary");
   });
 });
 
-describe("applyXp", () => {
-  test("accumulates xp below the threshold", () => {
-    expect(applyXp(1, 0, 50)).toEqual({ level: 1, xp: 50 });
+describe("equipment", () => {
+  test("speed equipment shortens grow time, capped at 55%", () => {
+    const tomato = CROPS[0];
+    expect(effectiveGrowMs(tomato, [])).toBe(20_000);
+    expect(effectiveGrowMs(tomato, ["watering_can"])).toBe(18_000);
+    const all = EQUIPMENT.map((e) => e.id);
+    // total speed bonuses = 0.7 → capped at 0.55
+    expect(effectiveGrowMs(tomato, all)).toBe(9_000);
   });
 
-  test("levels up and carries over remaining xp", () => {
-    // level 1 needs 100 xp
-    expect(applyXp(1, 90, 20)).toEqual({ level: 2, xp: 10 });
+  test("sell equipment raises prices, capped at 15%", () => {
+    const melon = CROPS.find((c) => c.id === "melon")!;
+    expect(effectiveSellPrice(melon, [])).toBe(58);
+    expect(effectiveSellPrice(melon, ["scarecrow"])).toBe(61);
+    expect(effectiveSellPrice(melon, ["scarecrow", "golden_hoe"])).toBe(Math.round(58 * 1.15));
   });
+});
 
-  test("handles multiple level-ups in one grant", () => {
-    // 100 (lvl1) + 200 (lvl2) = 300 spent, 5 left over
-    expect(applyXp(1, 0, 305)).toEqual({ level: 3, xp: 5 });
-  });
-
+describe("levels", () => {
   test("xp requirement grows with level", () => {
     expect(xpForLevel(1)).toBe(100);
     expect(xpForLevel(7)).toBe(700);
+  });
+
+  test("levels up and carries over remaining xp", () => {
+    expect(applyXp(1, 90, 20)).toEqual({ level: 2, xp: 10 });
+    expect(applyXp(1, 0, 305)).toEqual({ level: 3, xp: 5 });
+  });
+
+  test("level is capped at 10", () => {
+    expect(applyXp(9, 890, 99_999)).toEqual({ level: 10, xp: 0 });
+    expect(applyXp(10, 0, 500)).toEqual({ level: 10, xp: 0 });
   });
 });

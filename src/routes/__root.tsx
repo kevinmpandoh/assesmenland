@@ -85,25 +85,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sawah Voyages — Sail, Cast, Chill on Solana" },
+      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
       {
         name: "description",
         content:
-          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
+          "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
-      { property: "og:title", content: "Sawah Voyages — Sail, Cast, Chill on Solana" },
+      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
       {
         property: "og:description",
         content:
-          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
+          "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Sawah Voyages — Sail, Cast, Chill on Solana" },
+      { name: "twitter:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
       {
         name: "twitter:description",
         content:
-          "Game santai laut di Solana. Naik perahu, lempar pancing, dan tangkap ikan langka langsung di browser. Open beta.",
+          "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
       {
         property: "og:image",

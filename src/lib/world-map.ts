@@ -1,38 +1,39 @@
-// The island map for the explorable world. Pure data + helpers so the
-// canvas renderer and tests can share it. Coordinates are tile units;
-// (0,0) is the top corner of the isometric diamond.
+// The Agri Land town map. Pure data + helpers shared by the canvas
+// renderer and tests. Coordinates are tile units.
 
-export const MAP_SIZE = 26;
+export const MAP_SIZE = 48;
 
 export type TileKind =
-  | "deep" // deep water (border)
-  | "water" // shallow water
-  | "sand"
   | "grass"
-  | "paddy"
-  | "path"
-  | "dock";
+  | "grass2" // mowed/alt grass for variety
+  | "dirt" // paths
+  | "stone" // plaza
+  | "soil" // tilled farm field
+  | "water";
 
 export type WorldObject = {
-  kind: "house" | "tree" | "rock" | "stall";
+  kind:
+    | "house"
+    | "bighouse"
+    | "tree"
+    | "rock"
+    | "stall"
+    | "fountain"
+    | "fence"
+    | "sign"
+    | "crate"
+    | "well";
   x: number;
   y: number;
+  label?: string;
 };
 
 const W = MAP_SIZE;
-const center = (W - 1) / 2;
 
-// Island shape: a rounded blob. Everything beyond radius is water.
-function baseTile(x: number, y: number): TileKind {
-  const dx = x - center;
-  const dy = y - center;
-  // slightly oval, with a wavy edge so the coast isn't a perfect circle
-  const wobble = Math.sin(x * 1.7) * 0.7 + Math.cos(y * 2.3) * 0.7;
-  const d = Math.sqrt(dx * dx * 1.15 + dy * dy) + wobble;
-  if (d > 11.5) return "deep";
-  if (d > 9.8) return "water";
-  if (d > 8.4) return "sand";
-  return "grass";
+// Deterministic pseudo-random so the town is identical for everyone.
+function rand(x: number, y: number): number {
+  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return n - Math.floor(n);
 }
 
 function stampRect(
@@ -54,46 +55,115 @@ export function buildMap(): { tiles: TileKind[][]; objects: WorldObject[] } {
   const tiles: TileKind[][] = [];
   for (let y = 0; y < W; y++) {
     const row: TileKind[] = [];
-    for (let x = 0; x < W; x++) row.push(baseTile(x, y));
+    for (let x = 0; x < W; x++) {
+      row.push(rand(x, y) > 0.82 ? "grass2" : "grass");
+    }
     tiles.push(row);
   }
 
-  // Rice paddies on the west side
-  stampRect(tiles, "paddy", 6, 10, 4, 2);
-  stampRect(tiles, "paddy", 6, 13, 4, 2);
+  // Lake in the north-east corner (like the reference shot).
+  for (let y = 0; y < W; y++) {
+    for (let x = 0; x < W; x++) {
+      if (x + (W - y) > W + 30) tiles[y][x] = "water";
+    }
+  }
 
-  // Village path: from the paddies through the centre down to the dock
-  stampRect(tiles, "path", 10, 12, 7, 1);
-  stampRect(tiles, "path", 14, 12, 1, 6);
+  // Dirt street grid.
+  for (const gy of [10, 24, 38]) stampRect(tiles, "dirt", 2, gy, W - 4, 2);
+  for (const gx of [10, 24, 38]) stampRect(tiles, "dirt", gx, 2, 2, W - 4);
 
-  // Dock: wooden planks running south into the water
-  stampRect(tiles, "dock", 14, 18, 1, 6);
+  // Central plaza with fountain.
+  stampRect(tiles, "stone", 19, 19, 12, 12);
 
-  // Objects (drawn on top, not walkable)
+  // Farm fields (south-west district), tilled soil with fences around.
+  stampRect(tiles, "soil", 5, 28, 8, 6);
+  stampRect(tiles, "soil", 5, 41, 8, 5);
+  stampRect(tiles, "soil", 15, 41, 7, 5);
+
+  // Orchard clearing (north-west) keeps its grass.
+
   const objects: WorldObject[] = [
-    { kind: "house", x: 12, y: 10 },
-    { kind: "house", x: 16, y: 10 },
-    { kind: "stall", x: 11, y: 14 },
-    { kind: "tree", x: 8, y: 8 },
-    { kind: "tree", x: 18, y: 8 },
-    { kind: "tree", x: 19, y: 14 },
-    { kind: "tree", x: 9, y: 17 },
-    { kind: "tree", x: 16, y: 16 },
-    { kind: "rock", x: 11, y: 7 },
-    { kind: "rock", x: 18, y: 17 },
+    // plaza
+    { kind: "fountain", x: 24, y: 24 },
+    { kind: "stall", x: 20, y: 20, label: "SEED SHOP" },
+    { kind: "stall", x: 29, y: 20, label: "MARKET" },
+    { kind: "sign", x: 21, y: 29, label: "AGRI LAND" },
+    { kind: "well", x: 28, y: 28 },
+
+    // housing district (north-west & north-centre)
+    { kind: "bighouse", x: 5, y: 5 },
+    { kind: "house", x: 14, y: 5 },
+    { kind: "house", x: 19, y: 7 },
+    { kind: "house", x: 28, y: 5 },
+    { kind: "bighouse", x: 33, y: 7 },
+    { kind: "house", x: 5, y: 14 },
+    { kind: "house", x: 14, y: 14 },
+    { kind: "house", x: 28, y: 14 },
+    { kind: "house", x: 33, y: 14 },
+
+    // east village
+    { kind: "house", x: 42, y: 28 },
+    { kind: "house", x: 42, y: 33 },
+    { kind: "bighouse", x: 33, y: 42 },
+    { kind: "house", x: 28, y: 44 },
+
+    // farm district props
+    { kind: "crate", x: 14, y: 29 },
+    { kind: "crate", x: 14, y: 31 },
+    { kind: "sign", x: 4, y: 27, label: "FARMLAND" },
+    { kind: "well", x: 14, y: 34 },
   ];
+
+  // Fences around the big farm field.
+  for (let x = 4; x <= 13; x++) {
+    objects.push({ kind: "fence", x, y: 27 });
+    objects.push({ kind: "fence", x, y: 34 });
+  }
+  for (let y = 28; y <= 33; y++) {
+    objects.push({ kind: "fence", x: 4, y });
+    objects.push({ kind: "fence", x: 13, y });
+  }
+  // Gate: remove two fence pieces on the east side.
+  const gate = objects.findIndex((o) => o.kind === "fence" && o.x === 13 && o.y === 30);
+  if (gate >= 0) objects.splice(gate, 1);
+  const gate2 = objects.findIndex((o) => o.kind === "fence" && o.x === 13 && o.y === 31);
+  if (gate2 >= 0) objects.splice(gate2, 1);
+
+  // Scatter trees & rocks on free grass, deterministically.
+  for (let y = 3; y < W - 3; y++) {
+    for (let x = 3; x < W - 3; x++) {
+      const t = tiles[y][x];
+      if (t !== "grass" && t !== "grass2") continue;
+      if (objects.some((o) => Math.abs(o.x - x) <= 1 && Math.abs(o.y - y) <= 1)) continue;
+      const r = rand(x * 3 + 7, y * 5 + 1);
+      if (r > 0.965) objects.push({ kind: "tree", x, y });
+      else if (r < 0.012) objects.push({ kind: "rock", x, y });
+    }
+  }
 
   return { tiles, objects };
 }
 
 const WALKABLE: Record<TileKind, boolean> = {
-  deep: false,
-  water: false,
-  sand: true,
   grass: true,
-  paddy: true,
-  path: true,
-  dock: true,
+  grass2: true,
+  dirt: true,
+  stone: true,
+  soil: true,
+  water: false,
+};
+
+const BLOCKING: Record<WorldObject["kind"], boolean> = {
+  house: true,
+  bighouse: true,
+  tree: true,
+  rock: false,
+  stall: true,
+  fountain: true,
+  fence: true,
+  sign: false,
+  crate: true,
+  well: true,
 };
 
 export function isWalkable(
@@ -106,21 +176,60 @@ export function isWalkable(
   const ty = Math.round(y);
   const tile = tiles[ty]?.[tx];
   if (!tile || !WALKABLE[tile]) return false;
-  return !objects.some((o) => o.x === tx && o.y === ty);
+  return !objects.some((o) => BLOCKING[o.kind] && o.x === tx && o.y === ty);
 }
 
-/** True when the tile (or a neighbour) touches water — fishing allowed. */
-export function nearWater(tiles: TileKind[][], x: number, y: number): boolean {
+/** Standing on or next to tilled soil — farming actions allowed. */
+export function nearFarmland(tiles: TileKind[][], x: number, y: number): boolean {
   const tx = Math.round(x);
   const ty = Math.round(y);
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
-      const t = tiles[ty + dy]?.[tx + dx];
-      if (t === "water" || t === "deep") return true;
+      if (tiles[ty + dy]?.[tx + dx] === "soil") return true;
     }
   }
   return false;
 }
 
-/** Village square — where new captains appear. */
-export const SPAWN = { x: 14, y: 12.5 };
+/** Near a market/seed stall — shop shortcut allowed. */
+export function nearStall(objects: WorldObject[], x: number, y: number): boolean {
+  const tx = Math.round(x);
+  const ty = Math.round(y);
+  return objects.some(
+    (o) => o.kind === "stall" && Math.abs(o.x - tx) <= 2 && Math.abs(o.y - ty) <= 2,
+  );
+}
+
+/** Town plaza — where new farmers appear. */
+export const SPAWN = { x: 24, y: 27 };
+
+/** Waypoint loops for ambient villager NPCs (on streets). */
+export const NPC_ROUTES: { name: string; points: { x: number; y: number }[] }[] = [
+  {
+    name: "Pak Tani",
+    points: [
+      { x: 11, y: 25 },
+      { x: 11, y: 31 },
+      { x: 8, y: 31 },
+      { x: 8, y: 25 },
+    ],
+  },
+  {
+    name: "Bu Sari",
+    points: [
+      { x: 25, y: 11 },
+      { x: 36, y: 11 },
+      { x: 36, y: 24 },
+      { x: 25, y: 24 },
+    ],
+  },
+  {
+    name: "Wira",
+    points: [
+      { x: 25, y: 32 },
+      { x: 25, y: 39 },
+      { x: 36, y: 39 },
+      { x: 36, y: 32 },
+    ],
+  },
+];
