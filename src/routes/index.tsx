@@ -105,11 +105,11 @@ function Hero() {
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-3">
-          <WalletButton />
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
             START FARMING →
           </Link>
-          <p className="mt-1 text-sm text-ink/70">Connect your Solana wallet to claim your field</p>
+          <WalletButton />
+          <p className="mt-1 text-sm text-ink/70">Sign in with your Solana wallet to join the town</p>
           <ArrowDown className="mt-2 h-5 w-5 animate-bounce text-ink/50" />
         </div>
 
