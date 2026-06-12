@@ -7,7 +7,7 @@ import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, TOKEN_MINT } from "@/lib/solana-config
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Docs — Agri Land" },
+      { title: "Docs · Agri Land" },
       {
         name: "description",
         content:
@@ -65,7 +65,7 @@ function DocsPage() {
               <span className="font-semibold">Connect Wallet</span>.
             </li>
             <li>
-              Hold <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span> — the
+              Hold <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span>, the
               gate check is read-only; the game never asks you to sign a transaction.
             </li>
             <li>
@@ -73,7 +73,7 @@ function DocsPage() {
               <Link to="/game" className="font-semibold text-ocean hover:underline">
                 My Farm
               </Link>{" "}
-              — you start with 25 gold, 5 tomato seeds, 100 energy, and a 9-plot field.
+              , you start with 25 gold, 5 tomato seeds, 100 energy, and a 9-plot field.
             </li>
             <li>
               Plant tomatoes, harvest, sell, and repeat. Visit the{" "}
@@ -84,7 +84,7 @@ function DocsPage() {
             </li>
           </ol>
           <p className="mt-4 text-xs text-muted-foreground">
-            Progress saves automatically — locally in your browser instantly, and to the cloud every
+            Progress saves automatically, locally in your browser instantly, and to the cloud every
             few seconds (the badge on your profile card shows the sync status).
           </p>
         </Section>
@@ -99,7 +99,7 @@ function DocsPage() {
             {TOKEN_MINT}
           </code>
           <ul className="mt-4 list-disc space-y-1.5 pl-5 text-sm text-ink/80">
-            <li>The balance check is a read-only RPC call — no signature, no transaction.</li>
+            <li>The balance check is a read-only RPC call, no signature, no transaction.</li>
             <li>The token is a game key for access and future cosmetics/events.</li>
             <li>
               <span className="font-semibold">It is not an investment.</span> Gold and crops are
@@ -119,9 +119,9 @@ function DocsPage() {
         {/* Crops */}
         <Section id="crops" title="🌱 Crops & Prices">
           <p className="mb-4 text-sm text-ink/80">
-            One crop unlocks per level. Buy seeds at the Seed Shop first — planting costs 1 seed + 2
+            One crop unlocks per level. Buy seeds at the Seed Shop first, planting costs 1 seed + 2
             energy. Your seed bag holds at most 10 seeds in total, so plant before restocking. Grow
-            time scales 5 seconds per crop level. Base values below — equipment can shorten grow
+            time scales 5 seconds per crop level. Base values below, equipment can shorten grow
             times and raise sell prices.
           </p>
           <div className="overflow-x-auto">
@@ -281,7 +281,7 @@ function DocsPage() {
           <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink/80">
             <li>
               Every player who connects is on{" "}
-              <span className="font-semibold">one shared live map</span> — there are no separate
+              <span className="font-semibold">one shared live map</span>, there are no separate
               rooms or servers.
             </li>
             <li>Walk with WASD / arrow keys, or click/tap where you want to go.</li>
@@ -293,12 +293,12 @@ function DocsPage() {
             <li>Chat messages appear as speech bubbles above heads for everyone to see.</li>
             <li>
               <span className="font-semibold">Shared fields:</span> the fenced soil plots are
-              plantable by everyone — pick a seed from the bar that appears near the field and click
+              plantable by everyone, pick a seed from the bar that appears near the field and click
               a free soil tile. Up to ~100 plots, first come first served.
             </li>
             <li>
               <span className="font-semibold">Only the planter can harvest</span> their crop (a
-              colored dot marks the owner). Ready crops sparkle ✨ — and{" "}
+              colored dot marks the owner). Ready crops sparkle ✨, and{" "}
               <span className="font-semibold">wither 2 hours after ripening</span> if left
               unharvested, freeing the plot.
             </li>
@@ -337,19 +337,19 @@ function DocsPage() {
               ],
               [
                 "What happens if I sell my token?",
-                "The gate re-checks your balance when you connect. Below 1 token, the farm locks until you hold again — progress is kept.",
+                "The gate re-checks your balance when you connect. Below 1 token, the farm locks until you hold again, progress is kept.",
               ],
               [
                 "How does the shared field work?",
-                "Buy seeds at the Seed Shop (the bag holds max 10 — plant before restocking), then plant them on any free soil tile in the six fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
+                "Buy seeds at the Seed Shop (the bag holds max 10, plant before restocking), then plant them on any free soil tile in the six fields. Only you can harvest what you planted, others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
               ],
               [
                 "Why don't I see other players?",
-                "Players idle for 12+ seconds disappear from the map. If the town looks empty, you might just be early — invite a friend!",
+                "Players idle for 12+ seconds disappear from the map. If the town looks empty, you might just be early, invite a friend!",
               ],
               [
                 "Is there a wiki / can I suggest features?",
-                "This page is the living wiki. Suggestions are welcome in the village chat — the roadmap below shows what's coming.",
+                "This page is the living wiki. Suggestions are welcome in the village chat, the roadmap below shows what's coming.",
               ],
             ].map(([q, a]) => (
               <div key={q} className="card-pop p-4">
@@ -365,25 +365,25 @@ function DocsPage() {
           <ol className="space-y-3">
             {[
               {
-                phase: "Phase 1 — First seeds",
+                phase: "Phase 1. First seeds",
                 status: "LIVE",
                 items:
                   "Token-gated access · 10 crops · endless levels · equipment shop · shared multiplayer town · daily top-3 leaderboard rewards (00:00 UTC) funded by trading fees",
               },
               {
-                phase: "Phase 2 — Personal plots",
+                phase: "Phase 2. Personal plots",
                 status: "NEXT",
                 items:
                   "Your farm visible on the town map · visit friends' fields · watering favors · sign-in-with-Solana account security",
               },
               {
-                phase: "Phase 3 — Seasons & festivals",
+                phase: "Phase 3. Seasons & festivals",
                 status: "PLANNED",
                 items:
                   "Weather affecting growth · limited seasonal crops · harvest festival events with boosted reward rounds",
               },
               {
-                phase: "Phase 4 — Marketplace & cosmetics",
+                phase: "Phase 4. Marketplace & cosmetics",
                 status: "PLANNED",
                 items: "Player-to-player crop market · farmhouse skins · pets · custom farmer hats",
               },

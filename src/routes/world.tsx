@@ -54,7 +54,7 @@ export const Route = createFileRoute("/world")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "The Town — Agri Land" },
+      { title: "The Town · Agri Land" },
       {
         name: "description",
         content: "Walk around the Agri Land town, meet other farmers, and tend the shared fields.",
@@ -167,7 +167,7 @@ const TILE_COLORS: Record<TileKind, [string, string]> = {
 // 10 shirt colors × 10 hat colors = 100 avatar combos, picked
 // deterministically from the wallet (or NPC name) so everyone always
 // sees the same outfit for the same farmer. Duplicates can happen with
-// many players — that's fine, it's a town.
+// many players, that's fine, it's a town.
 const SHIRT_COLORS = [
   "#3a82d4", // blue
   "#e2574c", // red
@@ -263,7 +263,7 @@ function World({ address }: { address: string }) {
         meRef.current.ty = p.y;
       }
     } catch {
-      // corrupt save — start at spawn
+      // corrupt save, start at spawn
     }
   }, []);
 
@@ -385,7 +385,7 @@ function World({ address }: { address: string }) {
         return;
       }
       if (Date.now() < plot.readyAt) {
-        toast.info("Still growing — be patient!");
+        toast.info("Still growing, be patient!");
         return;
       }
       busyRef.current = true;
@@ -400,7 +400,7 @@ function World({ address }: { address: string }) {
           toast.error(res.reason);
         }
       } catch {
-        toast.error("Network hiccup — try again.");
+        toast.error("Network hiccup, try again.");
       }
       busyRef.current = false;
       return;
@@ -413,7 +413,7 @@ function World({ address }: { address: string }) {
       return;
     }
     if ((g.state.seeds[crop.id] ?? 0) < 1) {
-      toast.error(`No ${crop.name} seeds — buy some at the Seed Shop 🌱`);
+      toast.error(`No ${crop.name} seeds, buy some at the Seed Shop 🌱`);
       return;
     }
     if (g.state.energy < 2) {
@@ -440,7 +440,7 @@ function World({ address }: { address: string }) {
         toast.error(res.reason);
       }
     } catch {
-      toast.error("Network hiccup — try again.");
+      toast.error("Network hiccup, try again.");
     }
     busyRef.current = false;
   };
@@ -998,7 +998,7 @@ function World({ address }: { address: string }) {
         </Link>
       </div>
 
-      {/* Seed bar: appears at the shared fields — click soil to plant. */}
+      {/* Seed bar: appears at the shared fields, click soil to plant. */}
       {zone === "farm" && shopOpen === null && (
         <div className="absolute bottom-[4.5rem] left-1/2 w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 sm:bottom-16">
           <div className="card-pop flex flex-wrap items-center justify-center gap-1.5 bg-foam/95 p-2">
@@ -1011,9 +1011,7 @@ function World({ address }: { address: string }) {
                   key={c.id}
                   disabled={locked}
                   onClick={() => setSelectedSeed(c.id)}
-                  title={
-                    locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${c.seedCost}g`
-                  }
+                  title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name}, ${c.seedCost}g`}
                   className={`flex items-center gap-0.5 rounded-lg border-2 px-1.5 py-1 text-[10px] font-bold transition ${
                     isSel
                       ? "border-ink bg-sunset text-ink"
@@ -1056,7 +1054,7 @@ function World({ address }: { address: string }) {
         <input
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
-          placeholder="Say something — it appears above your head…"
+          placeholder="Say something, it appears above your head…"
           maxLength={280}
           className="ink-border flex-1 rounded-xl bg-foam/95 px-3 py-2 text-sm outline-none focus:border-sunset-deep"
           aria-label="World chat message"
@@ -1109,7 +1107,7 @@ function WorldShop({
             {kind === "seed" && (
               <span
                 className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
-                title="Your seed bag — plant seeds to free up space"
+                title="Your seed bag, plant seeds to free up space"
               >
                 🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
               </span>
@@ -1202,7 +1200,7 @@ function WorldShop({
                               onClick={() => {
                                 if (seedBagSpace(state.seeds) === 0) {
                                   toast.error(
-                                    `Seed bag full (${MAX_SEED_BAG}) — plant your seeds first!`,
+                                    `Seed bag full (${MAX_SEED_BAG}), plant your seeds first!`,
                                   );
                                   return;
                                 }
@@ -1227,7 +1225,7 @@ function WorldShop({
             {tab === "sell" &&
               (barnEntries.length === 0 ? (
                 <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Your barn is empty — plant something on the fields! 🌱
+                  Your barn is empty, plant something on the fields! 🌱
                 </p>
               ) : (
                 <>
@@ -1277,7 +1275,7 @@ function WorldShop({
         {kind === "market" && (
           <>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Permanent upgrades — speed gear stacks up to 55% faster growth, market gear up to +15%
+              Permanent upgrades, speed gear stacks up to 55% faster growth, market gear up to +15%
               sell price.
             </p>
             <ul className="mt-3 space-y-2">

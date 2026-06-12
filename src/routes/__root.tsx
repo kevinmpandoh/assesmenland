@@ -86,13 +86,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { title: "Agri Land" },
       {
         name: "description",
         content:
           "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { property: "og:title", content: "Agri Land" },
       {
         property: "og:description",
         content:
@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { name: "twitter:title", content: "Agri Land" },
       {
         name: "twitter:description",
         content:
@@ -113,6 +113,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:image",
         content: logoAsset.url,
+      },
+      { name: "description", content: "Agri Land is a relaxing multiplayer Solana farming." },
+      {
+        property: "og:description",
+        content: "Agri Land is a relaxing multiplayer Solana farming.",
+      },
+      {
+        name: "twitter:description",
+        content: "Agri Land is a relaxing multiplayer Solana farming.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c",
       },
     ],
     links: [

@@ -11,17 +11,17 @@ import { Logo } from "@/components/Logo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { title: "Agri Land · Plant, Grow, Prosper on Solana" },
       {
         name: "description",
         content:
           "Claim a field, plant your first tomato, and grow it into a farming empire. A chill multiplayer Solana game that runs right in your browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper" },
+      { property: "og:title", content: "Agri Land · Plant, Grow, Prosper" },
       {
         property: "og:description",
         content:
-          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow — all in the browser, together with other farmers on one live map.",
+          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other farmers on one live map.",
       },
     ],
   }),
@@ -34,7 +34,6 @@ function Landing() {
       <SkyBackdrop />
       <Navbar />
       <Hero />
-      <CropsMarquee />
       <HowItWorks />
       <TokenSection />
       <Roadmap />
@@ -49,17 +48,27 @@ function SkyBackdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
       <div className="absolute inset-0 bg-[image:var(--gradient-hero)]" />
-      <div className="pixel-cloud cloud-float left-[6%] top-24" />
+      {/* warm sun */}
       <div
-        className="pixel-cloud cloud-float left-[68%] top-16"
-        style={{ animationDelay: "-6s" }}
+        className="absolute right-[8%] top-16 h-40 w-40 rounded-full ink-border"
+        style={{
+          background: "radial-gradient(circle at 35% 35%, #ffe9a8, #f3a14a 70%, #b8501e)",
+          boxShadow: "0 0 80px 10px rgba(240, 161, 74, 0.35)",
+          animation: "sun-pulse 6s ease-in-out infinite",
+        }}
+      />
+      {/* wheat sprigs scattered */}
+      <div className="pixel-cloud cloud-float left-[6%] top-32" />
+      <div
+        className="pixel-cloud cloud-float left-[18%] top-64"
+        style={{ animationDelay: "-2s", transform: "scale(0.8)" }}
       />
       <div
-        className="pixel-cloud cloud-float left-[35%] top-44"
-        style={{ animationDelay: "-12s", transform: "scale(0.8)" }}
+        className="pixel-cloud cloud-float left-[78%] top-[26rem]"
+        style={{ animationDelay: "-4s", transform: "scale(0.9)" }}
       />
       <div
-        className="pixel-cloud cloud-float left-[82%] top-72"
+        className="pixel-cloud cloud-float left-[42%] top-[22rem]"
         style={{ animationDelay: "-3s", transform: "scale(0.7)" }}
       />
     </div>
@@ -73,11 +82,6 @@ function Hero() {
   return (
     <section className="relative">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6 text-center sm:px-6">
-        <div className="pill mb-6 text-xs">
-          <span className="h-2 w-2 rounded-full bg-leaf" />
-          OPEN BETA · LIVE TOWN
-        </div>
-
         <div className="boat-bob" aria-hidden>
           <Logo className="h-28 w-28" />
         </div>
@@ -95,6 +99,7 @@ function Hero() {
           {[
             ["🧪", "OPEN BETA"],
             ["🎁", "DAILY TOP-3 REWARDS"],
+            ["✅", "NO DOWNLOAD"],
             ["🌐", "ONE SHARED MAP"],
             ["💬", "LIVE CHAT"],
           ].map(([emo, label]) => (
@@ -105,11 +110,12 @@ function Hero() {
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-3">
-          <WalletButton />
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
-            START FARMING →
+            PLAY NOW →
           </Link>
-          <p className="mt-1 text-sm text-ink/70">Connect your Solana wallet to claim your field</p>
+          <p className="mt-1 text-sm text-ink/70">
+            Sign in with your Solana wallet to join the town
+          </p>
           <ArrowDown className="mt-2 h-5 w-5 animate-bounce text-ink/50" />
         </div>
 
@@ -138,21 +144,20 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to claim
-            a field. Connect your wallet first.
+            Sign in with your Solana wallet to join the town and start farming.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
         {connected && status === "granted" && (
           <p className="flex items-center gap-1.5 font-semibold text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> Access granted — balance {balance.toLocaleString()}{" "}
-            · {shortAddress(address)}
+            <CheckCircle2 className="h-4 w-4" /> You're in. Balance {balance.toLocaleString()} ·{" "}
+            {shortAddress(address)}
           </p>
         )}
         {connected && status === "insufficient" && (
           <p className="flex items-center gap-1.5 text-ink">
-            <AlertCircle className="h-4 w-4 text-sunset-deep" /> You need at least 1 token. Current
-            balance: {balance.toLocaleString()}.
+            <AlertCircle className="h-4 w-4 text-sunset-deep" /> Your balance is{" "}
+            {balance.toLocaleString()}. Learn more about the project token below.
           </p>
         )}
         {connected && status === "error" && (
@@ -160,31 +165,9 @@ function GateBanner({
         )}
       </div>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="pill text-xs">
-        🪙 Get Token
+        🪙 Learn more
       </a>
     </div>
-  );
-}
-
-/* ---------- Crops marquee ---------- */
-
-function CropsMarquee() {
-  const row = [...CROPS, ...CROPS];
-  return (
-    <section
-      id="species"
-      className="relative my-8 overflow-hidden border-y-2 border-ink bg-foam py-4"
-    >
-      <div className="marquee gap-8 whitespace-nowrap pixel text-xs text-ink">
-        {row.map((c, i) => (
-          <span key={i} className="inline-flex items-center gap-2">
-            <span className="text-lg">{c.emoji}</span>
-            {c.name} <span className="text-sunset-deep">Lv{c.unlockLevel}</span>
-            <span className="text-ink/40">·</span>
-          </span>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -200,7 +183,7 @@ function HowItWorks() {
     {
       emo: "⏳",
       title: "GROW & HARVEST",
-      desc: "Crops grow in real time — 5 seconds per crop level, from a 5s tomato to a 50s Golden Rice. Harvest when they sparkle, stash everything in your barn.",
+      desc: "Crops grow in real time, 5 seconds per crop level, from a 5s tomato to a 50s Golden Rice. Harvest when they sparkle, stash everything in your barn.",
     },
     {
       emo: "💰",
@@ -230,20 +213,6 @@ function HowItWorks() {
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs">
-        {[
-          "🍅 Lv1 Tomato",
-          "🌽 Lv3 Corn",
-          "🍈 Lv6 Melon",
-          "🍓 Lv8 Strawberry",
-          "🌾 Lv10 Golden Rice",
-        ].map((r) => (
-          <span key={r} className="pill text-xs">
-            {r}
-          </span>
-        ))}
-      </div>
-
       <div className="mt-8 text-center">
         <Link to="/docs" className="pill text-xs">
           📚 Read the full docs. Crops, prices, equipment, FAQ
@@ -262,17 +231,17 @@ function TokenSection() {
         <div className="grid gap-0 md:grid-cols-[1fr_360px]">
           <div className="p-8 sm:p-10">
             <span className="pill text-xs">
-              <span>🪙</span> TOKEN
+              <span>🪙</span> PROJECT TOKEN
             </span>
-            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
+            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">A SMALL PART OF THE WORLD</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town. The
-              token is just a key for access, cosmetics, and seasonal events. Not a promise of
-              returns, not an investment pitch. Farm slowly, enjoy the seasons.
+              Agri Land has a community token used for cosmetics, seasonal events, and town
+              features. It is not an investment, not a promise of returns, and not financial advice.
+              You can enjoy the game without it. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="chunky-btn">
-                🪙 VIEW TOKEN
+                🪙 LEARN MORE
               </a>
               <Link to="/game" className="chunky-btn chunky-btn-sky">
                 🌱 TRY THE GAME
