@@ -273,7 +273,7 @@ function TokenSection() {
             <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
             <p className="mt-4 max-w-md text-ink/80">
               Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town.
-              The token is just a key — for access, cosmetics, and seasonal events. Not a promise of
+              The token is just a key for access, cosmetics, and seasonal events. Not a promise of
               returns, not an investment pitch. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
