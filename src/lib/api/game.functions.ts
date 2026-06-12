@@ -21,7 +21,7 @@ export const syncPlayer = createServerFn({ method: "POST" })
     z.object({
       wallet: wallet,
       username: z.string().trim().max(20).optional(),
-      level: z.number().int().min(1).max(10_000),
+      level: z.number().int().min(1).max(1_000_000),
       xp: z.number().int().min(0),
       coins: z.number().int().min(0),
       riceHarvested: z.number().int().min(0).default(0),
@@ -44,12 +44,53 @@ export const syncPlayer = createServerFn({ method: "POST" })
 
 // ----------------------------------------------------------- leaderboard
 
+/**
+ * Reward epochs run every 3h on a fixed UTC grid. On the first request
+ * of a new epoch we snapshot the current top-3 as that round's winners
+ * ("lazy cron" — no scheduler needed). Recent winners sit out a 24h
+ * cooldown so the next farmers get their shot at the podium.
+ */
+async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
+  const { currentEpochStart, WINNER_COOLDOWN_MS, REWARD_TOP_N } = await import("../game-logic");
+  const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
+  const latest = await store.latestWinnerEpoch();
+  if (latest && latest >= epochIso) return; // this epoch already settled
+
+  const cooldownSince = new Date(Date.now() - WINNER_COOLDOWN_MS).toISOString();
+  const onCooldown = new Set(
+    (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
+  );
+  const eligible = (await store.topPlayers(REWARD_TOP_N + onCooldown.size + 10)).filter(
+    (p) => !onCooldown.has(p.wallet_address) && p.coins > 0,
+  );
+  if (eligible.length === 0) return; // nobody to crown yet — try again next request
+  await store.recordWinners(
+    eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
+      epoch: epochIso,
+      rank: i + 1,
+      wallet_address: p.wallet_address,
+      name: p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`,
+      coins: p.coins,
+    })),
+  );
+}
+
 export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
-    const players = await store.topPlayers(data?.limit ?? 20);
-    return players.map((p, i) => ({
+    const { WINNER_COOLDOWN_MS } = await import("../game-logic");
+    await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
+
+    const cooldownSince = new Date(Date.now() - WINNER_COOLDOWN_MS).toISOString();
+    const onCooldown = new Set(
+      (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
+    );
+    const limit = data?.limit ?? 20;
+    const players = (await store.topPlayers(limit + onCooldown.size)).filter(
+      (p) => !onCooldown.has(p.wallet_address),
+    );
+    return players.slice(0, limit).map((p, i) => ({
       rank: i + 1,
       wallet: p.wallet_address,
       name: p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`,
@@ -59,6 +100,36 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       lastSeenAt: p.last_seen_at,
     }));
   });
+
+export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const store = getStore();
+  const { nextRewardAt, REWARD_INTERVAL_MS, WINNER_COOLDOWN_MS } = await import("../game-logic");
+  await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
+
+  const now = Date.now();
+  const cooldownSince = new Date(now - WINNER_COOLDOWN_MS).toISOString();
+  const recent = await store.winnersSince(cooldownSince);
+  const cooldown = recent.map((w) => ({
+    wallet: w.wallet_address,
+    name: w.name,
+    rank: w.rank,
+    until: new Date(new Date(w.epoch).getTime() + WINNER_COOLDOWN_MS).toISOString(),
+  }));
+  const winners = await store.listWinners(15);
+  return {
+    nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
+    intervalMs: REWARD_INTERVAL_MS,
+    cooldownMs: WINNER_COOLDOWN_MS,
+    winners: winners.map((w) => ({
+      epoch: w.epoch,
+      rank: w.rank,
+      wallet: w.wallet_address,
+      name: w.name,
+      coins: w.coins,
+    })),
+    cooldown,
+  };
+});
 
 // ------------------------------------------------------------------ chat
 
@@ -118,7 +189,7 @@ export const pingWorld = createServerFn({ method: "POST" })
     z.object({
       wallet: wallet,
       name: z.string().trim().min(1).max(20),
-      level: z.number().int().min(1).max(100).default(1),
+      level: z.number().int().min(1).max(100_000).default(1),
       x: z.number().min(0).max(200),
       y: z.number().min(0).max(200),
     }),

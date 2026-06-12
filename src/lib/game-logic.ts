@@ -1,7 +1,13 @@
 // Pure game rules for Agri Land — shared by the React hook, the UI
 // tables (shop, docs), and unit tests. Keep React/browser APIs out.
 
-export const MAX_LEVEL = 10;
+/**
+ * Crops unlock through level 10, but levels themselves are endless —
+ * keep harvesting and the number keeps climbing.
+ */
+export const MAX_CROP_LEVEL = 10;
+/** @deprecated kept as an alias for the crop-unlock ceiling */
+export const MAX_LEVEL = MAX_CROP_LEVEL;
 export const PLANT_ENERGY = 2;
 export const UPGRADE_PLOT_COST = 250;
 export const MAX_FARM_SIZE = 25;
@@ -228,15 +234,13 @@ export function xpForLevel(level: number) {
   return level * 100;
 }
 
-/** Add XP, carrying over level-ups; capped at MAX_LEVEL. */
+/** Add XP, carrying over level-ups. Levels are uncapped. */
 export function applyXp(level: number, xp: number, gained: number): { level: number; xp: number } {
-  if (level >= MAX_LEVEL) return { level: MAX_LEVEL, xp: 0 };
   let newXp = xp + gained;
-  while (level < MAX_LEVEL && newXp >= xpForLevel(level)) {
+  while (newXp >= xpForLevel(level)) {
     newXp -= xpForLevel(level);
     level += 1;
   }
-  if (level >= MAX_LEVEL) return { level: MAX_LEVEL, xp: 0 };
   return { level, xp: newXp };
 }
 
@@ -275,4 +279,21 @@ export function seedBagCount(seeds: Record<string, number>): number {
 
 export function seedBagSpace(seeds: Record<string, number>): number {
   return Math.max(0, MAX_SEED_BAG - seedBagCount(seeds));
+}
+
+// ------------------------------------------------- leaderboard rewards
+
+/** Rewards are distributed every 3 hours, on a fixed UTC schedule. */
+export const REWARD_INTERVAL_MS = 3 * 60 * 60 * 1000;
+/** Recent winners sit out of the rankings for 24 hours. */
+export const WINNER_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+/** Top N farmers win each round. */
+export const REWARD_TOP_N = 3;
+
+export function currentEpochStart(now: number): number {
+  return Math.floor(now / REWARD_INTERVAL_MS) * REWARD_INTERVAL_MS;
+}
+
+export function nextRewardAt(now: number): number {
+  return currentEpochStart(now) + REWARD_INTERVAL_MS;
 }

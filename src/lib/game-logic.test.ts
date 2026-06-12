@@ -2,6 +2,10 @@ import { describe, expect, test } from "bun:test";
 import {
   CROPS,
   MAX_SEED_BAG,
+  REWARD_INTERVAL_MS,
+  WINNER_COOLDOWN_MS,
+  currentEpochStart,
+  nextRewardAt,
   seedBagCount,
   seedBagSpace,
   EQUIPMENT,
@@ -70,9 +74,11 @@ describe("levels", () => {
     expect(applyXp(1, 0, 305)).toEqual({ level: 3, xp: 5 });
   });
 
-  test("level is capped at 10", () => {
-    expect(applyXp(9, 890, 99_999)).toEqual({ level: 10, xp: 0 });
-    expect(applyXp(10, 0, 500)).toEqual({ level: 10, xp: 0 });
+  test("levels are uncapped and keep climbing past 10", () => {
+    // level 10 needs 1000 XP → 1100 lands at level 11 with 100 left over
+    expect(applyXp(10, 0, 1_100)).toEqual({ level: 11, xp: 100 });
+    const high = applyXp(1, 0, 1_000_000);
+    expect(high.level).toBeGreaterThan(10);
   });
 });
 
@@ -83,5 +89,15 @@ describe("seed bag", () => {
     expect(seedBagSpace({ tomato: 4, corn: 3 })).toBe(3);
     expect(seedBagSpace({ tomato: 10 })).toBe(0);
     expect(seedBagSpace({})).toBe(MAX_SEED_BAG);
+  });
+});
+
+describe("reward schedule", () => {
+  test("epochs are 3 hours on a fixed grid", () => {
+    expect(REWARD_INTERVAL_MS).toBe(3 * 60 * 60 * 1000);
+    expect(WINNER_COOLDOWN_MS).toBe(24 * 60 * 60 * 1000);
+    const now = Date.UTC(2026, 5, 12, 7, 30); // 07:30 UTC
+    expect(currentEpochStart(now)).toBe(Date.UTC(2026, 5, 12, 6, 0));
+    expect(nextRewardAt(now)).toBe(Date.UTC(2026, 5, 12, 9, 0));
   });
 });

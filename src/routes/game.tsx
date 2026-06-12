@@ -12,7 +12,6 @@ import {
   useGame,
   CROPS,
   EQUIPMENT,
-  MAX_LEVEL,
   MAX_SEED_BAG,
   UPGRADE_PLOT_COST,
   seedBagSpace,
@@ -22,7 +21,7 @@ import {
   xpForLevel,
 } from "@/hooks/useGame";
 import { cropById, rarityColor } from "@/lib/game-logic";
-import { useLeaderboard, useChat, useRecentCatches } from "@/hooks/useVillage";
+import { useLeaderboard, useChat, useRecentCatches, useRewards } from "@/hooks/useVillage";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { toast } from "sonner";
 import {
@@ -255,7 +254,6 @@ function ProfileCard({
   game: GameApi;
 }) {
   const { state, setUsername, syncState } = game;
-  const atCap = state.level >= MAX_LEVEL;
   const xpNeeded = xpForLevel(state.level);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -323,9 +321,11 @@ function ProfileCard({
         <div>
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
             <span>XP</span>
-            <span>{atCap ? "MAX LEVEL" : `${state.xp} / ${xpNeeded}`}</span>
+            <span>
+              {state.xp} / {xpNeeded}
+            </span>
           </div>
-          <Progress value={atCap ? 100 : (state.xp / xpNeeded) * 100} className="h-2" />
+          <Progress value={(state.xp / xpNeeded) * 100} className="h-2" />
         </div>
         <div>
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
@@ -667,6 +667,32 @@ function ShopPanel({ game }: { game: GameApi }) {
   );
 }
 
+function RewardCountdown() {
+  const rewards = useRewards();
+  const [, force] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => force((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const target = rewards.data?.nextRewardAt;
+  if (!target) return null;
+  const ms = Math.max(0, new Date(target).getTime() - Date.now());
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const sec = Math.floor((ms % 60_000) / 1000);
+  return (
+    <Link
+      to="/leaderboard"
+      className="mt-3 flex items-center justify-between rounded-xl bg-sunset/25 px-3 py-2 text-xs ink-border transition hover:bg-sunset/40"
+    >
+      <span className="font-semibold text-ink">🎁 Top 3 rewards in</span>
+      <span className="pixel text-[11px] text-ink">
+        {String(h).padStart(2, "0")}:{String(m).padStart(2, "0")}:{String(sec).padStart(2, "0")}
+      </span>
+    </Link>
+  );
+}
+
 function Leaderboard({ meAddress }: { meAddress: string }) {
   const { data, isLoading, isError, refetch } = useLeaderboard(8);
   return (
@@ -674,6 +700,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       <h4 className="pixel flex items-center gap-2 text-xs text-ink">
         <Trophy className="h-4 w-4 text-sunset-deep" /> Leaderboard
       </h4>
+      <RewardCountdown />
       {isLoading && (
         <div className="mt-3 space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (

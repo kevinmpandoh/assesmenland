@@ -94,7 +94,7 @@ function Hero() {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
             ["🧪", "OPEN BETA"],
-            ["✅", "NO DOWNLOAD"],
+            ["🎁", "TOP-3 REWARDS EVERY 3H"],
             ["🌐", "ONE SHARED MAP"],
             ["💬", "LIVE CHAT"],
           ].map(([emo, label]) => (
@@ -298,7 +298,7 @@ function Roadmap() {
     {
       q: "PHASE 1",
       t: "First seeds LIVE",
-      d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
+      d: "Open beta: 10 crops, endless levels, shared town, and 3-hourly top-3 leaderboard rewards funded by trading fees.",
     },
     {
       q: "PHASE 2",

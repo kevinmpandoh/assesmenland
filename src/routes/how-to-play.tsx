@@ -52,8 +52,8 @@ const STEPS = [
   },
   {
     icon: Trophy,
-    title: "5 · Level up to 10",
-    body: "Each level needs level × 100 XP and unlocks a new crop — tomato at level 1 all the way to Golden Rice at level 10. Bigger crops take longer but pay far more per plot.",
+    title: "5 · Level up — forever",
+    body: "Each level needs level × 100 XP. All ten crops unlock by level 10, but levels never stop — keep climbing for the leaderboard. Every 3 hours the top 3 farmers win real rewards from the trading-fee pool.",
   },
   {
     icon: Globe,

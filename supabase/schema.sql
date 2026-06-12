@@ -141,3 +141,21 @@ create index if not exists world_plots_expiry_idx on public.world_plots (expires
 
 alter table public.world_plots enable row level security;
 create policy "public read plots" on public.world_plots for select using (true);
+
+-- ---------- leaderboard_winners ----------
+-- Top-3 snapshot recorded every 3h reward epoch. Winners sit out the
+-- rankings for 24h; the team sends prizes to these wallets manually.
+create table if not exists public.leaderboard_winners (
+  id uuid primary key default gen_random_uuid(),
+  epoch timestamptz not null,
+  rank int not null check (rank between 1 and 3),
+  wallet_address text not null,
+  name text not null,
+  coins int not null default 0,
+  created_at timestamptz not null default now(),
+  unique (epoch, rank)
+);
+create index if not exists winners_epoch_idx on public.leaderboard_winners (epoch desc);
+
+alter table public.leaderboard_winners enable row level security;
+create policy "public read winners" on public.leaderboard_winners for select using (true);

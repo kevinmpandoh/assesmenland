@@ -76,7 +76,7 @@ equipment → repeat. One crop unlocks per level:
   regens 1 per 8s.
 - Equipment (6 items, 150g–5,000g) permanently speeds growth up to **55%** and
   raises sell prices up to **+15%**. Field expands from 9 to 25 plots.
-- Each level needs `level × 100` XP; level 10 is the current cap.
+- Each level needs `level × 100` XP; levels are endless (crops unlock through 10).
 - All exact numbers live in `src/lib/game-logic.ts` and on the `/docs` page.
 
 ### The Town (shared multiplayer map)
@@ -87,6 +87,16 @@ lake, and wandering NPC villagers. **Every player is on the same map**: walk
 with WASD/click, see everyone's name + level badge live, and chat via speech
 bubbles. Presence works through the `pingWorld` server function (1.5s
 polling, 12s TTL) — no websocket server needed.
+
+### Leaderboard rewards
+
+Every 3 hours (fixed UTC grid) the top 3 farmers by gold are snapshotted as
+round winners — funded by **50% of the token's creator trading fees** (the
+other 50% funds development). Prizes are sent manually to winners' wallets;
+each winner then sits out a 24h cooldown so the podium rotates. The
+leaderboard page shows a live countdown, the resting champions, and the full
+public history of previous winners (with copy-wallet buttons for payouts).
+Reward sizes follow trading activity and are never guaranteed.
 
 ## 4. Token gate
 
@@ -121,10 +131,11 @@ All in `src/lib/api/game.functions.ts`, zod-validated:
 | `logFishCatch`     | POST   | Log a notable (level 5+) harvest for the feed    |
 | `getRecentCatches` | GET    | Recent-harvests activity feed                    |
 | `pingWorld`        | POST   | Report my town position, get all online players  |
+| `getRewardsStatus` | GET    | Next-round countdown, cooldowns, winner history  |
 
 ## 7. Roadmap
 
-1. **Phase 1 — First seeds (LIVE):** everything above.
+1. **Phase 1 — First seeds (LIVE):** everything above, incl. 3-hourly rewards.
 2. **Phase 2 — Personal plots:** farms visible on the town map, visiting,
    sign-in-with-Solana for account security.
 3. **Phase 3 — Seasons & festivals:** weather, seasonal crops, events,
