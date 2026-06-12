@@ -50,11 +50,12 @@ function SkyBackdrop() {
       <div className="absolute inset-0 bg-[image:var(--gradient-hero)]" />
       {/* warm sun */}
       <div
-        className="absolute right-[8%] top-16 h-40 w-40 rounded-full ink-border"
+        className="absolute right-[6%] top-12 h-24 w-24 rounded-full ink-border sm:top-16 sm:h-40 sm:w-40"
         style={{
           background: "radial-gradient(circle at 35% 35%, #ffe9a8, #f3a14a 70%, #b8501e)",
           boxShadow: "0 0 80px 10px rgba(240, 161, 74, 0.35)",
           animation: "sun-pulse 6s ease-in-out infinite",
+          opacity: 0.55,
         }}
       />
       {/* wheat sprigs scattered */}
