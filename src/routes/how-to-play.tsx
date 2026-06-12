@@ -33,7 +33,7 @@ const STEPS = [
   {
     icon: Wallet,
     title: "1 · Connect & hold the token",
-    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds at least 1 Agri Land token. That's your deed to the land — nothing else is required.",
+    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds 1 Agri Land token. That's your deed to the land — nothing else is required.",
   },
   {
     icon: Sprout,

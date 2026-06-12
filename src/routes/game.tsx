@@ -117,7 +117,7 @@ function ConnectGate() {
   return (
     <GateShell icon={Wallet} title="Connect wallet to start farming">
       <p className="mt-3 text-ink/70">
-        Hold at least {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
+        Hold {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
       </p>
       <div className="mt-6 flex justify-center">
         <WalletButton />
