@@ -252,7 +252,7 @@ function HowItWorks() {
 
       <div className="mt-8 text-center">
         <Link to="/docs" className="pill text-xs">
-          📚 Read the full docs — crops, prices, equipment, FAQ
+          📚 Read the full docs. Crops, prices, equipment, FAQ
         </Link>
       </div>
     </section>
