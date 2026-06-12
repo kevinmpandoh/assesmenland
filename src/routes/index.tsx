@@ -99,7 +99,6 @@ function Hero() {
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
-            ["🧪", "OPEN BETA"],
             ["✅", "NO DOWNLOAD"],
             ["🌐", "ONE SHARED MAP"],
             ["💬", "LIVE CHAT"],
