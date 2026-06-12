@@ -6,6 +6,7 @@ import { useTokenGate } from "@/hooks/useTokenGate";
 import { useGame, CROPS, EQUIPMENT, effectiveSellPrice } from "@/hooks/useGame";
 import { cropById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
+import type { StallKind } from "@/lib/world-map";
 import {
   pingWorld,
   getWorldPlots,
@@ -19,7 +20,7 @@ import {
   buildMap,
   isWalkable,
   nearFarmland,
-  nearStall,
+  stallKindAt,
   type TileKind,
   type WorldObject,
 } from "@/lib/world-map";
@@ -189,9 +190,9 @@ function World({ address }: { address: string }) {
   const busyRef = useRef(false);
 
   const [onlineCount, setOnlineCount] = useState(1);
-  const [zone, setZone] = useState<"farm" | "stall" | null>(null);
+  const [zone, setZone] = useState<"farm" | StallKind | null>(null);
   const [chatInput, setChatInput] = useState("");
-  const [shopOpen, setShopOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState<StallKind | null>(null);
   const shopOpenRef = useRef(shopOpen);
   shopOpenRef.current = shopOpen;
   const [selectedSeed, setSelectedSeed] = useState("tomato");
@@ -363,8 +364,8 @@ function World({ address }: { address: string }) {
       toast.error(`${crop.name} unlocks at level ${crop.unlockLevel}`);
       return;
     }
-    if (g.state.gold < crop.seedCost) {
-      toast.error(`Need ${crop.seedCost}g for a ${crop.name} seed`);
+    if ((g.state.seeds[crop.id] ?? 0) < 1) {
+      toast.error(`No ${crop.name} seeds — buy some at the Seed Shop 🌱`);
       return;
     }
     if (g.state.energy < 2) {
@@ -411,7 +412,7 @@ function World({ address }: { address: string }) {
     const down = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (k === "escape") {
-        setShopOpen(false);
+        setShopOpen(null);
         return;
       }
       if (shopOpenRef.current) return;
@@ -542,7 +543,7 @@ function World({ address }: { address: string }) {
       }
 
       setZone(
-        nearStall(objects, me.x, me.y) ? "stall" : nearFarmland(tiles, me.x, me.y) ? "farm" : null,
+        stallKindAt(objects, me.x, me.y) ?? (nearFarmland(tiles, me.x, me.y) ? "farm" : null),
       );
     };
 
@@ -574,12 +575,6 @@ function World({ address }: { address: string }) {
           ctx.moveTo(ax, ay);
           ctx.lineTo(bx, by);
           ctx.stroke();
-        }
-        // little sprouts
-        if ((x * 7 + y * 13) % 3 === 0) {
-          ctx.font = "10px serif";
-          ctx.textAlign = "center";
-          ctx.fillText("🌱", sx, sy + 2);
         }
       }
       if (kind === "stone") {
@@ -940,8 +935,11 @@ function World({ address }: { address: string }) {
         <div className="card-pop flex items-center gap-1.5 px-3 py-2 text-xs text-ink">
           <Users className="h-3.5 w-3.5 text-ocean" /> {onlineCount} online
         </div>
-        <button onClick={() => setShopOpen(true)} className="pill text-xs">
-          <ShoppingBag className="h-3.5 w-3.5" /> Shop
+        <button onClick={() => setShopOpen("seed")} className="pill text-xs">
+          🌱 Seeds
+        </button>
+        <button onClick={() => setShopOpen("market")} className="pill text-xs">
+          <ShoppingBag className="h-3.5 w-3.5" /> Market
         </button>
         <Link to="/game" className="pill text-xs">
           <ArrowLeft className="h-3.5 w-3.5" /> My Farm
@@ -949,7 +947,7 @@ function World({ address }: { address: string }) {
       </div>
 
       {/* Seed bar: appears at the shared fields — click soil to plant. */}
-      {zone === "farm" && !shopOpen && (
+      {zone === "farm" && shopOpen === null && (
         <div className="absolute bottom-[4.5rem] left-1/2 w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 sm:bottom-16">
           <div className="card-pop flex flex-wrap items-center justify-center gap-1.5 bg-foam/95 p-2">
             <span className="pixel mr-1 text-[9px] text-ink/70">PLANT:</span>
@@ -984,17 +982,19 @@ function World({ address }: { address: string }) {
         </div>
       )}
 
-      {/* Stall prompt: open the in-world shop window. */}
-      {zone === "stall" && !shopOpen && (
+      {/* Stall prompts: open the matching in-world window. */}
+      {(zone === "seed" || zone === "market") && shopOpen === null && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 sm:bottom-20">
-          <Button onClick={() => setShopOpen(true)} className="chunky-btn">
-            🛒 Open Shop
+          <Button onClick={() => setShopOpen(zone)} className="chunky-btn">
+            {zone === "seed" ? "🌱 Open Seed Shop" : "🛠️ Open Market"}
           </Button>
         </div>
       )}
 
-      {/* In-world shop window */}
-      {shopOpen && <WorldShop game={game} onClose={() => setShopOpen(false)} />}
+      {/* In-world shop windows */}
+      {shopOpen !== null && (
+        <WorldShop kind={shopOpen} game={game} onClose={() => setShopOpen(null)} />
+      )}
 
       {/* Chat bar */}
       <form
@@ -1022,11 +1022,20 @@ function World({ address }: { address: string }) {
   );
 }
 
-function WorldShop({ game, onClose }: { game: ReturnType<typeof useGame>; onClose: () => void }) {
-  const [tab, setTab] = useState<"barn" | "equipment">("barn");
-  const { state, sellCrop, buyEquipment } = game;
-  const entries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
-  const total = entries.reduce((sum, [id, qty]) => {
+function WorldShop({
+  kind,
+  game,
+  onClose,
+}: {
+  kind: StallKind;
+  game: ReturnType<typeof useGame>;
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<"buy" | "sell">("buy");
+  const { state, sellCrop, buySeeds, sellSeedsBack, buyEquipment } = game;
+
+  const barnEntries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
+  const barnTotal = barnEntries.reduce((sum, [id, qty]) => {
     const crop = cropById(id);
     return crop ? sum + qty * effectiveSellPrice(crop, state.equipment) : sum;
   }, 0);
@@ -1041,7 +1050,9 @@ function WorldShop({ game, onClose }: { game: ReturnType<typeof useGame>; onClos
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="pixel text-sm text-ink">🛒 Town Shop</h3>
+          <h3 className="pixel text-sm text-ink">
+            {kind === "seed" ? "🌱 Seed Shop" : "🛠️ Market"}
+          </h3>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 rounded-full bg-sunset/40 px-2 py-0.5 text-xs font-bold text-ink">
               <Coins className="h-3 w-3" /> {state.gold.toLocaleString()}g
@@ -1056,112 +1067,192 @@ function WorldShop({ game, onClose }: { game: ReturnType<typeof useGame>; onClos
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-cyan-soft p-1 ink-border">
-          {(
-            [
-              ["barn", "🧺 Sell Harvest"],
-              ["equipment", "🛠️ Equipment"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`rounded-lg px-2 py-1.5 text-xs font-bold transition ${
-                tab === id ? "bg-foam text-ink ink-border" : "text-ink/60"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {kind === "seed" && (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-cyan-soft p-1 ink-border">
+              {(
+                [
+                  ["buy", "🌱 Buy Seeds"],
+                  ["sell", "🧺 Sell Harvest"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={`rounded-lg px-2 py-1.5 text-xs font-bold transition ${
+                    tab === id ? "bg-foam text-ink ink-border" : "text-ink/60"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-        {tab === "barn" &&
-          (entries.length === 0 ? (
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Your barn is empty — plant something on the fields! 🌱
-            </p>
-          ) : (
-            <>
+            {tab === "buy" && (
               <ul className="mt-3 space-y-2">
-                {entries.map(([id, qty]) => {
-                  const crop = cropById(id)!;
-                  const price = effectiveSellPrice(crop, state.equipment);
+                {CROPS.map((c) => {
+                  const locked = c.unlockLevel > state.level;
+                  const owned = state.seeds[c.id] ?? 0;
                   return (
                     <li
-                      key={id}
-                      className="flex items-center justify-between rounded-xl bg-white/70 p-2.5 ink-border"
+                      key={c.id}
+                      className={`flex items-center justify-between gap-2 rounded-xl p-2.5 ink-border ${
+                        locked ? "bg-foam/60 opacity-60" : "bg-white/70"
+                      }`}
                     >
-                      <span className="flex items-center gap-2 text-sm font-semibold text-ink">
-                        <span className="text-lg">{crop.emoji}</span>
-                        {crop.name} × {qty}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-lg"
-                        onClick={() => {
-                          const earned = sellCrop(id);
-                          if (earned) toast.success(`+${earned}g`);
-                        }}
-                      >
-                        Sell {(qty * price).toLocaleString()}g
-                      </Button>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="text-lg">{locked ? "🔒" : c.emoji}</span>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold text-ink">
+                            {c.name}
+                            {owned > 0 && (
+                              <span className="ml-1 text-[10px] text-ink/60">×{owned} owned</span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {locked
+                              ? `Unlocks at level ${c.unlockLevel}`
+                              : `${c.seedCost}g per seed`}
+                          </div>
+                        </div>
+                      </div>
+                      {!locked && (
+                        <div className="flex shrink-0 items-center gap-1">
+                          {owned > 0 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 rounded-lg px-2 text-[10px]"
+                              title={`Sell 1 back for ${Math.floor(c.seedCost / 2)}g`}
+                              onClick={() => {
+                                const earned = sellSeedsBack(c.id, 1);
+                                if (earned) toast.success(`+${earned}g`);
+                              }}
+                            >
+                              −1
+                            </Button>
+                          )}
+                          {[1, 5].map((qty) => (
+                            <Button
+                              key={qty}
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-lg px-2 text-[10px]"
+                              disabled={state.gold < c.seedCost * qty}
+                              onClick={() => {
+                                const spent = buySeeds(c.id, qty);
+                                if (spent)
+                                  toast.success(
+                                    `+${qty} ${c.name} seed${qty > 1 ? "s" : ""} (−${spent}g)`,
+                                  );
+                              }}
+                            >
+                              +{qty}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </li>
                   );
                 })}
               </ul>
-              <Button
-                className="mt-3 w-full rounded-xl"
-                onClick={() => {
-                  let earned = 0;
-                  for (const [id] of entries) earned += sellCrop(id);
-                  if (earned) toast.success(`Sold everything for ${earned}g!`);
-                }}
-              >
-                Sell all ({total.toLocaleString()}g)
-              </Button>
-            </>
-          ))}
+            )}
 
-        {tab === "equipment" && (
-          <ul className="mt-3 space-y-2">
-            {EQUIPMENT.map((e) => {
-              const owned = state.equipment.includes(e.id);
-              return (
-                <li
-                  key={e.id}
-                  className={`flex items-center justify-between rounded-xl p-2.5 ink-border ${
-                    owned ? "bg-leaf/20" : "bg-white/70"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{e.emoji}</span>
-                    <div>
-                      <div className="text-sm font-semibold text-ink">{e.name}</div>
-                      <div className="text-[11px] text-muted-foreground">{e.desc}</div>
+            {tab === "sell" &&
+              (barnEntries.length === 0 ? (
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                  Your barn is empty — plant something on the fields! 🌱
+                </p>
+              ) : (
+                <>
+                  <ul className="mt-3 space-y-2">
+                    {barnEntries.map(([id, qty]) => {
+                      const crop = cropById(id)!;
+                      const price = effectiveSellPrice(crop, state.equipment);
+                      return (
+                        <li
+                          key={id}
+                          className="flex items-center justify-between rounded-xl bg-white/70 p-2.5 ink-border"
+                        >
+                          <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                            <span className="text-lg">{crop.emoji}</span>
+                            {crop.name} × {qty}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-lg"
+                            onClick={() => {
+                              const earned = sellCrop(id);
+                              if (earned) toast.success(`+${earned}g`);
+                            }}
+                          >
+                            Sell {(qty * price).toLocaleString()}g
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <Button
+                    className="mt-3 w-full rounded-xl"
+                    onClick={() => {
+                      let earned = 0;
+                      for (const [id] of barnEntries) earned += sellCrop(id);
+                      if (earned) toast.success(`Sold everything for ${earned}g!`);
+                    }}
+                  >
+                    Sell all ({barnTotal.toLocaleString()}g)
+                  </Button>
+                </>
+              ))}
+          </>
+        )}
+
+        {kind === "market" && (
+          <>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Permanent upgrades — speed gear stacks up to 55% faster growth, market gear up to +15%
+              sell price.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {EQUIPMENT.map((e) => {
+                const owned = state.equipment.includes(e.id);
+                return (
+                  <li
+                    key={e.id}
+                    className={`flex items-center justify-between rounded-xl p-2.5 ink-border ${
+                      owned ? "bg-leaf/20" : "bg-white/70"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{e.emoji}</span>
+                      <div>
+                        <div className="text-sm font-semibold text-ink">{e.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{e.desc}</div>
+                      </div>
                     </div>
-                  </div>
-                  {owned ? (
-                    <span className="rounded-full bg-leaf/40 px-2 py-0.5 text-[10px] font-bold text-ink">
-                      Owned
-                    </span>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-lg"
-                      disabled={state.gold < e.cost}
-                      onClick={() => {
-                        if (buyEquipment(e.id)) toast.success(`${e.name} purchased!`);
-                      }}
-                    >
-                      {e.cost.toLocaleString()}g
-                    </Button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                    {owned ? (
+                      <span className="rounded-full bg-leaf/40 px-2 py-0.5 text-[10px] font-bold text-ink">
+                        Owned
+                      </span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-lg"
+                        disabled={state.gold < e.cost}
+                        onClick={() => {
+                          if (buyEquipment(e.id)) toast.success(`${e.name} purchased!`);
+                        }}
+                      >
+                        {e.cost.toLocaleString()}g
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
 
         <p className="mt-3 text-center text-[10px] text-ink/50">

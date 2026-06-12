@@ -204,7 +204,7 @@ function HowItWorks() {
     {
       emo: "🌱",
       title: "PLANT",
-      desc: "Pick a seed and click an empty plot — the seed is bought automatically. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
+      desc: "Buy seeds at the Seed Shop, then click an empty plot to plant. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
     },
     {
       emo: "⏳",
