@@ -3,23 +3,24 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
+import { CROPS } from "@/lib/game-logic";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { CheckCircle2, AlertCircle, Wallet, ArrowDown } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sawah Voyages — Sail, Cast, Chill on Solana" },
+      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
       {
         name: "description",
         content:
-          "Hop on a tiny boat, cast your line, and reel in rare fish. A chill Solana game that runs right in your browser. Open beta.",
+          "Claim a field, plant your first tomato, and grow it into a farming empire. A chill multiplayer Solana game that runs right in your browser. Open beta.",
       },
-      { property: "og:title", content: "Sawah Voyages — Sail, Cast, Chill" },
+      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper" },
       {
         property: "og:description",
         content:
-          "A cozy sea-life game on Solana. Connect your wallet, set sail, and start fishing — all in the browser.",
+          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow — all in the browser, together with other farmers on one live map.",
       },
     ],
   }),
@@ -32,7 +33,7 @@ function Landing() {
       <SkyBackdrop />
       <Navbar />
       <Hero />
-      <SpeciesMarquee />
+      <CropsMarquee />
       <HowItWorks />
       <TokenSection />
       <Roadmap />
@@ -72,38 +73,39 @@ function Hero() {
     <section className="relative">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6 text-center sm:px-6">
         <div className="pill mb-6 text-xs">
-          <span className="h-2 w-2 rounded-full bg-destructive" />
-          12 CAPTAINS AT SEA
+          <span className="h-2 w-2 rounded-full bg-leaf" />
+          OPEN BETA · LIVE TOWN
         </div>
 
         <div className="text-6xl boat-bob" aria-hidden>
-          ⛵
+          🧑‍🌾
         </div>
 
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
-          SAWAH
+          AGRI
           <br />
-          <span className="text-sunset-deep">VOYAGES</span>
+          <span className="text-sunset-deep">LAND</span>
         </h1>
-        <p className="pixel mt-3 text-sm text-ocean sm:text-base">Sail · Cast · Chill</p>
+        <p className="pixel mt-3 text-sm text-ocean sm:text-base">Plant · Grow · Prosper</p>
 
         <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/80 sm:text-lg">
-          Hop on your little boat, cast your line, and let the waves decide today's catch. There are
-          common fish, weird ones, and a few that will make you yell. It all runs{" "}
+          Claim a field, plant your first tomato, and slowly grow it into a farming empire. Ten
+          crops, ten levels, one shared town where every farmer walks the same map. It all runs{" "}
           <span className="font-bold text-ocean">right in your browser</span> — no downloads, no
           drama.
         </p>
 
         <p className="mt-6 text-xs uppercase tracking-widest text-ink/60">
-          Canoe · Sailboat · Fishing Skiff · Bagan · Speedboat · Cargo Hauler
+          Tomato · Eggplant · Corn · Chili · Cabbage · Melon · Pumpkin · Strawberry · Mango · Golden
+          Rice
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
             ["🧪", "OPEN BETA"],
             ["✅", "NO DOWNLOAD"],
-            ["🌐", "MULTIPLAYER"],
-            ["🎙️", "VOICE CHAT"],
+            ["🌐", "ONE SHARED MAP"],
+            ["💬", "LIVE CHAT"],
           ].map(([emo, label]) => (
             <span key={label} className="pill text-xs">
               <span>{emo}</span> {label}
@@ -114,9 +116,9 @@ function Hero() {
         <div className="mt-10 flex flex-col items-center gap-3">
           <WalletButton />
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
-            ENTER HARBOR →
+            START FARMING →
           </Link>
-          <p className="mt-1 text-sm text-ink/70">Connect your Solana wallet to set sail</p>
+          <p className="mt-1 text-sm text-ink/70">Connect your Solana wallet to claim your field</p>
           <ArrowDown className="mt-2 h-5 w-5 animate-bounce text-ink/50" />
         </div>
 
@@ -146,7 +148,7 @@ function GateBanner({
         {!connected && (
           <p className="text-ink/70">
             Hold at least <span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to
-            come aboard. Connect your wallet first.
+            claim a field. Connect your wallet first.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
@@ -173,33 +175,20 @@ function GateBanner({
   );
 }
 
-/* ---------- Species marquee ---------- */
+/* ---------- Crops marquee ---------- */
 
-const SPECIES = [
-  { e: "🐟", n: "Coastal Sardine", r: "Common" },
-  { e: "🐠", n: "Reef Snapper", r: "Uncommon" },
-  { e: "🦀", n: "Mangrove Crab", r: "Uncommon" },
-  { e: "🦈", n: "Blue Shark", r: "Rare" },
-  { e: "🐡", n: "Moon Pufferfish", r: "Rare" },
-  { e: "🐙", n: "Dusk Octopus", r: "Epic" },
-  { e: "✨", n: "Mythic Eel Dragon", r: "MYTHICAL" },
-  { e: "🌊", n: "Valley Leviathan", r: "MYTHICAL" },
-  { e: "💜", n: "Sea Phoenix", r: "Epic" },
-  { e: "⚡", n: "Thunder Fin", r: "MYTHICAL" },
-];
-
-function SpeciesMarquee() {
-  const row = [...SPECIES, ...SPECIES];
+function CropsMarquee() {
+  const row = [...CROPS, ...CROPS];
   return (
     <section
       id="species"
       className="relative my-8 overflow-hidden border-y-2 border-ink bg-foam py-4"
     >
       <div className="marquee gap-8 whitespace-nowrap pixel text-xs text-ink">
-        {row.map((s, i) => (
+        {row.map((c, i) => (
           <span key={i} className="inline-flex items-center gap-2">
-            <span className="text-lg">{s.e}</span>
-            {s.n}
+            <span className="text-lg">{c.emoji}</span>
+            {c.name} <span className="text-sunset-deep">Lv{c.unlockLevel}</span>
             <span className="text-ink/40">·</span>
           </span>
         ))}
@@ -213,34 +202,34 @@ function SpeciesMarquee() {
 function HowItWorks() {
   const steps = [
     {
-      emo: "⛵",
-      title: "SAIL",
-      desc: "Pick your boat — from a beat-up canoe to a cargo hauler. Each one has its own range and feel.",
+      emo: "🌱",
+      title: "PLANT",
+      desc: "Pick a seed and click an empty plot — the seed is bought automatically. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
     },
     {
-      emo: "🎣",
-      title: "CAST",
-      desc: "Drop your line, wait a beat, then reel it in. Some fish only bite after dark — don't be surprised if you go home empty-handed.",
+      emo: "⏳",
+      title: "GROW & HARVEST",
+      desc: "Crops grow in real time, from 20 seconds for tomatoes to 10 minutes for Golden Rice. Harvest when they sparkle, stash everything in your barn.",
     },
     {
-      emo: "🛠️",
-      title: "UPGRADE",
-      desc: "Sell your catch, buy bait, level up your boat. Your tiny dock slowly grows into a busy harbor.",
+      emo: "💰",
+      title: "SELL & UPGRADE",
+      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster — then expand your field and repeat.",
     },
   ];
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="pixel text-xs text-ocean">The hunt is real</p>
+        <p className="pixel text-xs text-ocean">The loop is simple</p>
         <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">
-          26 SPECIES.
+          10 CROPS. 10 LEVELS.
           <br />
-          ONE LEGENDARY PRIZE.
+          ONE GOLDEN FIELD.
         </h2>
         <p className="mt-4 text-ink/80">
-          From sardines you can pull all day to Mythical creatures that make global chat lose its
-          mind. Eight fish only bite after sunset, and the rarest ones — honestly — are brutally
-          hard. But when you finally land one? It feels really good.
+          From tomatoes you can flip in seconds to Golden Rice that takes patience and pays like a
+          harvest festival. Level up to unlock bigger crops, invest your gold in equipment, and
+          climb the town leaderboard.
         </p>
       </div>
 
@@ -255,11 +244,23 @@ function HowItWorks() {
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs">
-        {["Common 100%", "Uncommon 60%", "Rare 20%", "Epic 6%", "Mythical <1%"].map((r) => (
+        {[
+          "🍅 Lv1 Tomato",
+          "🌽 Lv3 Corn",
+          "🍈 Lv6 Melon",
+          "🍓 Lv8 Strawberry",
+          "🌾 Lv10 Golden Rice",
+        ].map((r) => (
           <span key={r} className="pill text-xs">
             {r}
           </span>
         ))}
+      </div>
+
+      <div className="mt-8 text-center">
+        <Link to="/docs" className="pill text-xs">
+          📚 Read the full docs — crops, prices, equipment, FAQ
+        </Link>
       </div>
     </section>
   );
@@ -276,26 +277,26 @@ function TokenSection() {
             <span className="pill text-xs">
               <span>🪙</span> TOKEN
             </span>
-            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE HARBOR</h2>
+            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold at least {MIN_TOKEN_BALANCE} Sawah Voyages token to enter the harbor and set
-              sail. The token is just a key — for access, cosmetics, and seasonal events. Not a
-              promise of returns, not an investment pitch. Play slowly, enjoy the sea.
+              Hold at least {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town.
+              The token is just a key — for access, cosmetics, and seasonal events. Not a promise of
+              returns, not an investment pitch. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="chunky-btn">
                 🪙 VIEW TOKEN
               </a>
               <Link to="/game" className="chunky-btn chunky-btn-sky">
-                🎣 TRY THE GAME
+                🌱 TRY THE GAME
               </Link>
             </div>
           </div>
           <div className="relative grid place-items-center bg-sky p-8 ink-border md:border-l-2 md:border-t-0 border-t-2">
             <div className="text-7xl boat-bob" aria-hidden>
-              🏝️
+              🏡
             </div>
-            <p className="pixel mt-4 text-xs text-ink/70">HARBOR #1</p>
+            <p className="pixel mt-4 text-xs text-ink/70">FIELD #1</p>
           </div>
         </div>
       </div>
@@ -308,31 +309,31 @@ function TokenSection() {
 function Roadmap() {
   const phases = [
     {
-      q: "Q1",
-      t: "First boat afloat",
-      d: "Open beta, one fish per rarity, a tiny dock tucked in the corner of the map.",
+      q: "PHASE 1",
+      t: "First seeds — LIVE",
+      d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
     },
     {
-      q: "Q2",
-      t: "First harbor opens",
-      d: "Boats still wobble, but the fish are biting. Global chat goes live.",
+      q: "PHASE 2",
+      t: "Personal plots in town",
+      d: "Your farm appears on the world map — visit other farmers' fields, water their crops, leave a note.",
     },
     {
-      q: "Q3",
-      t: "Voice chat & nighttime",
-      d: "Chat with other captains. The rare fish start showing up after sundown.",
+      q: "PHASE 3",
+      t: "Seasons & festivals",
+      d: "Weather that changes growth rates, limited seasonal crops, and a harvest festival with town-wide prizes.",
     },
     {
-      q: "Q4",
+      q: "PHASE 4",
       t: "Marketplace & cosmetics",
-      d: "Sell sails, repaint your hull, hang lanterns. Mythical prizes get hunted for real.",
+      d: "Player-to-player crop trading, farmhouse skins, pets, and custom hats for your farmer.",
     },
   ];
   return (
     <section id="roadmap" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="text-center">
         <p className="pixel text-xs text-ocean">ROADMAP</p>
-        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">FROM CANOE TO ARMADA</h2>
+        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">FROM SEED TO EMPIRE</h2>
       </div>
       <ol className="mt-10 grid gap-4 md:grid-cols-4">
         {phases.map((p) => (

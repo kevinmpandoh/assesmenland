@@ -4,16 +4,16 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLeaderboard } from "@/hooks/useVillage";
-import { Trophy, Fish, ArrowRight, RefreshCw } from "lucide-react";
+import { Trophy, Sprout, ArrowRight, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/leaderboard")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Leaderboard — Sawah Voyages" },
+      { title: "Leaderboard — Agri Land" },
       {
         name: "description",
-        content: "The richest captains in Sawah Voyages. Sail and fish your way to the top.",
+        content: "The richest farmers in Agri Land. Plant and sell your way to the top.",
       },
     ],
   }),
@@ -35,7 +35,7 @@ function LeaderboardPage() {
           </div>
           <h1 className="pixel mt-4 text-2xl text-ink sm:text-3xl">Leaderboard</h1>
           <p className="mt-3 text-muted-foreground">
-            The hardest-sailing captains and luckiest anglers, ranked by coins.
+            The hardest-working farmers in town, ranked by gold.
           </p>
         </div>
 
@@ -63,13 +63,13 @@ function LeaderboardPage() {
 
           {data && data.length === 0 && (
             <div className="py-10 text-center">
-              <p className="text-muted-foreground">No captains ranked yet.</p>
+              <p className="text-muted-foreground">No farmers ranked yet.</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Play the game and your progress will appear here automatically.
               </p>
               <Link to="/game">
                 <Button className="mt-5 chunky-btn">
-                  Enter the harbor <ArrowRight className="ml-1 h-4 w-4" />
+                  Claim your field <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -83,17 +83,17 @@ function LeaderboardPage() {
                     {MEDALS[r.rank - 1] ?? `#${r.rank}`}
                   </span>
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-soft text-sm ink-border">
-                    ⛵
+                    🧑‍🌾
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{r.name}</div>
                     <div className="text-xs text-muted-foreground">Level {r.level}</div>
                   </div>
                   <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
-                    <Fish className="h-3.5 w-3.5" /> {r.fishCaught.toLocaleString()}
+                    <Sprout className="h-3.5 w-3.5" /> {r.harvests.toLocaleString()}
                   </div>
                   <div className="shrink-0 rounded-lg bg-foam px-2.5 py-1 text-sm font-bold ink-border">
-                    {r.coins.toLocaleString()} 🪙
+                    {r.coins.toLocaleString()}g
                   </div>
                 </li>
               ))}

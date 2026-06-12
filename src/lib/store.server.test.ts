@@ -73,11 +73,18 @@ describe("displayName", () => {
 
 describe("presence", () => {
   test("upserts and lists active players", async () => {
-    await store.upsertPresence({ wallet_address: WALLET, name: "Tester", x: 14, y: 12.5 });
+    await store.upsertPresence({
+      wallet_address: WALLET,
+      name: "Tester",
+      level: 3,
+      x: 14,
+      y: 12.5,
+    });
     const list = await store.listPresence(12_000);
     const me = list.find((p) => p.wallet_address === WALLET);
     expect(me?.x).toBe(14);
     expect(me?.name).toBe("Tester");
+    expect(me?.level).toBe(3);
   });
 
   test("expires stale players", async () => {

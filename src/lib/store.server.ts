@@ -45,6 +45,7 @@ export type CatchRow = {
 export type PresenceRow = {
   wallet_address: string;
   name: string;
+  level: number;
   x: number;
   y: number;
   updated_at: string;

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
@@ -8,10 +8,12 @@ import { useChat } from "@/hooks/useVillage";
 import { pingWorld } from "@/lib/api/game.functions";
 import {
   MAP_SIZE,
+  NPC_ROUTES,
   SPAWN,
   buildMap,
   isWalkable,
-  nearWater,
+  nearFarmland,
+  nearStall,
   type TileKind,
   type WorldObject,
 } from "@/lib/world-map";
@@ -29,18 +31,17 @@ import {
   Trophy,
   RefreshCw,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/world")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "The Island — Sawah Voyages" },
+      { title: "The Town — Agri Land" },
       {
         name: "description",
-        content:
-          "Walk around the Sawah Voyages island, meet other captains, and fish from the shore.",
+        content: "Walk around the Agri Land town, meet other farmers, and tend the shared fields.",
       },
     ],
   }),
@@ -52,7 +53,7 @@ function WorldPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      {!gate.connected && <Gate icon={Wallet} title="Connect wallet to come ashore" connect />}
+      {!gate.connected && <Gate icon={Wallet} title="Connect wallet to enter town" connect />}
       {gate.connected && gate.status === "loading" && (
         <Gate icon={Sparkles} title="Checking your wallet…" />
       )}
@@ -60,7 +61,7 @@ function WorldPage() {
         <Gate icon={Lock} title="At least 1 token needed" getToken />
       )}
       {gate.connected && gate.status === "error" && (
-        <Gate icon={AlertCircle} title="Network is choppy" onRetry={gate.refresh} />
+        <Gate icon={AlertCircle} title="Network is muddy" onRetry={gate.refresh} />
       )}
       {gate.connected && gate.status === "granted" && <World address={gate.address!} />}
     </div>
@@ -118,20 +119,19 @@ function Gate({
 
 const TILE_W = 64;
 const TILE_H = 32;
-const SPEED = 3.2; // tiles per second
+const SPEED = 3.4; // tiles per second
 const PING_MS = 1_500;
 const BUBBLE_MS = 10_000;
 
-type Mover = { x: number; y: number; tx: number; ty: number; name: string };
+type Mover = { x: number; y: number; tx: number; ty: number; name: string; level: number };
 
 const TILE_COLORS: Record<TileKind, [string, string]> = {
-  deep: ["#3a82d4", "#3576c2"],
+  grass: ["#8fd17a", "#85c870"],
+  grass2: ["#9bd987", "#90cf7d"],
+  dirt: ["#d2b07e", "#c8a674"],
+  stone: ["#cfd4dd", "#c4c9d3"],
+  soil: ["#a9805a", "#9e7651"],
   water: ["#5fb6e8", "#54aade"],
-  sand: ["#f1dfa8", "#e8d394"],
-  grass: ["#8fd17a", "#7fc46b"],
-  paddy: ["#5fae54", "#549c4a"],
-  path: ["#d9c08c", "#cfb37c"],
-  dock: ["#b07c4f", "#a07045"],
 };
 
 function walletColor(wallet: string): string {
@@ -143,28 +143,38 @@ function walletColor(wallet: string): string {
 function World({ address }: { address: string }) {
   const game = useGame(address);
   const { messages, send } = useChat();
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Mutable world state lives in refs so the rAF loop never depends on
   // React re-renders.
   const worldRef = useRef(buildMap());
-  const meRef = useRef<Mover>({ ...SPAWN, tx: SPAWN.x, ty: SPAWN.y, name: "" });
+  const meRef = useRef<Mover>({ ...SPAWN, tx: SPAWN.x, ty: SPAWN.y, name: "", level: 1 });
   const othersRef = useRef<Map<string, Mover>>(new Map());
+  const npcsRef = useRef(
+    NPC_ROUTES.map((r) => ({
+      name: r.name,
+      points: r.points,
+      idx: 0,
+      x: r.points[0].x,
+      y: r.points[0].y,
+    })),
+  );
   const keysRef = useRef<Set<string>>(new Set());
   const camRef = useRef({ x: 0, y: 0, ready: false });
   const bubblesRef = useRef<Map<string, string>>(new Map());
-  const splashesRef = useRef<{ x: number; y: number; t: number }[]>([]);
 
   const [onlineCount, setOnlineCount] = useState(1);
-  const [canFish, setCanFish] = useState(false);
-  const [casting, setCasting] = useState(false);
+  const [zone, setZone] = useState<"farm" | "stall" | null>(null);
   const [chatInput, setChatInput] = useState("");
 
   const myName = game.state.username || shortAddress(address);
   const nameRef = useRef(myName);
   nameRef.current = myName;
+  const levelRef = useRef(game.state.level);
+  levelRef.current = game.state.level;
 
-  // Chat bubbles: latest message per wallet, fresh ones only.
+  // Chat bubbles: latest fresh message per wallet.
   useEffect(() => {
     if (!messages.data) return;
     const map = new Map<string, string>();
@@ -175,14 +185,20 @@ function World({ address }: { address: string }) {
     bubblesRef.current = map;
   }, [messages.data]);
 
-  // Presence ping: send my position, receive everyone.
+  // Presence ping: send my position + level, receive everyone.
   useEffect(() => {
     let stopped = false;
     const tick = async () => {
       const me = meRef.current;
       try {
         const players = await pingWorld({
-          data: { wallet: address, name: nameRef.current, x: me.x, y: me.y },
+          data: {
+            wallet: address,
+            name: nameRef.current,
+            level: levelRef.current,
+            x: me.x,
+            y: me.y,
+          },
         });
         if (stopped) return;
         const seen = new Set<string>();
@@ -194,6 +210,7 @@ function World({ address }: { address: string }) {
             existing.tx = p.x;
             existing.ty = p.y;
             existing.name = p.name;
+            existing.level = p.level;
           } else {
             othersRef.current.set(p.wallet_address, {
               x: p.x,
@@ -201,6 +218,7 @@ function World({ address }: { address: string }) {
               tx: p.x,
               ty: p.y,
               name: p.name,
+              level: p.level,
             });
           }
         }
@@ -288,7 +306,7 @@ function World({ address }: { address: string }) {
       if (!collide || isWalkable(tiles, objects, nx, ny)) {
         m.x = nx;
         m.y = ny;
-      } else if (!collide || isWalkable(tiles, objects, nx, m.y)) {
+      } else if (isWalkable(tiles, objects, nx, m.y)) {
         m.x = nx;
         m.tx = nx;
       } else if (isWalkable(tiles, objects, m.x, ny)) {
@@ -300,10 +318,9 @@ function World({ address }: { address: string }) {
       }
     };
 
-    const update = (dt: number, now: number) => {
+    const update = (dt: number) => {
       const me = meRef.current;
 
-      // keyboard: screen-relative directions mapped to iso axes
       const keys = keysRef.current;
       let kx = 0;
       let ky = 0;
@@ -334,6 +351,21 @@ function World({ address }: { address: string }) {
         moveToward(other, dt, SPEED * 1.1, false);
       }
 
+      // NPC villagers walk their loops
+      for (const npc of npcsRef.current) {
+        const target = npc.points[npc.idx];
+        const dx = target.x - npc.x;
+        const dy = target.y - npc.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.1) {
+          npc.idx = (npc.idx + 1) % npc.points.length;
+        } else {
+          const step = Math.min(dist, 1.2 * dt);
+          npc.x += (dx / dist) * step;
+          npc.y += (dy / dist) * step;
+        }
+      }
+
       // camera follows me
       const [px, py] = iso(me.x, me.y);
       const cam = camRef.current;
@@ -346,26 +378,18 @@ function World({ address }: { address: string }) {
         cam.y += (py - cam.y) * Math.min(1, dt * 4);
       }
 
-      // ambient splashes on water
-      if (Math.random() < dt * 1.2) {
-        const x = Math.random() * MAP_SIZE;
-        const y = Math.random() * MAP_SIZE;
-        const t = tiles[Math.round(y)]?.[Math.round(x)];
-        if (t === "water" || t === "deep") splashesRef.current.push({ x, y, t: now });
-      }
-      splashesRef.current = splashesRef.current.filter((s) => now - s.t < 1500);
-
-      setCanFish(nearWater(tiles, me.x, me.y));
+      setZone(
+        nearStall(objects, me.x, me.y) ? "stall" : nearFarmland(tiles, me.x, me.y) ? "farm" : null,
+      );
     };
 
     const drawTile = (x: number, y: number, kind: TileKind, now: number) => {
       const [sx, sy] = iso(x, y);
       const [base, alt] = TILE_COLORS[kind];
       let fill = (x + y) % 2 === 0 ? base : alt;
-      if (kind === "water" || kind === "deep") {
+      if (kind === "water") {
         const wave = Math.sin(now / 700 + x * 1.3 + y * 0.9) * 0.5 + 0.5;
-        fill =
-          kind === "deep" ? `hsl(212 65% ${44 + wave * 4}%)` : `hsl(203 72% ${60 + wave * 5}%)`;
+        fill = `hsl(203 72% ${58 + wave * 6}%)`;
       }
       ctx.beginPath();
       ctx.moveTo(sx, sy - TILE_H / 2);
@@ -376,9 +400,8 @@ function World({ address }: { address: string }) {
       ctx.fillStyle = fill;
       ctx.fill();
 
-      if (kind === "paddy") {
-        // planted rows running across the diamond
-        ctx.strokeStyle = "rgba(27,34,64,0.3)";
+      if (kind === "soil") {
+        ctx.strokeStyle = "rgba(27,34,64,0.25)";
         ctx.lineWidth = 1.5;
         for (let i = 1; i <= 3; i++) {
           const f = i / 4 - 0.5;
@@ -389,128 +412,225 @@ function World({ address }: { address: string }) {
           ctx.lineTo(bx, by);
           ctx.stroke();
         }
+        // little sprouts
+        if ((x * 7 + y * 13) % 3 === 0) {
+          ctx.font = "10px serif";
+          ctx.textAlign = "center";
+          ctx.fillText("🌱", sx, sy + 2);
+        }
       }
-      if (kind === "dock") {
-        ctx.strokeStyle = "rgba(27,34,64,0.35)";
-        ctx.lineWidth = 1.5;
+      if (kind === "stone") {
+        ctx.strokeStyle = "rgba(27,34,64,0.12)";
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(sx - TILE_W / 4, sy - TILE_H / 4 + TILE_H / 2);
-        ctx.lineTo(sx + TILE_W / 4, sy + TILE_H / 4 - TILE_H / 2 + TILE_H / 2);
+        ctx.moveTo(sx, sy - TILE_H / 2);
+        ctx.lineTo(sx + TILE_W / 2, sy);
+        ctx.lineTo(sx, sy + TILE_H / 2);
+        ctx.lineTo(sx - TILE_W / 2, sy);
+        ctx.closePath();
         ctx.stroke();
       }
     };
 
-    const drawObject = (o: WorldObject) => {
+    const drawObject = (o: WorldObject, now: number) => {
       const [sx, sy] = iso(o.x, o.y);
+      ctx.strokeStyle = "#1b2240";
+      ctx.lineWidth = 2;
       if (o.kind === "tree") {
         ctx.fillStyle = "#8a5a33";
         ctx.fillRect(sx - 3, sy - 22, 6, 22);
         ctx.fillStyle = "#4f9c4a";
         ctx.beginPath();
-        ctx.arc(sx, sy - 30, 14, 0, Math.PI * 2);
-        ctx.arc(sx - 10, sy - 22, 10, 0, Math.PI * 2);
-        ctx.arc(sx + 10, sy - 22, 10, 0, Math.PI * 2);
+        ctx.arc(sx, sy - 32, 14, 0, Math.PI * 2);
+        ctx.arc(sx - 10, sy - 24, 10, 0, Math.PI * 2);
+        ctx.arc(sx + 10, sy - 24, 10, 0, Math.PI * 2);
         ctx.fill();
       } else if (o.kind === "rock") {
         ctx.fillStyle = "#9aa3b2";
         ctx.beginPath();
-        ctx.ellipse(sx, sy - 4, 12, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(sx, sy - 4, 11, 7, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#b6bdc9";
-        ctx.beginPath();
-        ctx.ellipse(sx - 3, sy - 8, 7, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (o.kind === "house") {
+      } else if (o.kind === "house" || o.kind === "bighouse") {
+        const w = o.kind === "bighouse" ? 26 : 18;
+        const h = o.kind === "bighouse" ? 34 : 24;
         ctx.fillStyle = "#f0e0c0";
-        ctx.fillRect(sx - 18, sy - 26, 36, 24);
-        ctx.strokeStyle = "#1b2240";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(sx - 18, sy - 26, 36, 24);
-        ctx.fillStyle = "#f48b2a";
+        ctx.fillRect(sx - w, sy - h, w * 2, h);
+        ctx.strokeRect(sx - w, sy - h, w * 2, h);
+        ctx.fillStyle = o.kind === "bighouse" ? "#6b4a2f" : "#8a5a33";
         ctx.beginPath();
-        ctx.moveTo(sx - 24, sy - 26);
-        ctx.lineTo(sx, sy - 44);
-        ctx.lineTo(sx + 24, sy - 26);
+        ctx.moveTo(sx - w - 6, sy - h);
+        ctx.lineTo(sx, sy - h - 18);
+        ctx.lineTo(sx + w + 6, sy - h);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
         ctx.fillStyle = "#7fc7ff";
-        ctx.fillRect(sx - 10, sy - 18, 8, 8);
-        ctx.fillStyle = "#8a5a33";
-        ctx.fillRect(sx + 4, sy - 16, 9, 14);
+        ctx.fillRect(sx - w + 6, sy - h + 6, 9, 9);
+        if (o.kind === "bighouse") ctx.fillRect(sx + w - 15, sy - h + 6, 9, 9);
+        ctx.fillStyle = "#6b4a2f";
+        ctx.fillRect(sx - 5, sy - 16, 10, 16);
       } else if (o.kind === "stall") {
         ctx.fillStyle = "#c98c54";
-        ctx.fillRect(sx - 16, sy - 18, 32, 16);
-        ctx.strokeStyle = "#1b2240";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(sx - 16, sy - 18, 32, 16);
+        ctx.fillRect(sx - 18, sy - 18, 36, 16);
+        ctx.strokeRect(sx - 18, sy - 18, 36, 16);
         ctx.fillStyle = "#f4f7fb";
-        ctx.fillRect(sx - 20, sy - 26, 40, 8);
-        ctx.fillStyle = "#f48b2a";
-        for (let i = 0; i < 4; i++) ctx.fillRect(sx - 20 + i * 10 + 5, sy - 26, 5, 8);
-        ctx.strokeRect(sx - 20, sy - 26, 40, 8);
+        ctx.fillRect(sx - 22, sy - 28, 44, 10);
+        ctx.fillStyle = "#6cc26a";
+        for (let i = 0; i < 4; i++) ctx.fillRect(sx - 22 + i * 11 + 5, sy - 28, 6, 10);
+        ctx.strokeRect(sx - 22, sy - 28, 44, 10);
+        if (o.label) {
+          ctx.font = "bold 9px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#1b2240";
+          ctx.fillText(o.label, sx, sy - 32);
+        }
+      } else if (o.kind === "fountain") {
+        ctx.fillStyle = "#b9c2d4";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, 30, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#5fb6e8";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, 22, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#b9c2d4";
+        ctx.fillRect(sx - 3, sy - 22, 6, 22);
+        const spray = Math.sin(now / 250) * 2;
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 24 - spray, 7, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (o.kind === "fence") {
+        ctx.strokeStyle = "#8a5a33";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(sx - 14, sy - 4);
+        ctx.lineTo(sx + 14, sy - 4);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(sx - 10, sy + 2);
+        ctx.lineTo(sx - 10, sy - 12);
+        ctx.moveTo(sx + 10, sy + 2);
+        ctx.lineTo(sx + 10, sy - 12);
+        ctx.stroke();
+      } else if (o.kind === "sign") {
+        ctx.fillStyle = "#8a5a33";
+        ctx.fillRect(sx - 2, sy - 18, 4, 18);
+        ctx.fillStyle = "#d9b87c";
+        ctx.fillRect(sx - 22, sy - 30, 44, 14);
+        ctx.strokeRect(sx - 22, sy - 30, 44, 14);
+        if (o.label) {
+          ctx.font = "bold 8px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#1b2240";
+          ctx.fillText(o.label, sx, sy - 20);
+        }
+      } else if (o.kind === "crate") {
+        ctx.fillStyle = "#c98c54";
+        ctx.fillRect(sx - 10, sy - 16, 20, 16);
+        ctx.strokeRect(sx - 10, sy - 16, 20, 16);
+        ctx.beginPath();
+        ctx.moveTo(sx - 10, sy - 16);
+        ctx.lineTo(sx + 10, sy);
+        ctx.moveTo(sx + 10, sy - 16);
+        ctx.lineTo(sx - 10, sy);
+        ctx.stroke();
+      } else if (o.kind === "well") {
+        ctx.fillStyle = "#9aa3b2";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 4, 13, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#3a82d4";
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 5, 8, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#8a5a33";
+        ctx.fillRect(sx - 12, sy - 26, 3, 22);
+        ctx.fillRect(sx + 9, sy - 26, 3, 22);
+        ctx.fillStyle = "#6b4a2f";
+        ctx.beginPath();
+        ctx.moveTo(sx - 16, sy - 24);
+        ctx.lineTo(sx, sy - 34);
+        ctx.lineTo(sx + 16, sy - 24);
+        ctx.closePath();
+        ctx.fill();
       }
     };
 
-    const drawAvatar = (m: Mover, wallet: string, isMe: boolean) => {
+    const drawPerson = (
+      m: { x: number; y: number; name: string; level?: number },
+      color: string,
+      opts: { isMe?: boolean; isNpc?: boolean; bubble?: string },
+    ) => {
       const [sx, sy] = iso(m.x, m.y);
-      // shadow
       ctx.fillStyle = "rgba(27,34,64,0.25)";
       ctx.beginPath();
       ctx.ellipse(sx, sy, 10, 5, 0, 0, Math.PI * 2);
       ctx.fill();
-      // body
-      ctx.fillStyle = walletColor(wallet);
+      ctx.fillStyle = color;
       ctx.strokeStyle = "#1b2240";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.roundRect(sx - 8, sy - 22, 16, 20, 7);
       ctx.fill();
       ctx.stroke();
-      // head
       ctx.fillStyle = "#ffe3c1";
       ctx.beginPath();
       ctx.arc(sx, sy - 28, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // sailor hat
-      ctx.fillStyle = isMe ? "#f48b2a" : "#f4f7fb";
+      // straw farmer hat
+      ctx.fillStyle = opts.isMe ? "#f48b2a" : opts.isNpc ? "#d9b87c" : "#ffd166";
       ctx.beginPath();
-      ctx.arc(sx, sy - 31, 8, Math.PI, 0);
-      ctx.closePath();
+      ctx.ellipse(sx, sy - 32, 11, 4, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // name
-      ctx.font = "bold 11px Nunito, sans-serif";
+      ctx.beginPath();
+      ctx.arc(sx, sy - 33, 6, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+
       ctx.textAlign = "center";
-      ctx.fillStyle = "#1b2240";
+      if (!opts.isNpc && m.level) {
+        ctx.font = "bold 9px Nunito, sans-serif";
+        const lvl = `Lvl ${m.level}`;
+        const lw = ctx.measureText(lvl).width + 8;
+        ctx.fillStyle = "#1b2240";
+        ctx.beginPath();
+        ctx.roundRect(sx - lw / 2, sy - 62, lw, 12, 5);
+        ctx.fill();
+        ctx.fillStyle = "#ffd166";
+        ctx.fillText(lvl, sx, sy - 53);
+      }
+      ctx.font = "bold 11px Nunito, sans-serif";
+      ctx.fillStyle = opts.isNpc ? "#5b6478" : "#1b2240";
       ctx.strokeStyle = "rgba(255,255,255,0.85)";
       ctx.lineWidth = 3;
-      const label = isMe ? `⭐ ${m.name}` : m.name;
-      ctx.strokeText(label, sx, sy - 44);
-      ctx.fillText(label, sx, sy - 44);
-      // chat bubble
-      const bubble = bubblesRef.current.get(wallet);
-      if (bubble) {
-        const text = bubble.length > 28 ? `${bubble.slice(0, 28)}…` : bubble;
+      ctx.strokeText(m.name, sx, sy - 42);
+      ctx.fillText(m.name, sx, sy - 42);
+
+      if (opts.bubble) {
+        const text = opts.bubble.length > 28 ? `${opts.bubble.slice(0, 28)}…` : opts.bubble;
         ctx.font = "11px Nunito, sans-serif";
         const w = ctx.measureText(text).width + 14;
         ctx.fillStyle = "rgba(255,255,255,0.95)";
         ctx.strokeStyle = "#1b2240";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(sx - w / 2, sy - 72, w, 20, 8);
+        ctx.roundRect(sx - w / 2, sy - 84, w, 20, 8);
         ctx.fill();
         ctx.stroke();
         ctx.fillStyle = "#1b2240";
-        ctx.fillText(text, sx, sy - 58);
+        ctx.fillText(text, sx, sy - 70);
       }
     };
 
     const draw = (now: number) => {
       const rect = canvas.parentElement!.getBoundingClientRect();
       const cam = camRef.current;
-      ctx.fillStyle = "#3a82d4";
+      ctx.fillStyle = "#bfe3ff";
       ctx.fillRect(0, 0, rect.width, rect.height);
       ctx.save();
       ctx.translate(rect.width / 2 - cam.x, rect.height / 2 - cam.y + 40);
@@ -519,36 +639,25 @@ function World({ address }: { address: string }) {
         for (let x = 0; x < MAP_SIZE; x++) drawTile(x, y, tiles[y][x], now);
       }
 
-      // splashes
-      for (const s of splashesRef.current) {
-        const age = (now - s.t) / 1500;
-        const [sx, sy] = iso(s.x, s.y);
-        ctx.strokeStyle = `rgba(255,255,255,${0.7 * (1 - age)})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(sx, sy, 4 + age * 14, 2 + age * 7, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // NPC boats drifting in a circle around the island
-      for (let b = 0; b < 2; b++) {
-        const angle = now / 14000 + b * Math.PI;
-        const bx = MAP_SIZE / 2 + Math.cos(angle) * 11.6;
-        const by = MAP_SIZE / 2 + Math.sin(angle) * 10.6;
-        const [sx, sy] = iso(bx, by);
-        ctx.font = "22px serif";
-        ctx.textAlign = "center";
-        ctx.fillText("⛵", sx, sy + Math.sin(now / 900 + b) * 2);
-      }
-
-      // depth-sorted drawables: objects + players
       const me = meRef.current;
       const drawables: { depth: number; fn: () => void }[] = [
-        ...objects.map((o) => ({ depth: o.x + o.y, fn: () => drawObject(o) })),
-        { depth: me.x + me.y, fn: () => drawAvatar(me, address, true) },
+        ...objects.map((o) => ({ depth: o.x + o.y, fn: () => drawObject(o, now) })),
+        {
+          depth: me.x + me.y,
+          fn: () =>
+            drawPerson(
+              { ...me, name: `⭐ ${nameRef.current}`, level: levelRef.current },
+              walletColor(address),
+              { isMe: true, bubble: bubblesRef.current.get(address) },
+            ),
+        },
         ...[...othersRef.current.entries()].map(([wallet, m]) => ({
           depth: m.x + m.y,
-          fn: () => drawAvatar(m, wallet, false),
+          fn: () => drawPerson(m, walletColor(wallet), { bubble: bubblesRef.current.get(wallet) }),
+        })),
+        ...npcsRef.current.map((npc) => ({
+          depth: npc.x + npc.y,
+          fn: () => drawPerson(npc, "#a8b2c4", { isNpc: true }),
         })),
       ];
       drawables.sort((a, b) => a.depth - b.depth);
@@ -560,13 +669,12 @@ function World({ address }: { address: string }) {
     const loop = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      update(dt, now);
+      update(dt);
       draw(now);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
-    // click / tap to move
     const onClick = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const cam = camRef.current;
@@ -588,23 +696,6 @@ function World({ address }: { address: string }) {
     };
   }, [address]);
 
-  const cast = () => {
-    if (casting) return;
-    if (game.fishCooldownRemaining > 0) return;
-    if (game.state.energy < 5) {
-      toast.error("Not enough energy");
-      return;
-    }
-    setCasting(true);
-    const me = meRef.current;
-    splashesRef.current.push({ x: me.x + 0.8, y: me.y + 0.8, t: performance.now() });
-    setTimeout(() => {
-      const caught = game.fish();
-      setCasting(false);
-      if (caught) toast.success(`Caught a ${caught.rarity} ${caught.name}! 🎣`);
-    }, 1200);
-  };
-
   const sendChat = (e: React.FormEvent) => {
     e.preventDefault();
     const body = chatInput.trim();
@@ -620,8 +711,6 @@ function World({ address }: { address: string }) {
     );
   };
 
-  const cooldown = Math.ceil(game.fishCooldownRemaining / 1000);
-
   return (
     <main className="relative flex-1 overflow-hidden" style={{ minHeight: "calc(100vh - 72px)" }}>
       <canvas ref={canvasRef} className="absolute inset-0 cursor-pointer" />
@@ -634,7 +723,7 @@ function World({ address }: { address: string }) {
             <Trophy className="h-3.5 w-3.5 text-sunset-deep" /> lv {game.state.level}
           </span>
           <span className="flex items-center gap-1 text-ink/80">
-            <Coins className="h-3.5 w-3.5 text-sunset-deep" /> {game.state.coins.toLocaleString()}
+            <Coins className="h-3.5 w-3.5 text-sunset-deep" /> {game.state.gold.toLocaleString()}
           </span>
           <span className="flex items-center gap-1 text-ink/80">
             <Zap className="h-3.5 w-3.5 text-sunset-deep" /> {game.state.energy}
@@ -648,15 +737,15 @@ function World({ address }: { address: string }) {
           <Users className="h-3.5 w-3.5 text-ocean" /> {onlineCount} online
         </div>
         <Link to="/game" className="pill text-xs">
-          <ArrowLeft className="h-3.5 w-3.5" /> Harbor
+          <ArrowLeft className="h-3.5 w-3.5" /> My Farm
         </Link>
       </div>
 
-      {/* Fishing action */}
-      {canFish && (
+      {/* Zone actions */}
+      {zone && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 sm:bottom-20">
-          <Button onClick={cast} disabled={casting || cooldown > 0} className="chunky-btn">
-            {casting ? "Reeling in…" : cooldown > 0 ? `Wait ${cooldown}s…` : "🎣 Cast Line"}
+          <Button onClick={() => navigate({ to: "/game" })} className="chunky-btn">
+            {zone === "farm" ? "🌱 Tend My Farm" : "🛒 Open the Shop"}
           </Button>
         </div>
       )}
@@ -681,7 +770,7 @@ function World({ address }: { address: string }) {
 
       {/* Help hint */}
       <div className="pointer-events-none absolute bottom-16 left-3 hidden text-[11px] text-ink/60 sm:block">
-        WASD / arrows / click to move · walk to the shore to fish
+        WASD / arrows / click to move · visit the fenced fields or the plaza stalls
       </div>
     </main>
   );

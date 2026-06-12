@@ -119,3 +119,6 @@ create index if not exists world_presence_time_idx on public.world_presence (upd
 
 alter table public.world_presence enable row level security;
 create policy "public read presence" on public.world_presence for select using (true);
+
+-- Level shown above heads in the world (added for Agri Land).
+alter table public.world_presence add column if not exists level int not null default 1;

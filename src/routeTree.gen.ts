@@ -13,6 +13,7 @@ import { Route as WorldRouteImport } from './routes/world'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as HowToPlayRouteImport } from './routes/how-to-play'
 import { Route as GameRouteImport } from './routes/game'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WorldRoute = WorldRouteImport.update({
@@ -35,6 +36,11 @@ const GameRoute = GameRouteImport.update({
   path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/game': typeof GameRoute
   '/how-to-play': typeof HowToPlayRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/game': typeof GameRoute
   '/how-to-play': typeof HowToPlayRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/game': typeof GameRoute
   '/how-to-play': typeof HowToPlayRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -65,14 +74,28 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/how-to-play' | '/leaderboard' | '/world'
+  fullPaths:
+    | '/'
+    | '/docs'
+    | '/game'
+    | '/how-to-play'
+    | '/leaderboard'
+    | '/world'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/how-to-play' | '/leaderboard' | '/world'
-  id: '__root__' | '/' | '/game' | '/how-to-play' | '/leaderboard' | '/world'
+  to: '/' | '/docs' | '/game' | '/how-to-play' | '/leaderboard' | '/world'
+  id:
+    | '__root__'
+    | '/'
+    | '/docs'
+    | '/game'
+    | '/how-to-play'
+    | '/leaderboard'
+    | '/world'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DocsRoute: typeof DocsRoute
   GameRoute: typeof GameRoute
   HowToPlayRoute: typeof HowToPlayRoute
   LeaderboardRoute: typeof LeaderboardRoute
@@ -109,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +151,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DocsRoute: DocsRoute,
   GameRoute: GameRoute,
   HowToPlayRoute: HowToPlayRoute,
   LeaderboardRoute: LeaderboardRoute,

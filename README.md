@@ -1,11 +1,13 @@
-# 🌾 SawahVerse — Farm, Fish, Chill on Solana
+# 🧑‍🌾 Agri Land — Plant, Grow, Prosper on Solana
 
-A relaxing, token-gated browser game inspired by Indonesian rice-field villages.
-Connect a Solana wallet, hold at least **1 token**, and enter a cozy blue village
-where you plant rice, fish in rivers, level up, chat, and climb the leaderboard.
+A cozy, token-gated multiplayer farming game. Connect a Solana wallet, hold at
+least **1 token**, claim your field, and grow it from a single tomato plot into
+a farming empire — while walking around one shared live town with every other
+farmer.
 
-> **This is a game.** The token is for gameplay access only. Nothing here is an
-> investment, and there is no promise of profit, yield, or returns.
+> **This is a game.** The token is for gameplay access only. Gold and crops are
+> in-game items with no monetary value. Nothing here is an investment, and
+> there is no promise of profit, yield, or returns.
 
 ---
 
@@ -15,9 +17,10 @@ where you plant rice, fish in rivers, level up, chat, and climb the leaderboard.
 ┌──────────────────────────────────────────────────────┐
 │  Browser                                             │
 │  React 19 + TypeScript (TanStack Start, SSR)         │
-│  Tailwind v4 + shadcn/ui      → blue glass UI        │
+│  Tailwind v4 + shadcn/ui      → pixel farm UI        │
 │  Solana Wallet Adapter        → Phantom / Solflare   │
 │  TanStack Query               → live data (polling)  │
+│  Canvas 2D                    → isometric town       │
 │  localStorage                 → instant local save   │
 └────────┬─────────────────────────────┬───────────────┘
          │ read-only RPC (no signing)  │ server functions (zod-validated)
@@ -25,7 +28,7 @@ where you plant rice, fish in rivers, level up, chat, and climb the leaderboard.
 ┌──────────────────┐   ┌───────────────────────────────┐
 │  Solana mainnet  │   │  Game API (src/lib/api)       │
 │  token balance   │   │  sync · leaderboard · chat ·  │
-│  check for gate  │   │  fish-catch log · rate limit  │
+│  check for gate  │   │  harvest log · presence       │
 └──────────────────┘   └──────────┬────────────────────┘
                                   ▼
                     ┌─────────────────────────────┐
@@ -35,11 +38,10 @@ where you plant rice, fish in rivers, level up, chat, and climb the leaderboard.
                     └─────────────────────────────┘
 ```
 
-Key design choice: the API works **with zero configuration**. Without env vars
-it persists to a local JSON file; set the two Supabase variables and the same
-code runs against Postgres. Game progress is also mirrored in `localStorage`
-so the player never loses state even if the network drops (the profile card
-shows a `saved / offline` badge).
+The API works **with zero configuration**: without env vars it persists to a
+local JSON file; set the two Supabase variables and the same code runs against
+Postgres. Player progress is mirrored in `localStorage` so nothing is lost if
+the network drops (profile card shows a saved/offline badge).
 
 ## 2. Run it
 
@@ -47,7 +49,7 @@ shows a `saved / offline` badge).
 bun install        # or npm install
 bun run dev        # start dev server (URL printed in terminal)
 
-bun test           # unit tests (game rules + storage layer)
+bun test           # unit tests (game rules, map, storage)
 bun run lint       # eslint + prettier
 bun run build      # production build
 ```
@@ -56,95 +58,74 @@ Optional `.env` (see `.env.example`):
 
 | Variable                                     | What it does                                                                                                           |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `VITE_RPC_ENDPOINT`                          | Custom Solana RPC (Helius/QuickNode). Public endpoint rate-limits.                                                     |
+| `VITE_RPC_ENDPOINT`                          | Custom Solana RPC (Helius/QuickNode). Default is a public CORS-enabled endpoint.                                       |
 | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | Switch the game API from local file storage to Supabase. Run `supabase/schema.sql` first. Server-only — never `VITE_`. |
 
-## 3. Folder structure
+## 3. The game
 
-```
-src/
-  routes/
-    __root.tsx         # app shell, error boundary, 404
-    index.tsx          # landing page
-    game.tsx           # token gate + game dashboard
-    leaderboard.tsx    # full leaderboard page
-    how-to-play.tsx    # guide page
-  components/
-    SolanaProvider.tsx # wallet adapter (Phantom, Solflare)
-    WalletButton.tsx / Navbar.tsx / Footer.tsx
-    ui/                # shadcn/ui components
-  hooks/
-    useTokenGate.ts    # read-only balance check + retry
-    useGame.ts         # game loop, localStorage, cloud sync
-    useVillage.ts      # leaderboard / chat / activity queries
-  lib/
-    game-logic.ts      # pure rules (odds, XP) — unit tested
-    solana-config.ts   # token mint + RPC endpoint
-    store.server.ts    # storage layer (Supabase | file) — unit tested
-    api/game.functions.ts  # the server API (zod-validated)
-supabase/schema.sql    # tables, leaderboard view, RLS
-```
+### Farming loop (10 levels)
+
+Plant → wait → harvest → sell → level up → unlock bigger crops → invest in
+equipment → repeat. One crop unlocks per level:
+
+🍅 Tomato → 🍆 Eggplant → 🌽 Corn → 🌶️ Chili → 🥬 Cabbage → 🍈 Melon →
+🎃 Pumpkin → 🍓 Strawberry → 🥭 Mango → 🌾 Golden Rice
+
+- Planting buys the seed automatically (tomato 4g/20s → Golden Rice 140g/10m)
+  and costs 2 energy; energy regens 1 per 8s.
+- Equipment (6 items, 150g–5,000g) permanently speeds growth up to **55%** and
+  raises sell prices up to **+15%**. Field expands from 9 to 25 plots.
+- Each level needs `level × 100` XP; level 10 is the current cap.
+- All exact numbers live in `src/lib/game-logic.ts` and on the `/docs` page.
+
+### The Town (shared multiplayer map)
+
+`/world` is a 48×48 isometric town rendered on `<canvas>` — plaza with a
+fountain, seed shop & market stalls, housing districts, fenced farm fields, a
+lake, and wandering NPC villagers. **Every player is on the same map**: walk
+with WASD/click, see everyone's name + level badge live, and chat via speech
+bubbles. Presence works through the `pingWorld` server function (1.5s
+polling, 12s TTL) — no websocket server needed.
 
 ## 4. Token gate
 
 1. Player connects a wallet (Phantom/Solflare).
-2. `useTokenGate` calls `getParsedTokenAccountsByOwner` — **read-only**, the
-   player never signs anything just to be checked.
+2. `GateBridge` calls `getParsedTokenAccountsByOwner` — **read-only**, the
+   player never signs anything.
 3. Balance for mint `Tqj8yFmagrg7oorpQkVGYR52r96RFTamvWfth9bpump` is summed.
-4. ≥ 1 → game unlocks. Otherwise: _“You need at least 1 token to enter
-   SawahVerse.”_ RPC failures show a retry button.
+4. ≥ 1 → game unlocks; otherwise blocked with a Get Token link. RPC failures
+   show a retry button.
 
-## 5. Gameplay
+## 5. Pages
 
-- **Farm:** plant (1 seed + 2 energy) → 15s growth → harvest (+1 rice,
-  +2 coins, +10 XP). Expand the paddy for 250 coins.
-- **Fish:** one cast per 5 seconds, 5 energy. Odds: Common 70% · Uncommon 20% ·
-  Rare 7% · Epic 2.5% · Legendary 0.5%. Catches are logged to the village
-  activity feed.
-- **Economy:** rice sells for 8, seeds cost 3. Each level needs `level × 100`
-  XP; energy regenerates 1 per 8s.
-- **Village:** live leaderboard (top coins), global chat (280-char limit,
-  2s rate limit per wallet), recent-catches feed — all polling the game API.
-- **Identity:** click your name on the profile card to set a villager name.
-
-## 5b. The Island (explorable world)
-
-`/world` is a live isometric island rendered on a `<canvas>` (no game-engine
-dependency). Walk with WASD/arrows or click/tap, and you'll see every other
-online captain walking around in real time:
-
-- **Multiplayer presence:** the client calls `pingWorld` every 1.5s — one
-  round-trip sends your position and returns everyone else's. Players idle
-  for 12s disappear. Positions are interpolated client-side so movement
-  looks smooth.
-- **Chat bubbles:** messages from Harbor Chat appear above players' heads.
-- **Fishing:** walk to the shore or the end of the dock and a Cast button
-  appears — same odds, energy, and inventory as the dashboard.
-- **Map:** defined in `src/lib/world-map.ts` (pure data — collision,
-  fishing zones, and spawn point are unit tested).
+| Route          | What it is                                                |
+| -------------- | --------------------------------------------------------- |
+| `/`            | Landing: hero, crop marquee, how it works, token, roadmap |
+| `/game`        | My Farm: field, barn, equipment shop + live sidebar       |
+| `/world`       | The Town: shared multiplayer map                          |
+| `/leaderboard` | Full top-50 ranking by gold                               |
+| `/how-to-play` | Step-by-step guide                                        |
+| `/docs`        | Full docs: tables, levels, FAQ, roadmap                   |
 
 ## 6. API endpoints (server functions)
 
-All in `src/lib/api/game.functions.ts`, callable from the client as typed
-async functions, validated with zod on the server:
+All in `src/lib/api/game.functions.ts`, zod-validated:
 
-| Function           | Method | Purpose                                             |
-| ------------------ | ------ | --------------------------------------------------- |
-| `syncPlayer`       | POST   | Upsert progress (level, xp, coins, stats, username) |
-| `getLeaderboard`   | GET    | Top players by coins                                |
-| `getChatMessages`  | GET    | Last 50 chat messages                               |
-| `sendChatMessage`  | POST   | Post a message (rate-limited per wallet)            |
-| `logFishCatch`     | POST   | Append to the catch log                             |
-| `getRecentCatches` | GET    | Activity feed                                       |
-| `pingWorld`        | POST   | Report my world position, get all online players    |
+| Function           | Method | Purpose                                          |
+| ------------------ | ------ | ------------------------------------------------ |
+| `syncPlayer`       | POST   | Upsert progress (level, xp, gold, harvest count) |
+| `getLeaderboard`   | GET    | Top players by gold                              |
+| `getChatMessages`  | GET    | Last 50 chat messages                            |
+| `sendChatMessage`  | POST   | Post a message (2s rate limit per wallet)        |
+| `logFishCatch`     | POST   | Log a notable (level 5+) harvest for the feed    |
+| `getRecentCatches` | GET    | Recent-harvests activity feed                    |
+| `pingWorld`        | POST   | Report my town position, get all online players  |
 
-## 7. Going further
+## 7. Roadmap
 
-1. **Supabase:** create a project, run `supabase/schema.sql`, set the two env
-   vars — done, the API switches over.
-2. **Wallet-signature auth:** today the API trusts the wallet string the
-   client sends (fine for a cozy MVP, not for real money). Add a
-   sign-in-with-Solana message verification step in the server functions
-   before trusting writes.
-3. **Realtime chat:** swap chat polling for Supabase Realtime.
-4. **Art pass:** replace the CSS village with original voxel illustrations.
+1. **Phase 1 — First seeds (LIVE):** everything above.
+2. **Phase 2 — Personal plots:** farms visible on the town map, visiting,
+   sign-in-with-Solana for account security.
+3. **Phase 3 — Seasons & festivals:** weather, seasonal crops, events,
+   levels beyond 10.
+4. **Phase 4 — Marketplace & cosmetics:** crop trading, skins, pets, hats.
