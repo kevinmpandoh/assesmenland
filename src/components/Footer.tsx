@@ -22,6 +22,9 @@ export function Footer() {
           >
             <span>𝕏</span> X
           </a>
+          <Link to="/about" className="pill text-xs">
+            <span>👋</span> About
+          </Link>
           <Link to="/how-to-play" className="pill text-xs">
             <span>📖</span> How to Play
           </Link>
@@ -31,6 +34,22 @@ export function Footer() {
           <Link to="/docs" className="pill text-xs">
             <span>📚</span> Docs
           </Link>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <Link to="/privacy" className="hover:text-ink">
+            Privacy
+          </Link>
+          <span>·</span>
+          <Link to="/terms" className="hover:text-ink">
+            Terms
+          </Link>
+          <span>·</span>
+          <a
+            href="mailto:hello@agriland.cc"
+            className="hover:text-ink"
+          >
+            hello@agriland.cc
+          </a>
         </div>
         <div className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} Agri Land · Open Beta on Solana
