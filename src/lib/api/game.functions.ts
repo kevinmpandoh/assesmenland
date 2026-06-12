@@ -134,3 +134,73 @@ export const pingWorld = createServerFn({ method: "POST" })
     });
     return store.listPresence(PRESENCE_TTL_MS);
   });
+
+// ----------------------------------------------------- shared town field
+
+// Everyone plants on the same fenced fields in the town. Only the farmer
+// who planted a plot can harvest it, and a ready crop withers (the row is
+// deleted) WORLD_PLOT_WITHER_MS after maturing.
+
+const plotCoord = z.number().int().min(0).max(200);
+
+export const getWorldPlots = createServerFn({ method: "GET" }).handler(async () => {
+  return getStore().listPlots();
+});
+
+export const plantWorldPlot = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ wallet: wallet, x: plotCoord, y: plotCoord, crop: z.string() }))
+  .handler(async ({ data }) => {
+    const { buildMap } = await import("../world-map");
+    const { cropById, cropsUnlockedAt, WORLD_PLOT_WITHER_MS } = await import("../game-logic");
+
+    const crop = cropById(data.crop);
+    if (!crop) return { ok: false as const, reason: "Unknown crop." };
+
+    const { tiles } = buildMap();
+    if (tiles[data.y]?.[data.x] !== "soil") {
+      return { ok: false as const, reason: "You can only plant on tilled soil." };
+    }
+
+    const store = getStore();
+    const player = await store.getPlayer(data.wallet);
+    const level = player?.level ?? 1;
+    if (!cropsUnlockedAt(level).some((c) => c.id === crop.id)) {
+      return { ok: false as const, reason: `Unlocks at level ${crop.unlockLevel}.` };
+    }
+
+    const now = Date.now();
+    const planted = await store.plantPlot({
+      plot_key: `${data.x}:${data.y}`,
+      x: data.x,
+      y: data.y,
+      wallet_address: data.wallet,
+      crop: crop.id,
+      planted_at: new Date(now).toISOString(),
+      ready_at: new Date(now + crop.growMs).toISOString(),
+      expires_at: new Date(now + crop.growMs + WORLD_PLOT_WITHER_MS).toISOString(),
+    });
+    if (!planted) return { ok: false as const, reason: "Someone already planted here." };
+    return { ok: true as const };
+  });
+
+export const harvestWorldPlot = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ wallet: wallet, x: plotCoord, y: plotCoord }))
+  .handler(async ({ data }) => {
+    const store = getStore();
+    const key = `${data.x}:${data.y}`;
+    const plot = await store.getPlot(key);
+    if (!plot) return { ok: false as const, reason: "Nothing growing here." };
+    if (plot.wallet_address !== data.wallet) {
+      return { ok: false as const, reason: "This plant belongs to another farmer." };
+    }
+    const now = Date.now();
+    if (now < new Date(plot.ready_at).getTime()) {
+      return { ok: false as const, reason: "Still growing — be patient!" };
+    }
+    if (now > new Date(plot.expires_at).getTime()) {
+      await store.removePlot(key);
+      return { ok: false as const, reason: "Too late — the plant withered." };
+    }
+    await store.removePlot(key);
+    return { ok: true as const, crop: plot.crop };
+  });

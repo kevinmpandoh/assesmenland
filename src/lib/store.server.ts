@@ -51,6 +51,17 @@ export type PresenceRow = {
   updated_at: string;
 };
 
+export type WorldPlotRow = {
+  plot_key: string; // "x:y"
+  x: number;
+  y: number;
+  wallet_address: string;
+  crop: string;
+  planted_at: string;
+  ready_at: string;
+  expires_at: string;
+};
+
 export interface GameStore {
   upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow>;
   getPlayer(wallet: string): Promise<PlayerRow | null>;
@@ -61,6 +72,13 @@ export interface GameStore {
   recentCatches(limit: number): Promise<CatchRow[]>;
   upsertPresence(p: Omit<PresenceRow, "updated_at">): Promise<void>;
   listPresence(maxAgeMs: number): Promise<PresenceRow[]>;
+  /** All live shared-field plots (expired ones are removed). */
+  listPlots(): Promise<WorldPlotRow[]>;
+  /** Plant if the plot is free. Returns false when occupied. */
+  plantPlot(row: WorldPlotRow): Promise<boolean>;
+  /** Remove a plot after a successful harvest. */
+  removePlot(plotKey: string): Promise<void>;
+  getPlot(plotKey: string): Promise<WorldPlotRow | null>;
 }
 
 export function displayName(p: { username: string | null; wallet_address: string }) {
@@ -186,6 +204,39 @@ class SupabaseStore implements GameStore {
     if (error) throw new Error(`listPresence: ${error.message}`);
     return (data ?? []) as PresenceRow[];
   }
+
+  async listPlots(): Promise<WorldPlotRow[]> {
+    // Opportunistic cleanup of withered plants.
+    await this.db.from("world_plots").delete().lt("expires_at", new Date().toISOString());
+    const { data, error } = await this.db.from("world_plots").select().limit(500);
+    if (error) throw new Error(`listPlots: ${error.message}`);
+    return (data ?? []) as WorldPlotRow[];
+  }
+
+  async plantPlot(row: WorldPlotRow): Promise<boolean> {
+    // Plain insert: the plot_key primary key makes double-planting fail.
+    const { error } = await this.db.from("world_plots").insert(row);
+    if (error) {
+      if (error.code === "23505") return false; // unique violation = occupied
+      throw new Error(`plantPlot: ${error.message}`);
+    }
+    return true;
+  }
+
+  async removePlot(plotKey: string): Promise<void> {
+    const { error } = await this.db.from("world_plots").delete().eq("plot_key", plotKey);
+    if (error) throw new Error(`removePlot: ${error.message}`);
+  }
+
+  async getPlot(plotKey: string): Promise<WorldPlotRow | null> {
+    const { data, error } = await this.db
+      .from("world_plots")
+      .select()
+      .eq("plot_key", plotKey)
+      .maybeSingle();
+    if (error) throw new Error(`getPlot: ${error.message}`);
+    return (data as WorldPlotRow) ?? null;
+  }
 }
 
 // -------------------------------------------------------------- File (dev)
@@ -194,9 +245,10 @@ type FileData = {
   players: Record<string, PlayerRow>;
   chat: ChatRow[];
   catches: CatchRow[];
+  plots: Record<string, WorldPlotRow>;
 };
 
-const EMPTY: FileData = { players: {}, chat: [], catches: [] };
+const EMPTY: FileData = { players: {}, chat: [], catches: [], plots: {} };
 const FILE_PATH = ".data/sawahverse.json";
 
 class FileStore implements GameStore {
@@ -308,6 +360,49 @@ class FileStore implements GameStore {
       else this.presence.delete(wallet);
     }
     return out;
+  }
+
+  private async cleanupPlots(data: FileData) {
+    const now = Date.now();
+    let changed = false;
+    for (const [key, plot] of Object.entries(data.plots ?? {})) {
+      if (new Date(plot.expires_at).getTime() < now) {
+        delete data.plots[key];
+        changed = true;
+      }
+    }
+    if (changed) await this.save(data);
+  }
+
+  async listPlots(): Promise<WorldPlotRow[]> {
+    const data = await this.load();
+    data.plots ??= {};
+    await this.cleanupPlots(data);
+    return Object.values(data.plots);
+  }
+
+  async plantPlot(row: WorldPlotRow): Promise<boolean> {
+    const data = await this.load();
+    data.plots ??= {};
+    await this.cleanupPlots(data);
+    if (data.plots[row.plot_key]) return false;
+    data.plots[row.plot_key] = row;
+    await this.save(data);
+    return true;
+  }
+
+  async removePlot(plotKey: string): Promise<void> {
+    const data = await this.load();
+    data.plots ??= {};
+    delete data.plots[plotKey];
+    await this.save(data);
+  }
+
+  async getPlot(plotKey: string): Promise<WorldPlotRow | null> {
+    const data = await this.load();
+    data.plots ??= {};
+    await this.cleanupPlots(data);
+    return data.plots[plotKey] ?? null;
   }
 }
 

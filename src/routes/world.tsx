@@ -1,11 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
-import { useGame } from "@/hooks/useGame";
+import { useGame, CROPS, EQUIPMENT, effectiveSellPrice } from "@/hooks/useGame";
+import { cropById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
-import { pingWorld } from "@/lib/api/game.functions";
+import {
+  pingWorld,
+  getWorldPlots,
+  plantWorldPlot,
+  harvestWorldPlot,
+} from "@/lib/api/game.functions";
 import {
   MAP_SIZE,
   NPC_ROUTES,
@@ -30,6 +36,8 @@ import {
   Coins,
   Trophy,
   RefreshCw,
+  ShoppingBag,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -125,6 +133,20 @@ const BUBBLE_MS = 10_000;
 
 type Mover = { x: number; y: number; tx: number; ty: number; name: string; level: number };
 
+type WorldPlot = {
+  x: number;
+  y: number;
+  wallet: string;
+  crop: string;
+  plantedAt: number;
+  readyAt: number;
+  expiresAt: number;
+};
+
+/** How close (in tiles) you must stand to plant or harvest. */
+const PLOT_REACH = 2.5;
+const POS_KEY = "agriland_world_pos";
+
 const TILE_COLORS: Record<TileKind, [string, string]> = {
   grass: ["#8fd17a", "#85c870"],
   grass2: ["#9bd987", "#90cf7d"],
@@ -143,7 +165,6 @@ function walletColor(wallet: string): string {
 function World({ address }: { address: string }) {
   const game = useGame(address);
   const { messages, send } = useChat();
-  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Mutable world state lives in refs so the rAF loop never depends on
@@ -164,15 +185,44 @@ function World({ address }: { address: string }) {
   const camRef = useRef({ x: 0, y: 0, ready: false });
   const bubblesRef = useRef<Map<string, string>>(new Map());
 
+  const plotsRef = useRef<Map<string, WorldPlot>>(new Map());
+  const busyRef = useRef(false);
+
   const [onlineCount, setOnlineCount] = useState(1);
   const [zone, setZone] = useState<"farm" | "stall" | null>(null);
   const [chatInput, setChatInput] = useState("");
+  const [shopOpen, setShopOpen] = useState(false);
+  const shopOpenRef = useRef(shopOpen);
+  shopOpenRef.current = shopOpen;
+  const [selectedSeed, setSelectedSeed] = useState("tomato");
+  const selectedSeedRef = useRef(selectedSeed);
+  selectedSeedRef.current = selectedSeed;
+  const gameRef = useRef(game);
+  gameRef.current = game;
 
   const myName = game.state.username || shortAddress(address);
   const nameRef = useRef(myName);
   nameRef.current = myName;
   const levelRef = useRef(game.state.level);
   levelRef.current = game.state.level;
+
+  // Restore my last position so leaving/returning doesn't reset to spawn.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(POS_KEY);
+      if (!saved) return;
+      const p = JSON.parse(saved) as { x: number; y: number };
+      const { tiles, objects } = worldRef.current;
+      if (isWalkable(tiles, objects, p.x, p.y)) {
+        meRef.current.x = p.x;
+        meRef.current.y = p.y;
+        meRef.current.tx = p.x;
+        meRef.current.ty = p.y;
+      }
+    } catch {
+      // corrupt save — start at spawn
+    }
+  }, []);
 
   // Chat bubbles: latest fresh message per wallet.
   useEffect(() => {
@@ -226,6 +276,7 @@ function World({ address }: { address: string }) {
           if (!seen.has(key)) othersRef.current.delete(key);
         }
         setOnlineCount(seen.size + 1);
+        sessionStorage.setItem(POS_KEY, JSON.stringify({ x: me.x, y: me.y }));
       } catch (e) {
         console.warn("presence ping failed", e);
       }
@@ -237,6 +288,113 @@ function World({ address }: { address: string }) {
       clearInterval(t);
     };
   }, [address]);
+
+  // Shared-field plots: poll every 4s.
+  useEffect(() => {
+    let stopped = false;
+    const tick = async () => {
+      try {
+        const rows = await getWorldPlots();
+        if (stopped) return;
+        const map = new Map<string, WorldPlot>();
+        for (const r of rows) {
+          map.set(`${r.x}:${r.y}`, {
+            x: r.x,
+            y: r.y,
+            wallet: r.wallet_address,
+            crop: r.crop,
+            plantedAt: new Date(r.planted_at).getTime(),
+            readyAt: new Date(r.ready_at).getTime(),
+            expiresAt: new Date(r.expires_at).getTime(),
+          });
+        }
+        plotsRef.current = map;
+      } catch (e) {
+        console.warn("plots fetch failed", e);
+      }
+    };
+    tick();
+    const t = setInterval(tick, 4_000);
+    return () => {
+      stopped = true;
+      clearInterval(t);
+    };
+  }, []);
+
+  // Plant or harvest the clicked soil tile (called from the canvas click
+  // handler via ref so the closure never goes stale).
+  const farmActionRef = useRef<(tx: number, ty: number) => void>(() => {});
+  farmActionRef.current = async (tx: number, ty: number) => {
+    if (busyRef.current) return;
+    const key = `${tx}:${ty}`;
+    const plot = plotsRef.current.get(key);
+    const g = gameRef.current;
+
+    if (plot) {
+      if (plot.wallet !== address) {
+        toast.info("This plant belongs to another farmer 🌱");
+        return;
+      }
+      if (Date.now() < plot.readyAt) {
+        toast.info("Still growing — be patient!");
+        return;
+      }
+      busyRef.current = true;
+      try {
+        const res = await harvestWorldPlot({ data: { wallet: address, x: tx, y: ty } });
+        if (res.ok) {
+          plotsRef.current.delete(key);
+          const crop = g.gainHarvest(res.crop);
+          if (crop) toast.success(`+1 ${crop.name} ${crop.emoji} +${crop.xp} XP`);
+        } else {
+          plotsRef.current.delete(key);
+          toast.error(res.reason);
+        }
+      } catch {
+        toast.error("Network hiccup — try again.");
+      }
+      busyRef.current = false;
+      return;
+    }
+
+    const crop = cropById(selectedSeedRef.current);
+    if (!crop) return;
+    if (crop.unlockLevel > g.state.level) {
+      toast.error(`${crop.name} unlocks at level ${crop.unlockLevel}`);
+      return;
+    }
+    if (g.state.gold < crop.seedCost) {
+      toast.error(`Need ${crop.seedCost}g for a ${crop.name} seed`);
+      return;
+    }
+    if (g.state.energy < 2) {
+      toast.error("Not enough energy");
+      return;
+    }
+    busyRef.current = true;
+    try {
+      const res = await plantWorldPlot({ data: { wallet: address, x: tx, y: ty, crop: crop.id } });
+      if (res.ok) {
+        g.spendSeed(crop.id);
+        const now = Date.now();
+        plotsRef.current.set(key, {
+          x: tx,
+          y: ty,
+          wallet: address,
+          crop: crop.id,
+          plantedAt: now,
+          readyAt: now + crop.growMs,
+          expiresAt: now + crop.growMs + 2 * 60 * 60 * 1000,
+        });
+        toast.success(`Planted ${crop.name} ${crop.emoji}`);
+      } else {
+        toast.error(res.reason);
+      }
+    } catch {
+      toast.error("Network hiccup — try again.");
+    }
+    busyRef.current = false;
+  };
 
   // Keyboard movement.
   useEffect(() => {
@@ -252,6 +410,11 @@ function World({ address }: { address: string }) {
     ]);
     const down = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
+      if (k === "escape") {
+        setShopOpen(false);
+        return;
+      }
+      if (shopOpenRef.current) return;
       if (!MOVE_KEYS.has(k)) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
@@ -627,6 +790,34 @@ function World({ address }: { address: string }) {
       }
     };
 
+    const drawPlot = (p: WorldPlot) => {
+      const [sx, sy] = iso(p.x, p.y);
+      const crop = cropById(p.crop);
+      if (!crop) return;
+      const nowMs = Date.now();
+      ctx.textAlign = "center";
+      if (nowMs >= p.readyAt) {
+        const bounce = p.wallet === address ? Math.sin(nowMs / 250) * 2 : 0;
+        ctx.font = "20px serif";
+        ctx.fillText(crop.emoji, sx, sy + 4 - bounce);
+        ctx.font = "10px serif";
+        ctx.fillText("✨", sx + 11, sy - 10 - bounce);
+        if (p.expiresAt - nowMs < 15 * 60 * 1000) ctx.fillText("⏳", sx - 12, sy - 10);
+      } else {
+        const progress = (nowMs - p.plantedAt) / Math.max(1, p.readyAt - p.plantedAt);
+        ctx.font = progress < 0.5 ? "10px serif" : "14px serif";
+        ctx.fillText("🌱", sx, sy + 3);
+      }
+      // owner marker
+      ctx.fillStyle = walletColor(p.wallet);
+      ctx.strokeStyle = "#1b2240";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(sx + 13, sy + 7, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    };
+
     const draw = (now: number) => {
       const rect = canvas.parentElement!.getBoundingClientRect();
       const cam = camRef.current;
@@ -642,6 +833,10 @@ function World({ address }: { address: string }) {
       const me = meRef.current;
       const drawables: { depth: number; fn: () => void }[] = [
         ...objects.map((o) => ({ depth: o.x + o.y, fn: () => drawObject(o, now) })),
+        ...[...plotsRef.current.values()].map((p) => ({
+          depth: p.x + p.y - 0.3,
+          fn: () => drawPlot(p),
+        })),
         {
           depth: me.x + me.y,
           fn: () =>
@@ -676,15 +871,24 @@ function World({ address }: { address: string }) {
     raf = requestAnimationFrame(loop);
 
     const onClick = (e: MouseEvent) => {
+      if (shopOpenRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const cam = camRef.current;
       const px = e.clientX - rect.left - rect.width / 2 + cam.x;
       const py = e.clientY - rect.top - rect.height / 2 + cam.y - 40;
       const x = px / TILE_W + py / TILE_H;
       const y = py / TILE_H - px / TILE_W;
+      const tx = Math.round(x);
+      const ty = Math.round(y);
+      const me = meRef.current;
+      // Clicking soil within reach plants/harvests; farther away just walks.
+      if (tiles[ty]?.[tx] === "soil" && Math.hypot(tx - me.x, ty - me.y) <= PLOT_REACH) {
+        farmActionRef.current(tx, ty);
+        return;
+      }
       if (isWalkable(tiles, objects, x, y)) {
-        meRef.current.tx = x;
-        meRef.current.ty = y;
+        me.tx = x;
+        me.ty = y;
       }
     };
     canvas.addEventListener("click", onClick);
@@ -736,19 +940,61 @@ function World({ address }: { address: string }) {
         <div className="card-pop flex items-center gap-1.5 px-3 py-2 text-xs text-ink">
           <Users className="h-3.5 w-3.5 text-ocean" /> {onlineCount} online
         </div>
+        <button onClick={() => setShopOpen(true)} className="pill text-xs">
+          <ShoppingBag className="h-3.5 w-3.5" /> Shop
+        </button>
         <Link to="/game" className="pill text-xs">
           <ArrowLeft className="h-3.5 w-3.5" /> My Farm
         </Link>
       </div>
 
-      {/* Zone actions */}
-      {zone && (
+      {/* Seed bar: appears at the shared fields — click soil to plant. */}
+      {zone === "farm" && !shopOpen && (
+        <div className="absolute bottom-[4.5rem] left-1/2 w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 sm:bottom-16">
+          <div className="card-pop flex flex-wrap items-center justify-center gap-1.5 bg-foam/95 p-2">
+            <span className="pixel mr-1 text-[9px] text-ink/70">PLANT:</span>
+            {CROPS.map((c) => {
+              const locked = c.unlockLevel > game.state.level;
+              const isSel = c.id === selectedSeed;
+              return (
+                <button
+                  key={c.id}
+                  disabled={locked}
+                  onClick={() => setSelectedSeed(c.id)}
+                  title={
+                    locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${c.seedCost}g`
+                  }
+                  className={`flex items-center gap-0.5 rounded-lg border-2 px-1.5 py-1 text-[10px] font-bold transition ${
+                    isSel
+                      ? "border-ink bg-sunset text-ink"
+                      : locked
+                        ? "border-dashed border-ink/30 bg-foam text-ink/40"
+                        : "border-ink/60 bg-foam text-ink hover:bg-cyan-soft"
+                  }`}
+                >
+                  <span className="text-sm">{locked ? "🔒" : c.emoji}</span>
+                  {locked ? `L${c.unlockLevel}` : `${c.seedCost}g`}
+                </button>
+              );
+            })}
+            <span className="ml-1 hidden text-[10px] text-ink/60 sm:inline">
+              click soil to plant · click your ✨ crop to harvest
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Stall prompt: open the in-world shop window. */}
+      {zone === "stall" && !shopOpen && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 sm:bottom-20">
-          <Button onClick={() => navigate({ to: "/game" })} className="chunky-btn">
-            {zone === "farm" ? "🌱 Tend My Farm" : "🛒 Open the Shop"}
+          <Button onClick={() => setShopOpen(true)} className="chunky-btn">
+            🛒 Open Shop
           </Button>
         </div>
       )}
+
+      {/* In-world shop window */}
+      {shopOpen && <WorldShop game={game} onClose={() => setShopOpen(false)} />}
 
       {/* Chat bar */}
       <form
@@ -770,8 +1016,158 @@ function World({ address }: { address: string }) {
 
       {/* Help hint */}
       <div className="pointer-events-none absolute bottom-16 left-3 hidden text-[11px] text-ink/60 sm:block">
-        WASD / arrows / click to move · visit the fenced fields or the plaza stalls
+        WASD / arrows / click to move · plant on the fenced fields · 🛒 shop anytime
       </div>
     </main>
+  );
+}
+
+function WorldShop({ game, onClose }: { game: ReturnType<typeof useGame>; onClose: () => void }) {
+  const [tab, setTab] = useState<"barn" | "equipment">("barn");
+  const { state, sellCrop, buyEquipment } = game;
+  const entries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
+  const total = entries.reduce((sum, [id, qty]) => {
+    const crop = cropById(id);
+    return crop ? sum + qty * effectiveSellPrice(crop, state.equipment) : sum;
+  }, 0);
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-ink/40 p-3"
+      onClick={onClose}
+    >
+      <div
+        className="card-pop max-h-[85%] w-full max-w-md overflow-y-auto bg-foam p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="pixel text-sm text-ink">🛒 Town Shop</h3>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-sunset/40 px-2 py-0.5 text-xs font-bold text-ink">
+              <Coins className="h-3 w-3" /> {state.gold.toLocaleString()}g
+            </span>
+            <button
+              onClick={onClose}
+              className="grid h-7 w-7 place-items-center rounded-lg text-ink/70 transition hover:bg-cyan-soft"
+              aria-label="Close shop"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-cyan-soft p-1 ink-border">
+          {(
+            [
+              ["barn", "🧺 Sell Harvest"],
+              ["equipment", "🛠️ Equipment"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`rounded-lg px-2 py-1.5 text-xs font-bold transition ${
+                tab === id ? "bg-foam text-ink ink-border" : "text-ink/60"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "barn" &&
+          (entries.length === 0 ? (
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Your barn is empty — plant something on the fields! 🌱
+            </p>
+          ) : (
+            <>
+              <ul className="mt-3 space-y-2">
+                {entries.map(([id, qty]) => {
+                  const crop = cropById(id)!;
+                  const price = effectiveSellPrice(crop, state.equipment);
+                  return (
+                    <li
+                      key={id}
+                      className="flex items-center justify-between rounded-xl bg-white/70 p-2.5 ink-border"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                        <span className="text-lg">{crop.emoji}</span>
+                        {crop.name} × {qty}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-lg"
+                        onClick={() => {
+                          const earned = sellCrop(id);
+                          if (earned) toast.success(`+${earned}g`);
+                        }}
+                      >
+                        Sell {(qty * price).toLocaleString()}g
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <Button
+                className="mt-3 w-full rounded-xl"
+                onClick={() => {
+                  let earned = 0;
+                  for (const [id] of entries) earned += sellCrop(id);
+                  if (earned) toast.success(`Sold everything for ${earned}g!`);
+                }}
+              >
+                Sell all ({total.toLocaleString()}g)
+              </Button>
+            </>
+          ))}
+
+        {tab === "equipment" && (
+          <ul className="mt-3 space-y-2">
+            {EQUIPMENT.map((e) => {
+              const owned = state.equipment.includes(e.id);
+              return (
+                <li
+                  key={e.id}
+                  className={`flex items-center justify-between rounded-xl p-2.5 ink-border ${
+                    owned ? "bg-leaf/20" : "bg-white/70"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{e.emoji}</span>
+                    <div>
+                      <div className="text-sm font-semibold text-ink">{e.name}</div>
+                      <div className="text-[11px] text-muted-foreground">{e.desc}</div>
+                    </div>
+                  </div>
+                  {owned ? (
+                    <span className="rounded-full bg-leaf/40 px-2 py-0.5 text-[10px] font-bold text-ink">
+                      Owned
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg"
+                      disabled={state.gold < e.cost}
+                      onClick={() => {
+                        if (buyEquipment(e.id)) toast.success(`${e.name} purchased!`);
+                      }}
+                    >
+                      {e.cost.toLocaleString()}g
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <p className="mt-3 text-center text-[10px] text-ink/50">
+          Press ESC or tap outside to close
+        </p>
+      </div>
+    </div>
   );
 }

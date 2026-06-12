@@ -229,7 +229,19 @@ function DocsPage() {
             </li>
             <li>Chat messages appear as speech bubbles above heads for everyone to see.</li>
             <li>
-              Walk to the fenced fields or the plaza stalls for shortcuts to your farm and the shop.
+              <span className="font-semibold">Shared fields:</span> the fenced soil plots are
+              plantable by everyone — pick a seed from the bar that appears near the field and click
+              a free soil tile. Up to ~100 plots, first come first served.
+            </li>
+            <li>
+              <span className="font-semibold">Only the planter can harvest</span> their crop (a
+              colored dot marks the owner). Ready crops sparkle ✨ — and{" "}
+              <span className="font-semibold">wither 2 hours after ripening</span> if left
+              unharvested, freeing the plot.
+            </li>
+            <li>
+              The 🛒 Shop opens as a window inside the town — sell your harvest and buy equipment
+              without ever leaving the map.
             </li>
           </ul>
         </Section>
@@ -253,6 +265,10 @@ function DocsPage() {
               [
                 "What happens if I sell my token?",
                 "The gate re-checks your balance when you connect. Below 1 token, the farm locks until you hold again — progress is kept.",
+              ],
+              [
+                "How does the shared field work?",
+                "Anyone can plant on a free soil tile in the fenced fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
               ],
               [
                 "Why don't I see other players?",

@@ -257,3 +257,6 @@ export const rarityColor: Record<Rarity, string> = {
   Epic: "text-violet-500",
   Legendary: "text-sunset-deep",
 };
+
+/** Shared town field: a ready crop withers if not harvested in time. */
+export const WORLD_PLOT_WITHER_MS = 2 * 60 * 60 * 1000; // 2 hours
