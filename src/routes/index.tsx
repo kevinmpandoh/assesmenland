@@ -11,17 +11,17 @@ import { Logo } from "@/components/Logo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Agri Land — Plant, Grow, Prosper on Solana" },
+      { title: "Agri Land · Plant, Grow, Prosper on Solana" },
       {
         name: "description",
         content:
           "Claim a field, plant your first tomato, and grow it into a farming empire. A chill multiplayer Solana game that runs right in your browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land — Plant, Grow, Prosper" },
+      { property: "og:title", content: "Agri Land · Plant, Grow, Prosper" },
       {
         property: "og:description",
         content:
-          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow — all in the browser, together with other farmers on one live map.",
+          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other farmers on one live map.",
       },
     ],
   }),
@@ -147,7 +147,7 @@ function GateBanner({
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
         {connected && status === "granted" && (
           <p className="flex items-center gap-1.5 font-semibold text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> You're in — balance {balance.toLocaleString()} ·{" "}
+            <CheckCircle2 className="h-4 w-4" /> You're in. Balance {balance.toLocaleString()} ·{" "}
             {shortAddress(address)}
           </p>
         )}
@@ -181,7 +181,7 @@ function HowItWorks() {
     {
       emo: "⏳",
       title: "GROW & HARVEST",
-      desc: "Crops grow in real time — 5 seconds per crop level, from a 5s tomato to a 50s Golden Rice. Harvest when they sparkle, stash everything in your barn.",
+      desc: "Crops grow in real time, 5 seconds per crop level, from a 5s tomato to a 50s Golden Rice. Harvest when they sparkle, stash everything in your barn.",
     },
     {
       emo: "💰",
@@ -235,7 +235,7 @@ function TokenSection() {
             <p className="mt-4 max-w-md text-ink/80">
               Agri Land has a community token used for cosmetics, seasonal events, and town
               features. It is not an investment, not a promise of returns, and not financial advice.
-              You can enjoy the game without it — farm slowly, enjoy the seasons.
+              You can enjoy the game without it. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="chunky-btn">
