@@ -6,7 +6,7 @@ import {
   buildMap,
   isWalkable,
   nearFarmland,
-  nearStall,
+  stallKindAt,
 } from "./world-map";
 
 const { tiles, objects } = buildMap();
@@ -47,9 +47,10 @@ describe("world map", () => {
     expect(nearFarmland(tiles, SPAWN.x, SPAWN.y)).toBe(false);
   });
 
-  test("stall proximity detection works", () => {
-    expect(nearStall(objects, 20, 21)).toBe(true);
-    expect(nearStall(objects, 8, 30)).toBe(false);
+  test("stall detection distinguishes seed shop from market", () => {
+    expect(stallKindAt(objects, 20, 21)).toBe("seed"); // SEED SHOP at (20,20)
+    expect(stallKindAt(objects, 29, 21)).toBe("market"); // MARKET at (29,20)
+    expect(stallKindAt(objects, 8, 30)).toBeNull();
   });
 
   test("NPC waypoints are walkable streets", () => {

@@ -64,16 +64,15 @@ function DocsPage() {
               <span className="font-semibold">Connect Wallet</span>.
             </li>
             <li>
-              Hold{" "}
-              <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span> — the gate
-              check is read-only; the game never asks you to sign a transaction.
+              Hold <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span> — the
+              gate check is read-only; the game never asks you to sign a transaction.
             </li>
             <li>
               Open{" "}
               <Link to="/game" className="font-semibold text-ocean hover:underline">
                 My Farm
               </Link>{" "}
-              — you start with 25 gold, 100 energy, and a 9-plot field.
+              — you start with 25 gold, 5 tomato seeds, 100 energy, and a 9-plot field.
             </li>
             <li>
               Plant tomatoes, harvest, sell, and repeat. Visit the{" "}
@@ -92,8 +91,8 @@ function DocsPage() {
         {/* Token */}
         <Section id="token" title="🪙 Token Access">
           <p className="text-sm text-ink/80">
-            Access to Agri Land is gated by holding {MIN_TOKEN_BALANCE} token of this mint
-            on Solana mainnet:
+            Access to Agri Land is gated by holding {MIN_TOKEN_BALANCE} token of this mint on Solana
+            mainnet:
           </p>
           <code className="mt-3 block overflow-x-auto rounded-xl bg-foam p-3 text-xs ink-border">
             {TOKEN_MINT}
@@ -119,8 +118,8 @@ function DocsPage() {
         {/* Crops */}
         <Section id="crops" title="🌱 Crops & Prices">
           <p className="mb-4 text-sm text-ink/80">
-            One crop unlocks per level. Planting buys the seed automatically and costs 2 energy.
-            Base values below — equipment can shorten grow times and raise sell prices.
+            One crop unlocks per level. Buy seeds at the Seed Shop first — planting costs 1 seed + 2
+            energy. Base values below — equipment can shorten grow times and raise sell prices.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
@@ -240,8 +239,10 @@ function DocsPage() {
               unharvested, freeing the plot.
             </li>
             <li>
-              The 🛒 Shop opens as a window inside the town — sell your harvest and buy equipment
-              without ever leaving the map.
+              Two separate shops open as windows inside the town: the{" "}
+              <span className="font-semibold">🌱 Seed Shop</span> (buy seeds, sell seeds back at
+              half price, and sell your harvest) and the{" "}
+              <span className="font-semibold">🛠️ Market</span> (equipment only).
             </li>
           </ul>
         </Section>
@@ -268,7 +269,7 @@ function DocsPage() {
               ],
               [
                 "How does the shared field work?",
-                "Anyone can plant on a free soil tile in the fenced fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
+                "Buy seeds at the Seed Shop, then plant them on any free soil tile in the fenced fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
               ],
               [
                 "Why don't I see other players?",

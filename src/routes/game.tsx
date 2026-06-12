@@ -390,23 +390,26 @@ function FarmPanel({ game }: { game: GameApi }) {
       <div className="mb-4 flex flex-wrap gap-2">
         {CROPS.map((c) => {
           const locked = c.unlockLevel > state.level;
+          const owned = state.seeds[c.id] ?? 0;
           const isSel = c.id === selected;
           return (
             <button
               key={c.id}
               disabled={locked}
               onClick={() => setSelected(c.id)}
-              title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${c.seedCost}g`}
+              title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${owned} seeds`}
               className={`flex items-center gap-1 rounded-xl border-2 px-2.5 py-1.5 text-xs font-semibold transition ${
                 isSel
                   ? "border-ink bg-sunset text-ink"
                   : locked
                     ? "border-dashed border-ink/30 bg-foam text-ink/40"
-                    : "border-ink/60 bg-foam text-ink hover:bg-cyan-soft"
+                    : owned === 0
+                      ? "border-ink/30 bg-foam text-ink/50"
+                      : "border-ink/60 bg-foam text-ink hover:bg-cyan-soft"
               }`}
             >
               <span className="text-base">{locked ? "🔒" : c.emoji}</span>
-              {locked ? `Lv ${c.unlockLevel}` : `${c.seedCost}g`}
+              {locked ? `Lv ${c.unlockLevel}` : `×${owned}`}
             </button>
           );
         })}
@@ -440,7 +443,7 @@ function FarmPanel({ game }: { game: GameApi }) {
                   ? `Harvest ${crop?.name}`
                   : growing
                     ? `${crop?.name} growing…`
-                    : `Plant ${selectedCrop.name} (${selectedCrop.seedCost}g)`
+                    : `Plant ${selectedCrop.name} (${state.seeds[selectedCrop.id] ?? 0} seeds left)`
               }
               className={`relative aspect-square rounded-xl border-2 transition active:scale-95 ${
                 ready
@@ -466,9 +469,10 @@ function FarmPanel({ game }: { game: GameApi }) {
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        {selectedCrop.emoji} {selectedCrop.name}: {selectedCrop.seedCost}g seed · grows in{" "}
-        {Math.round(effectiveGrowMs(selectedCrop, state.equipment) / 1000)}s · sells for{" "}
-        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP
+        {selectedCrop.emoji} {selectedCrop.name}: {state.seeds[selectedCrop.id] ?? 0} seeds in bag ·
+        grows in {Math.round(effectiveGrowMs(selectedCrop, state.equipment) / 1000)}s · sells for{" "}
+        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP — buy seeds in
+        the Shop tab
       </p>
     </div>
   );
@@ -544,11 +548,61 @@ function BarnPanel({ game }: { game: GameApi }) {
 }
 
 function ShopPanel({ game }: { game: GameApi }) {
-  const { state, buyEquipment } = game;
+  const { state, buyEquipment, buySeeds } = game;
   return (
     <div className="card-pop p-6">
       <h3 className="pixel flex items-center gap-2 text-sm text-ink">
-        <Wrench className="h-4 w-4" /> Equipment Shop
+        <Sprout className="h-4 w-4 text-leaf" /> Seed Shop
+      </h3>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {CROPS.map((c) => {
+          const locked = c.unlockLevel > state.level;
+          const owned = state.seeds[c.id] ?? 0;
+          return (
+            <li
+              key={c.id}
+              className={`flex items-center justify-between gap-2 rounded-xl p-2.5 ink-border ${
+                locked ? "bg-foam/60 opacity-60" : "bg-foam"
+              }`}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="text-lg">{locked ? "🔒" : c.emoji}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {c.name}
+                    {owned > 0 && <span className="ml-1 text-[10px] text-ink/60">×{owned}</span>}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {locked ? `Unlocks at level ${c.unlockLevel}` : `${c.seedCost}g per seed`}
+                  </div>
+                </div>
+              </div>
+              {!locked && (
+                <div className="flex shrink-0 gap-1">
+                  {[1, 5].map((qty) => (
+                    <Button
+                      key={qty}
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-lg px-2 text-[10px]"
+                      disabled={state.gold < c.seedCost * qty}
+                      onClick={() => {
+                        const spent = buySeeds(c.id, qty);
+                        if (spent) toast.success(`+${qty} ${c.name} seeds (−${spent}g)`);
+                      }}
+                    >
+                      +{qty}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <h3 className="pixel mt-6 flex items-center gap-2 text-sm text-ink">
+        <Wrench className="h-4 w-4" /> Equipment
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
         Permanent upgrades. Speed gear stacks up to 55% faster growth; market gear up to +15% sell
@@ -588,9 +642,6 @@ function ShopPanel({ game }: { game: GameApi }) {
           );
         })}
       </ul>
-      <p className="mt-4 text-xs text-muted-foreground">
-        Need seeds? Pick them right on the Farm tab — planting buys the seed automatically.
-      </p>
     </div>
   );
 }

@@ -38,7 +38,7 @@ const STEPS = [
   {
     icon: Sprout,
     title: "2 · Plant your field",
-    body: "On the Farm tab, pick a seed and click an empty plot — the seed is bought automatically (tomatoes cost 4 gold, planting costs 2 energy). A progress bar shows growth in real time.",
+    body: "Buy seeds at the Seed Shop (you start with 5 tomato seeds), then pick one and click an empty plot — planting costs 1 seed + 2 energy. A progress bar shows growth in real time.",
   },
   {
     icon: Warehouse,
@@ -48,7 +48,7 @@ const STEPS = [
   {
     icon: Wrench,
     title: "4 · Invest your gold",
-    body: "Buy equipment in the Shop: watering can, sprinkler, fertilizer, and greenhouse stack up to 55% faster growth. Expand your field from 9 plots up to 25.",
+    body: "Buy equipment at the Market: watering can, sprinkler, fertilizer, and greenhouse stack up to 55% faster growth. Expand your field from 9 plots up to 25.",
   },
   {
     icon: Trophy,

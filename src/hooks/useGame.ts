@@ -48,6 +48,8 @@ export type GameState = {
   tiles: Tile[];
   harvests: number;
   equipment: string[];
+  /** seeds owned, by crop id — buy them at the Seed Shop */
+  seeds: Record<string, number>;
   /** harvested produce waiting to be sold, by crop id */
   barn: Record<string, number>;
 };
@@ -78,6 +80,7 @@ const initial: GameState = {
   tiles: makeTiles(DEFAULT_SIZE),
   harvests: 0,
   equipment: [],
+  seeds: { tomato: 5 }, // a starter pack so new farmers can plant right away
   barn: {},
 };
 
@@ -192,13 +195,13 @@ export function useGame(walletAddress: string | null = null) {
     setState((s) => ({ ...s, username: name.trim().slice(0, 20) }));
   };
 
-  /** Buy a seed and plant it in one action (kintara-style quick loop). */
+  /** Plant a seed from your seed bag (buy seeds at the Seed Shop). */
   const plant = (idx: number, cropId: string) => {
     setState((s) => {
       const crop = cropById(cropId);
       if (!crop) return s;
       if (crop.unlockLevel > s.level) return s;
-      if (s.gold < crop.seedCost || s.energy < PLANT_ENERGY) return s;
+      if ((s.seeds[crop.id] ?? 0) < 1 || s.energy < PLANT_ENERGY) return s;
       const tile = s.tiles[idx];
       if (!tile || tile.state !== "empty") return s;
       const growMs = effectiveGrowMs(crop, s.equipment);
@@ -210,7 +213,7 @@ export function useGame(walletAddress: string | null = null) {
       return {
         ...s,
         tiles,
-        gold: s.gold - crop.seedCost,
+        seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) - 1 },
         energy: s.energy - PLANT_ENERGY,
       };
     });
@@ -277,18 +280,49 @@ export function useGame(walletAddress: string | null = null) {
     return true;
   };
 
-  /** World field: pay seed cost + energy. Returns false if unaffordable. */
+  /** World field: consume 1 seed + energy. Returns false if you have none. */
   const spendSeed = (cropId: string): boolean => {
     const crop = cropById(cropId);
     if (!crop) return false;
     if (crop.unlockLevel > state.level) return false;
-    if (state.gold < crop.seedCost || state.energy < PLANT_ENERGY) return false;
+    if ((state.seeds[crop.id] ?? 0) < 1 || state.energy < PLANT_ENERGY) return false;
     setState((s) => ({
       ...s,
-      gold: s.gold - crop.seedCost,
+      seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) - 1 },
       energy: s.energy - PLANT_ENERGY,
     }));
     return true;
+  };
+
+  /** Seed Shop: buy seeds with gold. Returns gold spent (0 = failed). */
+  const buySeeds = (cropId: string, qty: number): number => {
+    const crop = cropById(cropId);
+    if (!crop || qty < 1) return 0;
+    if (crop.unlockLevel > state.level) return 0;
+    const cost = crop.seedCost * qty;
+    if (state.gold < cost) return 0;
+    setState((s) => ({
+      ...s,
+      gold: s.gold - cost,
+      seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) + qty },
+    }));
+    return cost;
+  };
+
+  /** Seed Shop: sell seeds back at half price. Returns gold earned. */
+  const sellSeedsBack = (cropId: string, qty: number): number => {
+    const crop = cropById(cropId);
+    if (!crop || qty < 1) return 0;
+    const owned = state.seeds[crop.id] ?? 0;
+    const take = Math.min(qty, owned);
+    if (take === 0) return 0;
+    const earned = Math.floor((crop.seedCost / 2) * take);
+    setState((s) => ({
+      ...s,
+      gold: s.gold + earned,
+      seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) - take },
+    }));
+    return earned;
   };
 
   /** World field: receive a harvested crop into the barn (+XP). */
@@ -340,6 +374,8 @@ export function useGame(walletAddress: string | null = null) {
     buyEquipment,
     upgradeFarm,
     spendSeed,
+    buySeeds,
+    sellSeedsBack,
     gainHarvest,
   };
 }

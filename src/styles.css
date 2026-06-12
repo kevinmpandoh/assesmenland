@@ -95,7 +95,6 @@
   --gradient-hero: radial-gradient(ellipse at 50% 0%, #cdebb0 0%, #e8f6d2 55%, #fff5e2 100%);
 }
 
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -192,7 +191,6 @@
 @utility chunky-btn-sky {
   background: linear-gradient(180deg, #e1f3c9, #b3e08a);
 }
-
 
 @utility cloud-float {
   animation: cloud-drift 22s ease-in-out infinite;

@@ -191,13 +191,17 @@ export function nearFarmland(tiles: TileKind[][], x: number, y: number): boolean
   return false;
 }
 
-/** Near a market/seed stall — shop shortcut allowed. */
-export function nearStall(objects: WorldObject[], x: number, y: number): boolean {
+export type StallKind = "seed" | "market";
+
+/** Which stall (if any) the player is standing next to. */
+export function stallKindAt(objects: WorldObject[], x: number, y: number): StallKind | null {
   const tx = Math.round(x);
   const ty = Math.round(y);
-  return objects.some(
+  const stall = objects.find(
     (o) => o.kind === "stall" && Math.abs(o.x - tx) <= 2 && Math.abs(o.y - ty) <= 2,
   );
+  if (!stall) return null;
+  return stall.label === "MARKET" ? "market" : "seed";
 }
 
 /** Town plaza — where new farmers appear. */
@@ -206,7 +210,7 @@ export const SPAWN = { x: 24, y: 27 };
 /** Waypoint loops for ambient villager NPCs (on streets). */
 export const NPC_ROUTES: { name: string; points: { x: number; y: number }[] }[] = [
   {
-    name: "Pak Tani",
+    name: "Elon",
     points: [
       { x: 11, y: 25 },
       { x: 11, y: 31 },
@@ -215,7 +219,7 @@ export const NPC_ROUTES: { name: string; points: { x: number; y: number }[] }[] 
     ],
   },
   {
-    name: "Bu Sari",
+    name: "Kim",
     points: [
       { x: 25, y: 11 },
       { x: 36, y: 11 },
@@ -224,7 +228,7 @@ export const NPC_ROUTES: { name: string; points: { x: number; y: number }[] }[] 
     ],
   },
   {
-    name: "Wira",
+    name: "Adam",
     points: [
       { x: 25, y: 32 },
       { x: 25, y: 39 },

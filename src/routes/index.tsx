@@ -91,7 +91,6 @@ function Hero() {
           Claim a field, plant a seed, and grow your farm.
         </p>
 
-
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
             ["🧪", "OPEN BETA"],
@@ -139,8 +138,8 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to
-            claim a field. Connect your wallet first.
+            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to claim
+            a field. Connect your wallet first.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
@@ -196,7 +195,7 @@ function HowItWorks() {
     {
       emo: "🌱",
       title: "PLANT",
-      desc: "Pick a seed and click an empty plot, the seed is bought automatically. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
+      desc: "Buy seeds at the Seed Shop, then click an empty plot to plant. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
     },
     {
       emo: "⏳",
@@ -213,9 +212,7 @@ function HowItWorks() {
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <p className="pixel text-xs text-ocean">The loop is simple</p>
-        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">
-          ONE GOLDEN FIELD.
-        </h2>
+        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">ONE GOLDEN FIELD.</h2>
         <p className="mt-4 text-ink/80">
           From tomatoes you can flip in seconds to Golden Rice that takes patience and pays like a
           harvest festival. Level up to unlock bigger crops, invest your gold in equipment, and
@@ -269,8 +266,8 @@ function TokenSection() {
             </span>
             <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town.
-              The token is just a key for access, cosmetics, and seasonal events. Not a promise of
+              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town. The
+              token is just a key for access, cosmetics, and seasonal events. Not a promise of
               returns, not an investment pitch. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
