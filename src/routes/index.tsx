@@ -83,10 +83,6 @@ function Hero() {
   return (
     <section className="relative">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6 text-center sm:px-6">
-        <div className="pill mb-6 text-xs">
-          <span className="h-2 w-2 rounded-full bg-leaf" />
-          OPEN BETA · LIVE TOWN
-        </div>
 
         <div className="boat-bob" aria-hidden>
           <Logo className="h-28 w-28" />
