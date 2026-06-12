@@ -56,43 +56,43 @@
 :root {
   --radius: 1rem;
 
-  /* Agri Land palette — warm harvest (wheat, terracotta, sage) */
-  --sky: #ffe9c2;
-  --sky-deep: #f6c98a;
-  --ocean: #8a6a3b;
-  --foam: #fff5e1;
-  --sunset: #e0743a;
-  --sunset-deep: #b8501e;
-  --ink: #3a2418;
-  --leaf: #7a9457;
-  --gold: #e8b04b;
-  --sand: #f3e2b8;
-  --cyan-soft: #d9c7a3;
+  /* Agri Land palette — green fields + warm sun accents */
+  --sky: #cdebb0;
+  --sky-deep: #9ed87a;
+  --ocean: #4ca64c;
+  --foam: #eef9e2;
+  --sunset: #ffb05a;
+  --sunset-deep: #f48b2a;
+  --ink: #1f3320;
+  --leaf: #6cc26a;
+  --gold: #ffd166;
+  --sand: #fff1d6;
+  --cyan-soft: #def5c4;
 
-  --background: #fdf5e3;
+  --background: #f3fbe8;
   --foreground: var(--ink);
-  --card: #fffaf0;
+  --card: #ffffff;
   --card-foreground: var(--ink);
-  --popover: #fffaf0;
+  --popover: #ffffff;
   --popover-foreground: var(--ink);
   --primary: var(--sunset);
-  --primary-foreground: #fffaf0;
+  --primary-foreground: var(--ink);
   --secondary: var(--foam);
   --secondary-foreground: var(--ink);
-  --muted: #f5e8cf;
-  --muted-foreground: #6b4a32;
-  --accent: var(--leaf);
-  --accent-foreground: #fffaf0;
-  --destructive: #c0392b;
+  --muted: #ecf6df;
+  --muted-foreground: #5a6a4a;
+  --accent: var(--sky-deep);
+  --accent-foreground: var(--ink);
+  --destructive: #e84a4a;
   --destructive-foreground: #ffffff;
-  --border: #e2c9a0;
-  --input: #ecd9b3;
+  --border: #cfe6b3;
+  --input: #e2efce;
   --ring: var(--sunset-deep);
 
-  --gradient-sky: linear-gradient(180deg, #ffe9c2 0%, #fff5e1 55%, #fffaf0 100%);
-  --gradient-ocean: linear-gradient(135deg, #b8501e, #e0743a);
-  --gradient-sunset: linear-gradient(180deg, #f1a96b, #e0743a 60%, #b8501e);
-  --gradient-hero: radial-gradient(ellipse at 80% -10%, #ffd58a 0%, #ffe9c2 40%, #fff5e1 75%, #fffaf0 100%);
+  --gradient-sky: linear-gradient(180deg, #cdebb0 0%, #e8f6d2 60%, #fff7e6 100%);
+  --gradient-ocean: linear-gradient(135deg, #4ca64c, #9ed87a);
+  --gradient-sunset: linear-gradient(180deg, #ffc481, #ffb05a 60%, #f48b2a);
+  --gradient-hero: radial-gradient(ellipse at 80% -5%, #ffd58a 0%, #ffe9b8 25%, #d9efba 60%, #f3fbe8 100%);
 }
 
 @layer base {
