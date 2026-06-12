@@ -70,7 +70,7 @@ function GamePage() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
         {!gate.connected && <ConnectGate />}
         {gate.connected && gate.status === "loading" && <LoadingGate />}
         {gate.connected && gate.status === "insufficient" && (
