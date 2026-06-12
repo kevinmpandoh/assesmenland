@@ -49,17 +49,27 @@ function SkyBackdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
       <div className="absolute inset-0 bg-[image:var(--gradient-hero)]" />
-      <div className="pixel-cloud cloud-float left-[6%] top-24" />
+      {/* warm sun */}
       <div
-        className="pixel-cloud cloud-float left-[68%] top-16"
-        style={{ animationDelay: "-6s" }}
+        className="absolute right-[8%] top-16 h-40 w-40 rounded-full ink-border"
+        style={{
+          background: "radial-gradient(circle at 35% 35%, #ffe9a8, #f3a14a 70%, #b8501e)",
+          boxShadow: "0 0 80px 10px rgba(240, 161, 74, 0.35)",
+          animation: "sun-pulse 6s ease-in-out infinite",
+        }}
+      />
+      {/* wheat sprigs scattered */}
+      <div className="pixel-cloud cloud-float left-[6%] top-32" />
+      <div
+        className="pixel-cloud cloud-float left-[18%] top-64"
+        style={{ animationDelay: "-2s", transform: "scale(0.8)" }}
       />
       <div
-        className="pixel-cloud cloud-float left-[35%] top-44"
-        style={{ animationDelay: "-12s", transform: "scale(0.8)" }}
+        className="pixel-cloud cloud-float left-[78%] top-[26rem]"
+        style={{ animationDelay: "-4s", transform: "scale(0.9)" }}
       />
       <div
-        className="pixel-cloud cloud-float left-[82%] top-72"
+        className="pixel-cloud cloud-float left-[42%] top-[22rem]"
         style={{ animationDelay: "-3s", transform: "scale(0.7)" }}
       />
     </div>
