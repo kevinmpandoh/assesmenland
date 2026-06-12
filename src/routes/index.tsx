@@ -303,7 +303,7 @@ function Roadmap() {
   const phases = [
     {
       q: "PHASE 1",
-      t: "First seeds — LIVE",
+      t: "First seeds LIVE",
       d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
     },
     {
