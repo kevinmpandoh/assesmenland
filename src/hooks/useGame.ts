@@ -277,6 +277,43 @@ export function useGame(walletAddress: string | null = null) {
     return true;
   };
 
+  /** World field: pay seed cost + energy. Returns false if unaffordable. */
+  const spendSeed = (cropId: string): boolean => {
+    const crop = cropById(cropId);
+    if (!crop) return false;
+    if (crop.unlockLevel > state.level) return false;
+    if (state.gold < crop.seedCost || state.energy < PLANT_ENERGY) return false;
+    setState((s) => ({
+      ...s,
+      gold: s.gold - crop.seedCost,
+      energy: s.energy - PLANT_ENERGY,
+    }));
+    return true;
+  };
+
+  /** World field: receive a harvested crop into the barn (+XP). */
+  const gainHarvest = (cropId: string): Crop | null => {
+    const crop = cropById(cropId);
+    if (!crop) return null;
+    setState((s) => ({
+      ...s,
+      harvests: s.harvests + 1,
+      barn: { ...s.barn, [crop.id]: (s.barn[crop.id] ?? 0) + 1 },
+    }));
+    grant(crop.xp);
+    if (walletAddress && crop.unlockLevel >= 5) {
+      logFishCatch({
+        data: {
+          wallet: walletAddress,
+          fishName: crop.name,
+          rarity: cropTier(crop),
+          value: crop.sellPrice,
+        },
+      }).catch((e) => console.warn("harvest log failed", e));
+    }
+    return crop;
+  };
+
   const upgradeFarm = () => {
     setState((s) => {
       if (s.gold < UPGRADE_PLOT_COST || s.farmSize >= MAX_FARM_SIZE) return s;
@@ -293,5 +330,16 @@ export function useGame(walletAddress: string | null = null) {
     });
   };
 
-  return { state, syncState, setUsername, plant, harvest, sellCrop, buyEquipment, upgradeFarm };
+  return {
+    state,
+    syncState,
+    setUsername,
+    plant,
+    harvest,
+    sellCrop,
+    buyEquipment,
+    upgradeFarm,
+    spendSeed,
+    gainHarvest,
+  };
 }

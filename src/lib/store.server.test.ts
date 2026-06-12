@@ -1,10 +1,16 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
 import { getStore, displayName } from "./store.server";
 
 // Exercises the FileStore fallback (no SUPABASE_* env in tests).
 const store = getStore();
 const WALLET = "TestWa11et1111111111111111111111111111111111";
+
+// Start from a clean slate — a leftover .data dir from a dev-server run
+// would pollute the ranking assertions.
+beforeAll(async () => {
+  await rm(".data", { recursive: true, force: true });
+});
 
 afterAll(async () => {
   await rm(".data", { recursive: true, force: true });
@@ -91,5 +97,48 @@ describe("presence", () => {
     await new Promise((r) => setTimeout(r, 10));
     const list = await store.listPresence(5);
     expect(list.find((p) => p.wallet_address === WALLET)).toBeUndefined();
+  });
+});
+
+describe("world plots", () => {
+  const plot = (key: string, over: Record<string, unknown> = {}) => ({
+    plot_key: key,
+    x: 8,
+    y: 30,
+    wallet_address: WALLET,
+    crop: "tomato",
+    planted_at: new Date().toISOString(),
+    ready_at: new Date(Date.now() + 20_000).toISOString(),
+    expires_at: new Date(Date.now() + 7_220_000).toISOString(),
+    ...over,
+  });
+
+  test("plants a free plot, rejects an occupied one", async () => {
+    expect(await store.plantPlot(plot("8:30"))).toBe(true);
+    expect(
+      await store.plantPlot(
+        plot("8:30", { wallet_address: "SomeoneE1se111111111111111111111111111111111" }),
+      ),
+    ).toBe(false);
+    const got = await store.getPlot("8:30");
+    expect(got?.wallet_address).toBe(WALLET);
+  });
+
+  test("lists active plots and removes harvested ones", async () => {
+    const list = await store.listPlots();
+    expect(list.some((p) => p.plot_key === "8:30")).toBe(true);
+    await store.removePlot("8:30");
+    expect(await store.getPlot("8:30")).toBeNull();
+  });
+
+  test("expired (withered) plots are cleaned up on read", async () => {
+    await store.plantPlot(
+      plot("9:30", {
+        ready_at: new Date(Date.now() - 10_000).toISOString(),
+        expires_at: new Date(Date.now() - 5_000).toISOString(),
+      }),
+    );
+    const list = await store.listPlots();
+    expect(list.some((p) => p.plot_key === "9:30")).toBe(false);
   });
 });

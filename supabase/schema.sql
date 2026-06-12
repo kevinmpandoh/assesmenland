@@ -122,3 +122,22 @@ create policy "public read presence" on public.world_presence for select using (
 
 -- Level shown above heads in the world (added for Agri Land).
 alter table public.world_presence add column if not exists level int not null default 1;
+
+-- ---------- world_plots ----------
+-- The shared town field: anyone can plant on free soil tiles, only the
+-- planter may harvest, and a ready crop withers 2h after maturing
+-- (expired rows are cleaned up by the API on read).
+create table if not exists public.world_plots (
+  plot_key text primary key, -- "x:y"
+  x int not null,
+  y int not null,
+  wallet_address text not null,
+  crop text not null,
+  planted_at timestamptz not null default now(),
+  ready_at timestamptz not null,
+  expires_at timestamptz not null
+);
+create index if not exists world_plots_expiry_idx on public.world_plots (expires_at);
+
+alter table public.world_plots enable row level security;
+create policy "public read plots" on public.world_plots for select using (true);

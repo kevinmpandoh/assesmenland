@@ -58,7 +58,7 @@ const STEPS = [
   {
     icon: Globe,
     title: "6 · Visit the town",
-    body: "Everyone shares ONE live map. Walk around with WASD or click, see other farmers with their level above their head, and chat — your messages appear as speech bubbles.",
+    body: "Everyone shares ONE live map. Walk to the fenced fields and plant directly on shared soil — only you can harvest your own crop, and it withers 2 hours after ripening. The shop opens right inside the town, no page-switching.",
   },
 ];
 
