@@ -261,17 +261,17 @@ function TokenSection() {
         <div className="grid gap-0 md:grid-cols-[1fr_360px]">
           <div className="p-8 sm:p-10">
             <span className="pill text-xs">
-              <span>🪙</span> TOKEN
+              <span>🪙</span> PROJECT TOKEN
             </span>
-            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
+            <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">A SMALL PART OF THE WORLD</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town. The
-              token is just a key for access, cosmetics, and seasonal events. Not a promise of
-              returns, not an investment pitch. Farm slowly, enjoy the seasons.
+              Agri Land has a community token used for cosmetics, seasonal events, and town
+              features. It is not an investment, not a promise of returns, and not financial advice.
+              You can enjoy the game without it — farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="chunky-btn">
-                🪙 VIEW TOKEN
+                🪙 LEARN MORE
               </a>
               <Link to="/game" className="chunky-btn chunky-btn-sky">
                 🌱 TRY THE GAME
