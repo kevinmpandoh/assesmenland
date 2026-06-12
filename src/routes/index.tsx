@@ -90,10 +90,6 @@ function Hero() {
           Claim a field, plant a seed, and grow your farm — all in your browser. No downloads needed.
         </p>
 
-        <p className="mt-6 text-xs uppercase tracking-widest text-ink/60">
-          Tomato · Eggplant · Corn · Chili · Cabbage · Melon · Pumpkin · Strawberry · Mango · Golden
-          Rice
-        </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
