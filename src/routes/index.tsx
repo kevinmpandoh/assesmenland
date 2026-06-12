@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other farmers on one live map.",
+          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other players on one live map.",
       },
     ],
   }),
@@ -272,7 +272,7 @@ function Roadmap() {
     {
       q: "PHASE 2",
       t: "Personal plots in town",
-      d: "Your farm appears on the world map, visit other farmers' fields, water their crops, leave a note.",
+      d: "Your farm appears on the world map, visit other players' fields, water their crops, leave a note.",
     },
     {
       q: "PHASE 3",
@@ -282,7 +282,7 @@ function Roadmap() {
     {
       q: "PHASE 4",
       t: "Marketplace & cosmetics",
-      d: "Player-to-player crop trading, farmhouse skins, pets, and custom hats for your farmer.",
+      d: "Player-to-player crop trading, farmhouse skins, pets, and custom hats for your player.",
     },
   ];
   return (

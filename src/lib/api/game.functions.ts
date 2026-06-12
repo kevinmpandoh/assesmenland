@@ -59,7 +59,7 @@ export const syncPlayer = createServerFn({ method: "POST" })
  *  - a round's champions are hidden from the rankings until the next
  *    00:00 UTC reset (24h cooldown), and
  *  - the previous round's champions can't win two rounds back to back,
- *    so the podium always rotates to new farmers.
+ *    so the podium always rotates to new players.
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const { REWARD_TOP_N } = await import("../game-logic");
@@ -218,7 +218,7 @@ export const pingWorld = createServerFn({ method: "POST" })
 
 // ----------------------------------------------------- shared town field
 
-// Everyone plants on the same fenced fields in the town. Only the farmer
+// Everyone plants on the same fenced fields in the town. Only the player
 // who planted a plot can harvest it, and a ready crop withers (the row is
 // deleted) WORLD_PLOT_WITHER_MS after maturing.
 
@@ -272,7 +272,7 @@ export const harvestWorldPlot = createServerFn({ method: "POST" })
     const plot = await store.getPlot(key);
     if (!plot) return { ok: false as const, reason: "Nothing growing here." };
     if (plot.wallet_address !== data.wallet) {
-      return { ok: false as const, reason: "This plant belongs to another farmer." };
+      return { ok: false as const, reason: "This plant belongs to another player." };
     }
     const now = Date.now();
     if (now < new Date(plot.ready_at).getTime()) {
