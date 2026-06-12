@@ -11,8 +11,7 @@ export function Footer() {
           <span className="pixel text-xs text-ink">AGRI&nbsp;LAND</span>
         </div>
         <p className="max-w-md text-sm text-muted-foreground">
-          A tiny farming world on Solana. Built slowly, played calmly. Not financial advice — the
-          token is just a key to the land.
+          A tiny farming world on Solana. Built slowly, played calmly.&nbsp;
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <a href="https://x.com" target="_blank" rel="noreferrer" className="pill text-xs">

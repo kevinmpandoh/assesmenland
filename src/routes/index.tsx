@@ -87,7 +87,7 @@ function Hero() {
         <p className="pixel mt-3 text-sm text-ocean sm:text-base">Plant · Grow · Prosper</p>
 
         <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/80 sm:text-lg">
-          Claim a field, plant a seed, and grow your farm — all in your browser. No downloads needed.
+          Claim a field, plant a seed, and grow your farm.
         </p>
 
 
