@@ -25,6 +25,10 @@ describe("crops", () => {
     for (const c of CROPS) expect(c.sellPrice).toBeGreaterThan(c.seedCost);
   });
 
+  test("grow time scales 5s per crop level (5s … 50s)", () => {
+    for (const c of CROPS) expect(c.growMs).toBe(c.unlockLevel * 5_000);
+  });
+
   test("level gates which crops can be planted", () => {
     expect(cropsUnlockedAt(1).map((c) => c.id)).toEqual(["tomato"]);
     expect(cropsUnlockedAt(3).length).toBe(3);
@@ -40,11 +44,11 @@ describe("crops", () => {
 describe("equipment", () => {
   test("speed equipment shortens grow time, capped at 55%", () => {
     const tomato = CROPS[0];
-    expect(effectiveGrowMs(tomato, [])).toBe(20_000);
-    expect(effectiveGrowMs(tomato, ["watering_can"])).toBe(18_000);
+    expect(effectiveGrowMs(tomato, [])).toBe(5_000);
+    expect(effectiveGrowMs(tomato, ["watering_can"])).toBe(4_500);
     const all = EQUIPMENT.map((e) => e.id);
     // total speed bonuses = 0.7 → capped at 0.55
-    expect(effectiveGrowMs(tomato, all)).toBe(9_000);
+    expect(effectiveGrowMs(tomato, all)).toBe(2_250);
   });
 
   test("sell equipment raises prices, capped at 15%", () => {

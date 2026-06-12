@@ -71,8 +71,9 @@ equipment → repeat. One crop unlocks per level:
 🍅 Tomato → 🍆 Eggplant → 🌽 Corn → 🌶️ Chili → 🥬 Cabbage → 🍈 Melon →
 🎃 Pumpkin → 🍓 Strawberry → 🥭 Mango → 🌾 Golden Rice
 
-- Planting buys the seed automatically (tomato 4g/20s → Golden Rice 140g/10m)
-  and costs 2 energy; energy regens 1 per 8s.
+- Buy seeds at the Seed Shop (bag holds 10), then plant: 1 seed + 2 energy.
+  Grow time is 5s per crop level (tomato 5s → Golden Rice 50s); energy
+  regens 1 per 8s.
 - Equipment (6 items, 150g–5,000g) permanently speeds growth up to **55%** and
   raises sell prices up to **+15%**. Field expands from 9 to 25 plots.
 - Each level needs `level × 100` XP; level 10 is the current cap.
