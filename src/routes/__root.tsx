@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import logoAsset from "@/assets/agriland-logo.png.asset.json";
 // Wallet adapter base styles, vendored into src/wallet-adapter.css. The
 // package's own styles.css starts with a remote Google Fonts @import that
 // lightningcss can't resolve (the old "Vite 500 CSS error"), so we keep a
@@ -107,16 +108,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png",
+        content: logoAsset.url,
       },
       {
         name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3b16b827-2143-45a2-9227-f0ac152da080/id-preview-d88146d3--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1781200595483.png",
+        content: logoAsset.url,
       },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: logoAsset.url },
+      { rel: "apple-touch-icon", href: logoAsset.url },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

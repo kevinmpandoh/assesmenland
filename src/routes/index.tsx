@@ -6,6 +6,7 @@ import { useTokenGate } from "@/hooks/useTokenGate";
 import { CROPS } from "@/lib/game-logic";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { CheckCircle2, AlertCircle, Wallet, ArrowDown } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -77,27 +78,17 @@ function Hero() {
           OPEN BETA · LIVE TOWN
         </div>
 
-        <div className="text-6xl boat-bob" aria-hidden>
-          🧑‍🌾
+        <div className="boat-bob" aria-hidden>
+          <Logo className="h-28 w-28" />
         </div>
 
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
-          AGRI
-          <br />
-          <span className="text-sunset-deep">LAND</span>
+          AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
         </h1>
         <p className="pixel mt-3 text-sm text-ocean sm:text-base">Plant · Grow · Prosper</p>
 
         <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/80 sm:text-lg">
-          Claim a field, plant your first tomato, and slowly grow it into a farming empire. Ten
-          crops, ten levels, one shared town where every farmer walks the same map. It all runs{" "}
-          <span className="font-bold text-ocean">right in your browser</span> — no downloads, no
-          drama.
-        </p>
-
-        <p className="mt-6 text-xs uppercase tracking-widest text-ink/60">
-          Tomato · Eggplant · Corn · Chili · Cabbage · Melon · Pumpkin · Strawberry · Mango · Golden
-          Rice
+          Claim a field, plant a seed, and grow your farm.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -147,8 +138,8 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold at least <span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to
-            claim a field. Connect your wallet first.
+            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to claim
+            a field. Connect your wallet first.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
@@ -214,18 +205,14 @@ function HowItWorks() {
     {
       emo: "💰",
       title: "SELL & UPGRADE",
-      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster — then expand your field and repeat.",
+      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster, then expand your field and repeat.",
     },
   ];
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <p className="pixel text-xs text-ocean">The loop is simple</p>
-        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">
-          10 CROPS. 10 LEVELS.
-          <br />
-          ONE GOLDEN FIELD.
-        </h2>
+        <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">ONE GOLDEN FIELD.</h2>
         <p className="mt-4 text-ink/80">
           From tomatoes you can flip in seconds to Golden Rice that takes patience and pays like a
           harvest festival. Level up to unlock bigger crops, invest your gold in equipment, and
@@ -259,7 +246,7 @@ function HowItWorks() {
 
       <div className="mt-8 text-center">
         <Link to="/docs" className="pill text-xs">
-          📚 Read the full docs — crops, prices, equipment, FAQ
+          📚 Read the full docs. Crops, prices, equipment, FAQ
         </Link>
       </div>
     </section>
@@ -279,8 +266,8 @@ function TokenSection() {
             </span>
             <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Hold at least {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town.
-              The token is just a key — for access, cosmetics, and seasonal events. Not a promise of
+              Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town. The
+              token is just a key for access, cosmetics, and seasonal events. Not a promise of
               returns, not an investment pitch. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -310,13 +297,13 @@ function Roadmap() {
   const phases = [
     {
       q: "PHASE 1",
-      t: "First seeds — LIVE",
+      t: "First seeds LIVE",
       d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
     },
     {
       q: "PHASE 2",
       t: "Personal plots in town",
-      d: "Your farm appears on the world map — visit other farmers' fields, water their crops, leave a note.",
+      d: "Your farm appears on the world map, visit other farmers' fields, water their crops, leave a note.",
     },
     {
       q: "PHASE 3",

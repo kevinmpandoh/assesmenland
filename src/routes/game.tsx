@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 type GameApi = ReturnType<typeof useGame>;
 
@@ -117,7 +118,7 @@ function ConnectGate() {
   return (
     <GateShell icon={Wallet} title="Connect wallet to start farming">
       <p className="mt-3 text-ink/70">
-        Hold at least {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
+        Hold {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
       </p>
       <div className="mt-6 flex justify-center">
         <WalletButton />
@@ -270,8 +271,8 @@ function ProfileCard({
   return (
     <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
-          🧑‍🌾
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-ink ink-border overflow-hidden">
+          <Logo className="h-12 w-12" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
