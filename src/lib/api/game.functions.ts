@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getStore } from "../store.server";
+import {
+  currentEpochStart,
+  nextRewardAt,
+  REWARD_INTERVAL_MS,
+  WINNER_COOLDOWN_MS,
+} from "../game-logic";
 
 // SawahVerse game API. Each function runs server-side only; the client
 // calls them like async functions. Storage backend is resolved in
@@ -108,8 +114,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
 export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
   const store = getStore();
-  const { nextRewardAt, currentEpochStart, REWARD_INTERVAL_MS, WINNER_COOLDOWN_MS } =
-    await import("../game-logic");
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
