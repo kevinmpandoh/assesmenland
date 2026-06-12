@@ -250,21 +250,23 @@
   animation: water-shimmer 3s ease-in-out infinite;
 }
 
-/* pixel-style cloud (pure CSS) */
+/* pixel-style wheat sprig (pure CSS) — replaces the old cloud decoration */
 .pixel-cloud {
   position: absolute;
-  width: 90px;
-  height: 36px;
-  background: #ffffff;
-  border-radius: 6px;
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  border-radius: 2px;
   box-shadow:
-    -18px 0 0 0 #ffffff,
-    18px 0 0 0 #ffffff,
-    -36px -10px 0 0 #ffffff,
-    14px -12px 0 0 #ffffff,
-    0 -16px 0 0 #ffffff;
-  opacity: 0.92;
-  filter: drop-shadow(0 2px 0 rgba(27, 34, 64, 0.08));
+    0 -14px 0 0 var(--gold),
+    14px -7px 0 0 var(--sunset),
+    -14px -7px 0 0 var(--sunset),
+    0 14px 0 0 var(--leaf),
+    14px 7px 0 0 var(--gold),
+    -14px 7px 0 0 var(--gold),
+    0 28px 0 0 var(--leaf);
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 0 rgba(58, 36, 24, 0.15));
 }
 
 /* wallet adapter overrides — chunky sunset */
