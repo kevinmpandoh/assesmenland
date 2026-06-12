@@ -270,8 +270,8 @@ function ProfileCard({
   return (
     <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-2xl text-ink ink-border">
-          🧑‍🌾
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-ink ink-border overflow-hidden">
+          <Logo className="h-12 w-12" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
