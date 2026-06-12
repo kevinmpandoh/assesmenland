@@ -8,7 +8,7 @@ export function Footer() {
           <span className="text-xl" aria-hidden>
             🧑‍🌾
           </span>
-          <span className="pixel text-xs text-ink">AGRI LAND</span>
+          <span className="pixel text-xs text-ink">AGRI&nbsp;LAND</span>
         </div>
         <p className="max-w-md text-sm text-muted-foreground">
           A tiny farming world on Solana. Built slowly, played calmly. Not financial advice — the
