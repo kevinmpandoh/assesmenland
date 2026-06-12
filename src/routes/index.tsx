@@ -209,7 +209,7 @@ function HowItWorks() {
     {
       emo: "💰",
       title: "SELL & UPGRADE",
-      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster — then expand your field and repeat.",
+      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster, then expand your field and repeat.",
     },
   ];
   return (
