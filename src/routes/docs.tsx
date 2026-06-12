@@ -64,7 +64,7 @@ function DocsPage() {
               <span className="font-semibold">Connect Wallet</span>.
             </li>
             <li>
-              Hold at least{" "}
+              Hold{" "}
               <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span> — the gate
               check is read-only; the game never asks you to sign a transaction.
             </li>
