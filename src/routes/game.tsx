@@ -98,13 +98,13 @@ function GateShell({
   tone?: "ocean" | "gold";
 }) {
   return (
-    <div className="mx-auto mt-8 max-w-xl card-pop p-10 text-center">
+    <div className="mx-auto mt-6 max-w-xl card-pop p-6 text-center sm:mt-8 sm:p-10">
       <div
         className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ink-border ${tone === "ocean" ? "bg-sky-deep text-ink" : "bg-sunset text-ink"}`}
       >
         <Icon className="h-7 w-7" />
       </div>
-      <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
+      <h2 className="pixel mt-5 text-base text-ink sm:text-xl">{title}</h2>
       {children}
       <div className="mt-6 flex justify-center">
         <Link to="/" className="pill text-xs">
