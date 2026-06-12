@@ -97,6 +97,18 @@ function Hero() {
           Claim a field, plant a seed, and grow your farm.
         </p>
 
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {[
+            ["🧪", "OPEN BETA"],
+            ["✅", "NO DOWNLOAD"],
+            ["🌐", "ONE SHARED MAP"],
+            ["💬", "LIVE CHAT"],
+          ].map(([emo, label]) => (
+            <span key={label} className="pill text-xs">
+              <span>{emo}</span> {label}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-10 flex flex-col items-center gap-3">
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
