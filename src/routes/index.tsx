@@ -138,21 +138,20 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to claim
-            a field. Connect your wallet first.
+            Sign in with your Solana wallet to join the town and start farming.
           </p>
         )}
         {connected && status === "loading" && <p className="text-ink/70">Checking your balance…</p>}
         {connected && status === "granted" && (
           <p className="flex items-center gap-1.5 font-semibold text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> Access granted — balance {balance.toLocaleString()}{" "}
-            · {shortAddress(address)}
+            <CheckCircle2 className="h-4 w-4" /> You're in — balance {balance.toLocaleString()} ·{" "}
+            {shortAddress(address)}
           </p>
         )}
         {connected && status === "insufficient" && (
           <p className="flex items-center gap-1.5 text-ink">
-            <AlertCircle className="h-4 w-4 text-sunset-deep" /> You need at least 1 token. Current
-            balance: {balance.toLocaleString()}.
+            <AlertCircle className="h-4 w-4 text-sunset-deep" /> Your balance is{" "}
+            {balance.toLocaleString()}. Learn more about the project token below.
           </p>
         )}
         {connected && status === "error" && (
@@ -160,7 +159,7 @@ function GateBanner({
         )}
       </div>
       <a href={PUMP_FUN_URL} target="_blank" rel="noreferrer" className="pill text-xs">
-        🪙 Get Token
+        🪙 Learn more
       </a>
     </div>
   );
