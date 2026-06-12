@@ -62,6 +62,17 @@ export type WorldPlotRow = {
   expires_at: string;
 };
 
+export type WinnerRow = {
+  id: string;
+  /** ISO start of the 3h reward epoch this win belongs to */
+  epoch: string;
+  rank: number;
+  wallet_address: string;
+  name: string;
+  coins: number;
+  created_at: string;
+};
+
 export interface GameStore {
   upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow>;
   getPlayer(wallet: string): Promise<PlayerRow | null>;
@@ -79,6 +90,14 @@ export interface GameStore {
   /** Remove a plot after a successful harvest. */
   removePlot(plotKey: string): Promise<void>;
   getPlot(plotKey: string): Promise<WorldPlotRow | null>;
+  /** Record the top-3 snapshot for a reward epoch (idempotent per epoch). */
+  recordWinners(rows: Omit<WinnerRow, "id" | "created_at">[]): Promise<void>;
+  /** Most recent winners, newest epoch first. */
+  listWinners(limit: number): Promise<WinnerRow[]>;
+  /** ISO of the latest epoch that has winners recorded, or null. */
+  latestWinnerEpoch(): Promise<string | null>;
+  /** Wins recorded since the given time (for the 24h cooldown). */
+  winnersSince(sinceIso: string): Promise<WinnerRow[]>;
 }
 
 export function displayName(p: { username: string | null; wallet_address: string }) {
@@ -237,6 +256,45 @@ class SupabaseStore implements GameStore {
     if (error) throw new Error(`getPlot: ${error.message}`);
     return (data as WorldPlotRow) ?? null;
   }
+
+  async recordWinners(rows: Omit<WinnerRow, "id" | "created_at">[]): Promise<void> {
+    if (rows.length === 0) return;
+    const { error } = await this.db
+      .from("leaderboard_winners")
+      .upsert(rows, { onConflict: "epoch,rank" });
+    if (error) throw new Error(`recordWinners: ${error.message}`);
+  }
+
+  async listWinners(limit: number): Promise<WinnerRow[]> {
+    const { data, error } = await this.db
+      .from("leaderboard_winners")
+      .select()
+      .order("epoch", { ascending: false })
+      .order("rank", { ascending: true })
+      .limit(limit);
+    if (error) throw new Error(`listWinners: ${error.message}`);
+    return (data ?? []) as WinnerRow[];
+  }
+
+  async latestWinnerEpoch(): Promise<string | null> {
+    const { data, error } = await this.db
+      .from("leaderboard_winners")
+      .select("epoch")
+      .order("epoch", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(`latestWinnerEpoch: ${error.message}`);
+    return data?.epoch ?? null;
+  }
+
+  async winnersSince(sinceIso: string): Promise<WinnerRow[]> {
+    const { data, error } = await this.db
+      .from("leaderboard_winners")
+      .select()
+      .gte("epoch", sinceIso);
+    if (error) throw new Error(`winnersSince: ${error.message}`);
+    return (data ?? []) as WinnerRow[];
+  }
 }
 
 // -------------------------------------------------------------- File (dev)
@@ -246,9 +304,10 @@ type FileData = {
   chat: ChatRow[];
   catches: CatchRow[];
   plots: Record<string, WorldPlotRow>;
+  winners: WinnerRow[];
 };
 
-const EMPTY: FileData = { players: {}, chat: [], catches: [], plots: {} };
+const EMPTY: FileData = { players: {}, chat: [], catches: [], plots: {}, winners: [] };
 const FILE_PATH = ".data/sawahverse.json";
 
 class FileStore implements GameStore {
@@ -403,6 +462,46 @@ class FileStore implements GameStore {
     data.plots ??= {};
     await this.cleanupPlots(data);
     return data.plots[plotKey] ?? null;
+  }
+
+  async recordWinners(rows: Omit<WinnerRow, "id" | "created_at">[]): Promise<void> {
+    if (rows.length === 0) return;
+    const data = await this.load();
+    data.winners ??= [];
+    for (const row of rows) {
+      const exists = data.winners.some((w) => w.epoch === row.epoch && w.rank === row.rank);
+      if (!exists) {
+        data.winners.push({
+          ...row,
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+    data.winners = data.winners.slice(-300);
+    await this.save(data);
+  }
+
+  async listWinners(limit: number): Promise<WinnerRow[]> {
+    const data = await this.load();
+    data.winners ??= [];
+    return [...data.winners]
+      .sort((a, b) => (a.epoch === b.epoch ? a.rank - b.rank : b.epoch.localeCompare(a.epoch)))
+      .slice(0, limit);
+  }
+
+  async latestWinnerEpoch(): Promise<string | null> {
+    const data = await this.load();
+    data.winners ??= [];
+    let latest: string | null = null;
+    for (const w of data.winners) if (!latest || w.epoch > latest) latest = w.epoch;
+    return latest;
+  }
+
+  async winnersSince(sinceIso: string): Promise<WinnerRow[]> {
+    const data = await this.load();
+    data.winners ??= [];
+    return data.winners.filter((w) => w.epoch >= sinceIso);
   }
 }
 

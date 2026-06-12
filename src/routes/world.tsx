@@ -1011,9 +1011,7 @@ function World({ address }: { address: string }) {
                   key={c.id}
                   disabled={locked}
                   onClick={() => setSelectedSeed(c.id)}
-                  title={
-                    locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name}, ${c.seedCost}g`
-                  }
+                  title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name}, ${c.seedCost}g`}
                   className={`flex items-center gap-0.5 rounded-lg border-2 px-1.5 py-1 text-[10px] font-bold transition ${
                     isSel
                       ? "border-ink bg-sunset text-ink"

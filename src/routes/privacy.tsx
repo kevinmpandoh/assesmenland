@@ -36,9 +36,9 @@ function Privacy() {
         <h2 className="pixel mt-10 text-xl text-ink">What we collect</h2>
         <ul className="mt-4 list-disc space-y-2 pl-6 text-ink/80">
           <li>
-            <strong>Wallet address.</strong> When you connect a Solana wallet, your public address is
-            used to identify your in-game farm. We never see, store, or have access to your private
-            keys or seed phrase.
+            <strong>Wallet address.</strong> When you connect a Solana wallet, your public address
+            is used to identify your in-game farm. We never see, store, or have access to your
+            private keys or seed phrase.
           </li>
           <li>
             <strong>Game state.</strong> Crops, gold, barn inventory, equipment, level, and chat

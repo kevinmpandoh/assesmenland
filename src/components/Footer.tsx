@@ -44,10 +44,7 @@ export function Footer() {
             Terms
           </Link>
           <span>·</span>
-          <a
-            href="mailto:hello@agriland.cc"
-            className="hover:text-ink"
-          >
+          <a href="mailto:hello@agriland.cc" className="hover:text-ink">
             hello@agriland.cc
           </a>
         </div>

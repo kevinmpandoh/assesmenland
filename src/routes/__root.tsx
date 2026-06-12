@@ -115,10 +115,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: logoAsset.url,
       },
       { name: "description", content: "Agri Land is a relaxing multiplayer Solana farming." },
-      { property: "og:description", content: "Agri Land is a relaxing multiplayer Solana farming." },
-      { name: "twitter:description", content: "Agri Land is a relaxing multiplayer Solana farming." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c" },
+      {
+        property: "og:description",
+        content: "Agri Land is a relaxing multiplayer Solana farming.",
+      },
+      {
+        name: "twitter:description",
+        content: "Agri Land is a relaxing multiplayer Solana farming.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c",
+      },
     ],
     links: [
       { rel: "icon", type: "image/png", href: logoAsset.url },

@@ -82,7 +82,6 @@ function Hero() {
   return (
     <section className="relative">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6 text-center sm:px-6">
-
         <div className="boat-bob" aria-hidden>
           <Logo className="h-28 w-28" />
         </div>
@@ -98,6 +97,8 @@ function Hero() {
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
+            ["🧪", "OPEN BETA"],
+            ["🎁", "DAILY TOP-3 REWARDS"],
             ["✅", "NO DOWNLOAD"],
             ["🌐", "ONE SHARED MAP"],
             ["💬", "LIVE CHAT"],
@@ -112,7 +113,9 @@ function Hero() {
           <Link to="/game" className="chunky-btn chunky-btn-sky text-ink">
             PLAY NOW →
           </Link>
-          <p className="mt-1 text-sm text-ink/70">Sign in with your Solana wallet to join the town</p>
+          <p className="mt-1 text-sm text-ink/70">
+            Sign in with your Solana wallet to join the town
+          </p>
           <ArrowDown className="mt-2 h-5 w-5 animate-bounce text-ink/50" />
         </div>
 
@@ -167,7 +170,6 @@ function GateBanner({
     </div>
   );
 }
-
 
 /* ---------- How it works ---------- */
 
@@ -265,7 +267,7 @@ function Roadmap() {
     {
       q: "PHASE 1",
       t: "First seeds LIVE",
-      d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
+      d: "Open beta: 10 crops, endless levels, shared town, and daily top-3 leaderboard rewards funded by trading fees.",
     },
     {
       q: "PHASE 2",

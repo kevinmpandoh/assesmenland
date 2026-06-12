@@ -92,7 +92,13 @@
   --gradient-sky: linear-gradient(180deg, #cdebb0 0%, #e8f6d2 60%, #fff7e6 100%);
   --gradient-ocean: linear-gradient(135deg, #4ca64c, #9ed87a);
   --gradient-sunset: linear-gradient(180deg, #ffc481, #ffb05a 60%, #f48b2a);
-  --gradient-hero: radial-gradient(ellipse at 80% -5%, #ffd58a 0%, #ffe9b8 25%, #d9efba 60%, #f3fbe8 100%);
+  --gradient-hero: radial-gradient(
+    ellipse at 80% -5%,
+    #ffd58a 0%,
+    #ffe9b8 25%,
+    #d9efba 60%,
+    #f3fbe8 100%
+  );
 }
 
 @layer base {

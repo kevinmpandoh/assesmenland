@@ -23,6 +23,7 @@ const SECTIONS = [
   { id: "token", label: "Token Access" },
   { id: "crops", label: "Crops & Prices" },
   { id: "levels", label: "Levels & XP" },
+  { id: "rewards", label: "Leaderboard Rewards" },
   { id: "equipment", label: "Equipment" },
   { id: "town", label: "The Town" },
   { id: "faq", label: "FAQ" },
@@ -72,7 +73,7 @@ function DocsPage() {
               <Link to="/game" className="font-semibold text-ocean hover:underline">
                 My Farm
               </Link>{" "}
-             , you start with 25 gold, 5 tomato seeds, 100 energy, and a 9-plot field.
+              , you start with 25 gold, 5 tomato seeds, 100 energy, and a 9-plot field.
             </li>
             <li>
               Plant tomatoes, harvest, sell, and repeat. Visit the{" "}
@@ -158,8 +159,10 @@ function DocsPage() {
         {/* Levels */}
         <Section id="levels" title="🏆 Levels & XP">
           <p className="mb-4 text-sm text-ink/80">
-            XP comes from harvesting. Each level needs <code>level × 100</code> XP. There are{" "}
-            {MAX_LEVEL} levels right now, level 10 is the cap, with more planned (see roadmap).
+            XP comes from harvesting. Each level needs <code>level × 100</code> XP and{" "}
+            <span className="font-semibold">levels are endless</span> — the grind never stops. All
+            ten crops are unlocked by level {MAX_LEVEL}; beyond that, every level is pure bragging
+            rights on the leaderboard.
           </p>
           <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
             {Array.from({ length: MAX_LEVEL }, (_, i) => i + 1).map((lvl) => {
@@ -170,12 +173,71 @@ function DocsPage() {
                   <div className="mt-1 text-xl">{crop?.emoji}</div>
                   <div className="text-xs font-semibold text-ink">{crop?.name}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {lvl < MAX_LEVEL ? `${xpForLevel(lvl)} XP to next` : "MAX"}
+                    {xpForLevel(lvl)} XP to next
                   </div>
                 </div>
               );
             })}
           </div>
+        </Section>
+
+        {/* Rewards */}
+        <Section id="rewards" title="🎁 Leaderboard Rewards">
+          <p className="text-sm text-ink/80">
+            Agri Land is competitive: the gold leaderboard pays. The program is funded entirely by
+            the token's <span className="font-semibold">creator trading fees</span>, split 50/50:
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="card-pop bg-sunset/15 p-4">
+              <h3 className="pixel text-xs text-ink">50% — Reward Pool</h3>
+              <p className="mt-2 text-sm text-ink/75">
+                Distributed to the <span className="font-semibold">top 3 farmers</span> every round.
+                The bigger the trading volume, the bigger the pool.
+              </p>
+            </div>
+            <div className="card-pop bg-cyan-soft p-4">
+              <h3 className="pixel text-xs text-ink">50% — Development</h3>
+              <p className="mt-2 text-sm text-ink/75">
+                Funds servers, new features, art, and the roadmap below.
+              </p>
+            </div>
+          </div>
+          <h3 className="mt-5 text-sm font-bold text-ink">How a reward round works</h3>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink/80">
+            <li>
+              A round closes <span className="font-semibold">every day at 00:00 UTC</span> (the live
+              countdown is on the{" "}
+              <Link to="/leaderboard" className="font-semibold text-ocean hover:underline">
+                leaderboard
+              </Link>
+              ).
+            </li>
+            <li>
+              The <span className="font-semibold">top 3 by gold</span> at that moment are recorded
+              as winners — 🥇 🥈 🥉.
+            </li>
+            <li>
+              Prizes are distributed to the winners' wallets shortly after each round, proportional
+              to the fees collected during that round.
+            </li>
+            <li>
+              <span className="font-semibold">Fair-play cooldown:</span> champions are hidden from
+              the rankings for 24 hours (until the next 00:00 UTC reset) and can't win two rounds
+              back to back, so new farmers reach the podium.
+            </li>
+            <li>
+              Every past podium is recorded permanently in the{" "}
+              <span className="font-semibold">Previous Winners</span> list — fully public, wallet
+              addresses included.
+            </li>
+          </ol>
+          <p className="mt-4 rounded-xl bg-foam p-3 text-xs text-ink/70 ink-border">
+            ⚖️ <span className="font-semibold">Transparency note:</span> reward amounts depend on
+            actual trading activity during the round and are therefore variable — sometimes large,
+            sometimes small, never guaranteed. Rewards are a community program for active players,
+            not interest, yield, or a return on holding the token. The team may adjust the schedule
+            or rules to keep the competition fair (e.g., against botting or multi-wallet abuse).
+          </p>
         </Section>
 
         {/* Equipment */}
@@ -259,7 +321,15 @@ function DocsPage() {
               ],
               [
                 "Is gold worth real money?",
-                "No. Gold, crops, and equipment are in-game items with no monetary value and no withdrawal mechanism. Agri Land promises no profit or returns.",
+                "Gold itself is an in-game currency with no monetary value and no withdrawal mechanism. However, finishing in the top 3 at the daily 00:00 UTC reset wins real rewards from the trading-fee pool — see the Leaderboard Rewards section above.",
+              ],
+              [
+                "How do I receive a leaderboard reward?",
+                "Nothing to claim — if you're top 3 when a round closes, your wallet is recorded automatically and the prize is sent to that address shortly after. Make sure your progress shows the 'saved' badge so your score is synced.",
+              ],
+              [
+                "I won — why am I gone from the leaderboard?",
+                "Winners rest for 24 hours after a win (you appear in the 'Champions Resting' list with your comeback time). Your gold and progress are untouched — you rejoin the rankings automatically.",
               ],
               [
                 "Where is my progress stored?",
@@ -298,7 +368,7 @@ function DocsPage() {
                 phase: "Phase 1. First seeds",
                 status: "LIVE",
                 items:
-                  "Token-gated access · 10 crops & 10 levels · equipment shop · field expansion · live leaderboard · global chat · one shared multiplayer town",
+                  "Token-gated access · 10 crops · endless levels · equipment shop · shared multiplayer town · daily top-3 leaderboard rewards (00:00 UTC) funded by trading fees",
               },
               {
                 phase: "Phase 2. Personal plots",
@@ -310,7 +380,7 @@ function DocsPage() {
                 phase: "Phase 3. Seasons & festivals",
                 status: "PLANNED",
                 items:
-                  "Weather affecting growth · limited seasonal crops · harvest festival events with town prizes · levels beyond 10",
+                  "Weather affecting growth · limited seasonal crops · harvest festival events with boosted reward rounds",
               },
               {
                 phase: "Phase 4. Marketplace & cosmetics",

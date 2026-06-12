@@ -4,6 +4,7 @@ import {
   getChatMessages,
   sendChatMessage,
   getRecentCatches,
+  getRewardsStatus,
 } from "@/lib/api/game.functions";
 
 // Live village data — leaderboard, chat, and the activity feed all poll
@@ -44,4 +45,13 @@ export function useChat() {
   });
 
   return { messages, send };
+}
+
+export function useRewards() {
+  return useQuery({
+    queryKey: ["rewards"],
+    queryFn: () => getRewardsStatus(),
+    refetchInterval: 30_000,
+    retry: 1,
+  });
 }
