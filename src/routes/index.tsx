@@ -217,8 +217,6 @@ function HowItWorks() {
       <div className="mx-auto max-w-2xl text-center">
         <p className="pixel text-xs text-ocean">The loop is simple</p>
         <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">
-          10 CROPS. 10 LEVELS.
-          <br />
           ONE GOLDEN FIELD.
         </h2>
         <p className="mt-4 text-ink/80">
