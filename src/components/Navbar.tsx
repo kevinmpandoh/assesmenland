@@ -1,18 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { WalletButton } from "./WalletButton";
+import { Logo } from "./Logo";
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl boat-bob" aria-hidden>
-            🧑‍🌾
-          </span>
+          <Logo className="h-9 w-9 boat-bob" />
           <span className="pixel text-sm text-ink sm:text-base">
             AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
           </span>
         </Link>
+
         <nav className="hidden items-center gap-2 md:flex">
           <a href="/#species" className="pill">
             <span>🌽</span> Crops
