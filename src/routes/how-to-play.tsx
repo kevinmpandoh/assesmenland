@@ -18,7 +18,7 @@ import {
 export const Route = createFileRoute("/how-to-play")({
   head: () => ({
     meta: [
-      { title: "How to Play — Agri Land" },
+      { title: "How to Play · Agri Land" },
       {
         name: "description",
         content:
@@ -33,17 +33,17 @@ const STEPS = [
   {
     icon: Wallet,
     title: "1 · Connect & hold the token",
-    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds 1 Agri Land token. That's your deed to the land — nothing else is required.",
+    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds 1 Agri Land token. That's your deed to the land, nothing else is required.",
   },
   {
     icon: Sprout,
     title: "2 · Plant your field",
-    body: "Buy seeds at the Seed Shop (you start with 5 tomato seeds; the bag holds max 10 — plant before restocking), then pick one and click an empty plot. Planting costs 1 seed + 2 energy.",
+    body: "Buy seeds at the Seed Shop (you start with 5 tomato seeds; the bag holds max 10, plant before restocking), then pick one and click an empty plot. Planting costs 1 seed + 2 energy.",
   },
   {
     icon: Warehouse,
     title: "3 · Harvest & sell",
-    body: "When a crop sparkles ✨, click it to harvest into your Barn and earn XP. Sell from the Barn whenever you like — prices rise up to +15% with market equipment.",
+    body: "When a crop sparkles ✨, click it to harvest into your Barn and earn XP. Sell from the Barn whenever you like, prices rise up to +15% with market equipment.",
   },
   {
     icon: Wrench,
@@ -53,12 +53,12 @@ const STEPS = [
   {
     icon: Trophy,
     title: "5 · Level up to 10",
-    body: "Each level needs level × 100 XP and unlocks a new crop — tomato at level 1 all the way to Golden Rice at level 10. Bigger crops take longer but pay far more per plot.",
+    body: "Each level needs level × 100 XP and unlocks a new crop, tomato at level 1 all the way to Golden Rice at level 10. Bigger crops take longer but pay far more per plot.",
   },
   {
     icon: Globe,
     title: "6 · Visit the town",
-    body: "Everyone shares ONE live map with six farm fields. Plant directly on shared soil — only you can harvest your own crop, and it withers 2 hours after ripening. The Seed Shop and Market open right inside the town.",
+    body: "Everyone shares ONE live map with six farm fields. Plant directly on shared soil, only you can harvest your own crop, and it withers 2 hours after ripening. The Seed Shop and Market open right inside the town.",
   },
 ];
 
@@ -116,7 +116,7 @@ function HowToPlayPage() {
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
               Planting costs 2 energy, and you regain 1 every 8 seconds (max 100). Energy sets the
-              pace — you can't replant the whole field in one breath, and that's the point.
+              pace, you can't replant the whole field in one breath, and that's the point.
             </p>
           </div>
           <div className="card-pop p-6">
@@ -135,7 +135,7 @@ function HowToPlayPage() {
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
               The token is a game key, nothing more. Agri Land makes no promise of profit, yield, or
-              returns — gold is in-game currency with no monetary value. It's here so you can plant,
+              returns, gold is in-game currency with no monetary value. It's here so you can plant,
               grow, and chill.
             </p>
           </div>

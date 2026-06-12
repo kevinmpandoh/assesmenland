@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Agri Land" },
+      { title: "About · Agri Land" },
       {
         name: "description",
         content:
@@ -31,12 +31,12 @@ function About() {
         <p className="mt-6 text-ink/80 leading-relaxed">
           Agri Land is a cozy, browser-based farming game where players plant, grow, and harvest
           crops together on one shared map. It started as a small weekend project and grew into an
-          open beta you can play right now — no download, no install, just open the page and farm.
+          open beta you can play right now, no download, no install, just open the page and farm.
         </p>
 
         <h2 className="pixel mt-10 text-xl text-ink">Our vision</h2>
         <p className="mt-4 text-ink/80 leading-relaxed">
-          We want to bring back the calm, slow joy of pixel farming games — but make them multiplayer
+          We want to bring back the calm, slow joy of pixel farming games, but make them multiplayer
           and a little more alive. Every crop you plant grows in real time, every harvest goes to your
           barn, and every other player you see on the map is a real person. No grind, no pressure,
           just one shared little town to grow with.
