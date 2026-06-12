@@ -11,7 +11,7 @@ export const Route = createFileRoute("/leaderboard")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Leaderboard — Agri Land" },
+      { title: "Leaderboard · Agri Land" },
       {
         name: "description",
         content: "The richest farmers in Agri Land. Plant and sell your way to the top.",

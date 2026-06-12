@@ -56,10 +56,10 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "My Farm — Agri Land" },
+      { title: "My Farm · Agri Land" },
       {
         name: "description",
-        content: "Plant, grow, harvest, and sell. Build your farm in Agri Land — wallet required.",
+        content: "Plant, grow, harvest, and sell. Build your farm in Agri Land, wallet required.",
       },
     ],
   }),
@@ -183,7 +183,7 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
             <div>
               <div className="pixel text-xs text-ink">Visit the Town</div>
               <p className="text-xs text-muted-foreground">
-                Walk around, meet other farmers — everyone shares one live map.
+                Walk around, meet other farmers, everyone shares one live map.
               </p>
             </div>
           </div>
@@ -399,7 +399,7 @@ function FarmPanel({ game }: { game: GameApi }) {
               key={c.id}
               disabled={locked}
               onClick={() => setSelected(c.id)}
-              title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name} — ${owned} seeds`}
+              title={locked ? `Unlocks at level ${c.unlockLevel}` : `${c.name}, ${owned} seeds`}
               className={`flex items-center gap-1 rounded-xl border-2 px-2.5 py-1.5 text-xs font-semibold transition ${
                 isSel
                   ? "border-ink bg-sunset text-ink"
@@ -473,7 +473,7 @@ function FarmPanel({ game }: { game: GameApi }) {
       <p className="mt-4 text-center text-xs text-muted-foreground">
         {selectedCrop.emoji} {selectedCrop.name}: {state.seeds[selectedCrop.id] ?? 0} seeds in bag ·
         grows in {Math.round(effectiveGrowMs(selectedCrop, state.equipment) / 1000)}s · sells for{" "}
-        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP — buy seeds in
+        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP, buy seeds in
         the Shop tab
       </p>
     </div>
@@ -508,7 +508,7 @@ function BarnPanel({ game }: { game: GameApi }) {
       </div>
       {entries.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          The barn is empty — go harvest something! 🌱
+          The barn is empty, go harvest something! 🌱
         </p>
       ) : (
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -559,13 +559,13 @@ function ShopPanel({ game }: { game: GameApi }) {
         </h3>
         <span
           className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
-          title="Your seed bag — plant seeds to free up space"
+          title="Your seed bag, plant seeds to free up space"
         >
           🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
         </span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        The bag holds {MAX_SEED_BAG} seeds in total — plant them before buying more so other farmers
+        The bag holds {MAX_SEED_BAG} seeds in total, plant them before buying more so other farmers
         get field space too.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -602,7 +602,7 @@ function ShopPanel({ game }: { game: GameApi }) {
                       disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
                       onClick={() => {
                         if (seedBagSpace(state.seeds) === 0) {
-                          toast.error(`Seed bag full (${MAX_SEED_BAG}) — plant your seeds first!`);
+                          toast.error(`Seed bag full (${MAX_SEED_BAG}), plant your seeds first!`);
                           return;
                         }
                         const bought = buySeeds(c.id, qty);
@@ -696,7 +696,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          No farmers ranked yet — keep playing, your progress syncs automatically.
+          No farmers ranked yet, keep playing, your progress syncs automatically.
         </p>
       )}
       {data && data.length > 0 && (
@@ -799,7 +799,7 @@ function ChatPanel({ address }: { address: string }) {
           <p className="text-xs text-muted-foreground">Chat is unreachable right now.</p>
         )}
         {messages.data && messages.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet — say hi, farmer! 👋</p>
+          <p className="text-xs text-muted-foreground">No messages yet, say hi, farmer! 👋</p>
         )}
         {messages.data?.map((m) => (
           <div key={m.id} className="rounded-lg bg-foam px-3 py-1.5">
