@@ -199,7 +199,7 @@ function HowItWorks() {
     {
       emo: "🌱",
       title: "PLANT",
-      desc: "Pick a seed and click an empty plot — the seed is bought automatically. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
+      desc: "Pick a seed and click an empty plot, the seed is bought automatically. Start with tomatoes; every level unlocks a bigger, more valuable crop.",
     },
     {
       emo: "⏳",
@@ -209,7 +209,7 @@ function HowItWorks() {
     {
       emo: "💰",
       title: "SELL & UPGRADE",
-      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster — then expand your field and repeat.",
+      desc: "Sell the barn for gold. Spend it on sprinklers, fertilizer, and a greenhouse so crops grow up to 55% faster, then expand your field and repeat.",
     },
   ];
   return (
@@ -217,8 +217,6 @@ function HowItWorks() {
       <div className="mx-auto max-w-2xl text-center">
         <p className="pixel text-xs text-ocean">The loop is simple</p>
         <h2 className="pixel mt-3 text-2xl text-ink sm:text-3xl">
-          10 CROPS. 10 LEVELS.
-          <br />
           ONE GOLDEN FIELD.
         </h2>
         <p className="mt-4 text-ink/80">
@@ -254,7 +252,7 @@ function HowItWorks() {
 
       <div className="mt-8 text-center">
         <Link to="/docs" className="pill text-xs">
-          📚 Read the full docs — crops, prices, equipment, FAQ
+          📚 Read the full docs. Crops, prices, equipment, FAQ
         </Link>
       </div>
     </section>
@@ -275,7 +273,7 @@ function TokenSection() {
             <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">YOUR KEY TO THE LAND</h2>
             <p className="mt-4 max-w-md text-ink/80">
               Hold {MIN_TOKEN_BALANCE} Agri Land token to claim a field and enter the town.
-              The token is just a key — for access, cosmetics, and seasonal events. Not a promise of
+              The token is just a key for access, cosmetics, and seasonal events. Not a promise of
               returns, not an investment pitch. Farm slowly, enjoy the seasons.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -305,13 +303,13 @@ function Roadmap() {
   const phases = [
     {
       q: "PHASE 1",
-      t: "First seeds — LIVE",
+      t: "First seeds LIVE",
       d: "Open beta: 10 crops, 10 levels, equipment shop, live leaderboard, global chat, and one shared multiplayer town.",
     },
     {
       q: "PHASE 2",
       t: "Personal plots in town",
-      d: "Your farm appears on the world map — visit other farmers' fields, water their crops, leave a note.",
+      d: "Your farm appears on the world map, visit other farmers' fields, water their crops, leave a note.",
     },
     {
       q: "PHASE 3",
