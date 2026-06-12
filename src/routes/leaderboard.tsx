@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLeaderboard } from "@/hooks/useVillage";
 import { Trophy, Sprout, ArrowRight, RefreshCw } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/leaderboard")({
   ssr: false,
