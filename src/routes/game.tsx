@@ -182,7 +182,7 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
             <div>
               <div className="pixel text-xs text-ink">Visit the Town</div>
               <p className="text-xs text-muted-foreground">
-                Walk around, meet other farmers, everyone shares one live map.
+                Walk around, meet other players, everyone shares one live map.
               </p>
             </div>
           </div>
@@ -289,7 +289,7 @@ function ProfileCard({
                   onChange={(e) => setDraft(e.target.value)}
                   maxLength={20}
                   autoFocus
-                  placeholder="Your farmer name"
+                  placeholder="Your player name"
                   className="h-8 w-40 rounded-lg border-2 border-ink bg-foam px-2 text-sm outline-none focus:border-sunset-deep"
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -298,7 +298,7 @@ function ProfileCard({
               </form>
             ) : (
               <button onClick={startEdit} className="group flex items-center gap-1.5">
-                <h3 className="pixel text-base text-ink">{state.username || "Farmer"}</h3>
+                <h3 className="pixel text-base text-ink">{state.username || "Player"}</h3>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
               </button>
             )}
@@ -565,7 +565,7 @@ function ShopPanel({ game }: { game: GameApi }) {
         </span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        The bag holds {MAX_SEED_BAG} seeds in total, plant them before buying more so other farmers
+        The bag holds {MAX_SEED_BAG} seeds in total, plant them before buying more so other players
         get field space too.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -723,7 +723,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          No farmers ranked yet, keep playing, your progress syncs automatically.
+          No players ranked yet, keep playing, your progress syncs automatically.
         </p>
       )}
       {data && data.length > 0 && (
@@ -826,7 +826,7 @@ function ChatPanel({ address }: { address: string }) {
           <p className="text-xs text-muted-foreground">Chat is unreachable right now.</p>
         )}
         {messages.data && messages.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet, say hi, farmer! 👋</p>
+          <p className="text-xs text-muted-foreground">No messages yet, say hi, player! 👋</p>
         )}
         {messages.data?.map((m) => (
           <div key={m.id} className="rounded-lg bg-foam px-3 py-1.5">

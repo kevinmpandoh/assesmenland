@@ -75,7 +75,7 @@ export function buildMap(): { tiles: TileKind[][]; objects: WorldObject[] } {
   // Central plaza with fountain.
   stampRect(tiles, "stone", 19, 19, 12, 12);
 
-  // Farm fields — six of them so plenty of farmers can plant at once.
+  // Farm fields — six of them so plenty of players can plant at once.
   stampRect(tiles, "soil", 5, 28, 8, 6); // west, fenced
   stampRect(tiles, "soil", 5, 41, 8, 5); // south-west
   stampRect(tiles, "soil", 15, 41, 7, 5); // south
@@ -210,7 +210,7 @@ export function stallKindAt(objects: WorldObject[], x: number, y: number): Stall
   return stall.label === "MARKET" ? "market" : "seed";
 }
 
-/** Town plaza — where new farmers appear. */
+/** Town plaza — where new players appear. */
 export const SPAWN = { x: 24, y: 27 };
 
 /** Waypoint loops for ambient villager NPCs (on streets). */

@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getStore } from "../store.server";
+import {
+  currentEpochStart,
+  nextRewardAt,
+  REWARD_INTERVAL_MS,
+  WINNER_COOLDOWN_MS,
+} from "../game-logic";
 
 // SawahVerse game API. Each function runs server-side only; the client
 // calls them like async functions. Storage backend is resolved in
@@ -53,10 +59,10 @@ export const syncPlayer = createServerFn({ method: "POST" })
  *  - a round's champions are hidden from the rankings until the next
  *    00:00 UTC reset (24h cooldown), and
  *  - the previous round's champions can't win two rounds back to back,
- *    so the podium always rotates to new farmers.
+ *    so the podium always rotates to new players.
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
-  const { currentEpochStart, REWARD_INTERVAL_MS, REWARD_TOP_N } = await import("../game-logic");
+  const { REWARD_TOP_N } = await import("../game-logic");
   const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
   const latest = await store.latestWinnerEpoch();
   if (latest && latest >= epochIso) return; // today's round already settled
@@ -83,7 +89,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
-    const { currentEpochStart } = await import("../game-logic");
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
     // Today's champions rest until the next 00:00 UTC reset.
@@ -108,8 +113,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
 export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
   const store = getStore();
-  const { nextRewardAt, currentEpochStart, REWARD_INTERVAL_MS, WINNER_COOLDOWN_MS } =
-    await import("../game-logic");
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
@@ -215,7 +218,7 @@ export const pingWorld = createServerFn({ method: "POST" })
 
 // ----------------------------------------------------- shared town field
 
-// Everyone plants on the same fenced fields in the town. Only the farmer
+// Everyone plants on the same fenced fields in the town. Only the player
 // who planted a plot can harvest it, and a ready crop withers (the row is
 // deleted) WORLD_PLOT_WITHER_MS after maturing.
 
@@ -269,7 +272,7 @@ export const harvestWorldPlot = createServerFn({ method: "POST" })
     const plot = await store.getPlot(key);
     if (!plot) return { ok: false as const, reason: "Nothing growing here." };
     if (plot.wallet_address !== data.wallet) {
-      return { ok: false as const, reason: "This plant belongs to another farmer." };
+      return { ok: false as const, reason: "This plant belongs to another player." };
     }
     const now = Date.now();
     if (now < new Date(plot.ready_at).getTime()) {

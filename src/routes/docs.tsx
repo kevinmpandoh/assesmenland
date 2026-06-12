@@ -191,7 +191,7 @@ function DocsPage() {
             <div className="card-pop bg-sunset/15 p-4">
               <h3 className="pixel text-xs text-ink">50% — Reward Pool</h3>
               <p className="mt-2 text-sm text-ink/75">
-                Distributed to the <span className="font-semibold">top 3 farmers</span> every round.
+                Distributed to the <span className="font-semibold">top 3 players</span> every round.
                 The bigger the trading volume, the bigger the pool.
               </p>
             </div>
@@ -223,7 +223,7 @@ function DocsPage() {
             <li>
               <span className="font-semibold">Fair-play cooldown:</span> champions are hidden from
               the rankings for 24 hours (until the next 00:00 UTC reset) and can't win two rounds
-              back to back, so new farmers reach the podium.
+              back to back, so new players reach the podium.
             </li>
             <li>
               Every past podium is recorded permanently in the{" "}
@@ -286,7 +286,7 @@ function DocsPage() {
             </li>
             <li>Walk with WASD / arrow keys, or click/tap where you want to go.</li>
             <li>
-              Every farmer appears with their name and{" "}
+              Every player appears with their name and{" "}
               <span className="font-semibold">Lvl badge</span> above their head; positions update in
               near real time.
             </li>
@@ -385,7 +385,7 @@ function DocsPage() {
               {
                 phase: "Phase 4. Marketplace & cosmetics",
                 status: "PLANNED",
-                items: "Player-to-player crop market · farmhouse skins · pets · custom farmer hats",
+                items: "Player-to-player crop market · farmhouse skins · pets · custom player hats",
               },
             ].map((p) => (
               <li key={p.phase} className="card-pop p-4">

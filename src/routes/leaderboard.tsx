@@ -17,7 +17,7 @@ export const Route = createFileRoute("/leaderboard")({
       {
         name: "description",
         content:
-          "Compete for the top of Agri Land. The top 3 farmers share a reward pool funded by 50% of trading fees, distributed daily at 00:00 UTC.",
+          "Compete for the top of Agri Land. The top 3 players share a reward pool funded by 50% of trading fees, distributed daily at 00:00 UTC.",
       },
     ],
   }),
@@ -82,7 +82,7 @@ function LeaderboardPage() {
           </div>
           <h1 className="pixel mt-4 text-2xl text-ink sm:text-3xl">Leaderboard & Rewards</h1>
           <p className="mt-3 text-muted-foreground">
-            The hardest-working farmers in town, ranked by gold.
+            The hardest-working players in town, ranked by gold.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ function LeaderboardPage() {
             </div>
           </div>
           <p className="mt-3 text-sm text-ink/80">
-            Every day at <span className="font-bold">00:00 UTC</span>, the top 3 farmers on this
+            Every day at <span className="font-bold">00:00 UTC</span>, the top 3 players on this
             board win a share of the community reward pool — funded by{" "}
             <span className="font-bold">50% of the token's trading fees</span> (the other half funds
             development). Prizes are distributed to winners' wallets after each round.
@@ -140,7 +140,7 @@ function LeaderboardPage() {
 
           {data && data.length === 0 && (
             <div className="py-10 text-center">
-              <p className="text-muted-foreground">No farmers ranked yet.</p>
+              <p className="text-muted-foreground">No players ranked yet.</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Play the game and your progress will appear here automatically.
               </p>
