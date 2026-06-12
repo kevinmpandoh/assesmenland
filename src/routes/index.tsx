@@ -309,7 +309,7 @@ function Roadmap() {
     {
       q: "PHASE 2",
       t: "Personal plots in town",
-      d: "Your farm appears on the world map — visit other farmers' fields, water their crops, leave a note.",
+      d: "Your farm appears on the world map, visit other farmers' fields, water their crops, leave a note.",
     },
     {
       q: "PHASE 3",
