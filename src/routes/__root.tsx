@@ -114,7 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "twitter:image",
         content: logoAsset.url,
       },
-      { name: "description", content: "Agri Land is a relaxing multiplayer Solana farming." },
+      { name: "description", content: "Claim a field, plant a seed, and grow your farm." },
       {
         property: "og:description",
         content: "Agri Land is a relaxing multiplayer Solana farming.",
@@ -133,6 +133,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a38c539f-9bc4-44f5-9bf4-7dddced36b8c",
       },
+      { property: "og:description", content: "Claim a field, plant a seed, and grow your farm." },
+      { name: "twitter:description", content: "Claim a field, plant a seed, and grow your farm." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36" },
     ],
     links: [
       { rel: "icon", type: "image/png", href: logoAsset.url },
