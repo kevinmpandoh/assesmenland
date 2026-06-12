@@ -79,7 +79,7 @@ function Hero() {
         </div>
 
         <div className="boat-bob" aria-hidden>
-          <Logo className="h-20 w-20" />
+          <Logo className="h-28 w-28" />
         </div>
 
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
