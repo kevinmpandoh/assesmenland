@@ -189,15 +189,15 @@
 }
 
 @utility chunky-btn-sky {
-  background: linear-gradient(180deg, #e1f3c9, #b3e08a);
+  background: linear-gradient(180deg, #fff1cf, #f3d28a);
 }
 
 @utility cloud-float {
-  animation: cloud-drift 22s ease-in-out infinite;
+  animation: leaf-sway 6s ease-in-out infinite;
 }
 
 @utility boat-bob {
-  animation: boat-bob 4s ease-in-out infinite;
+  animation: leaf-sway 5s ease-in-out infinite;
 }
 
 @utility marquee {
