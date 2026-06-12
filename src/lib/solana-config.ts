@@ -1,4 +1,4 @@
-export const TOKEN_MINT = "Tqj8yFmagrg7oorpQkVGYR52r96RFTamvWfth9bpump";
+export const TOKEN_MINT = "FsjVPA2bmBRcjsjC2wsaBTk9H7CuBjnE7XL7K5B8pump";
 export const MIN_TOKEN_BALANCE = 1;
 // Public mainnet RPC rate-limits; set VITE_RPC_ENDPOINT (Helius/QuickNode)
 // in .env for production traffic.
