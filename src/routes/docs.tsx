@@ -92,7 +92,7 @@ function DocsPage() {
         {/* Token */}
         <Section id="token" title="🪙 Token Access">
           <p className="text-sm text-ink/80">
-            Access to Agri Land is gated by holding at least {MIN_TOKEN_BALANCE} token of this mint
+            Access to Agri Land is gated by holding {MIN_TOKEN_BALANCE} token of this mint
             on Solana mainnet:
           </p>
           <code className="mt-3 block overflow-x-auto rounded-xl bg-foam p-3 text-xs ink-border">
