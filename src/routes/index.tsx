@@ -82,17 +82,12 @@ function Hero() {
         </div>
 
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
-          AGRI&nbsp;
-          <br />
-          <span className="text-sunset-deep">LAND</span>
+          AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
         </h1>
         <p className="pixel mt-3 text-sm text-ocean sm:text-base">Plant · Grow · Prosper</p>
 
         <p className="mt-6 max-w-xl text-base leading-relaxed text-ink/80 sm:text-lg">
-          Claim a field, plant your first tomato, and slowly grow it into a farming empire. Ten
-          crops, ten levels, one shared town where every farmer walks the same map. It all runs{" "}
-          <span className="font-bold text-ocean">right in your browser</span> — no downloads, no
-          drama.
+          Claim a field, plant a seed, and grow your farm — all in your browser. No downloads needed.
         </p>
 
         <p className="mt-6 text-xs uppercase tracking-widest text-ink/60">
