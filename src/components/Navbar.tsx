@@ -35,12 +35,6 @@ export function Navbar() {
           >
             <span>𝕏</span>
           </a>
-          <Link to="/world" className="pill">
-            <span>🌍</span> World
-          </Link>
-          <Link to="/game" className="pill">
-            <span>🎣</span> Play
-          </Link>
         </nav>
         <WalletButton />
       </div>
