@@ -104,7 +104,7 @@ Reward sizes follow trading activity and are never guaranteed.
 1. Player connects a wallet (Phantom/Solflare).
 2. `GateBridge` calls `getParsedTokenAccountsByOwner` — **read-only**, the
    player never signs anything.
-3. Balance for mint `Tqj8yFmagrg7oorpQkVGYR52r96RFTamvWfth9bpump` is summed.
+3. Balance for mint `FsjVPA2bmBRcjsjC2wsaBTk9H7CuBjnE7XL7K5B8pump` is summed.
 4. ≥ 1 → game unlocks; otherwise blocked with a Get Token link. RPC failures
    show a retry button.
 
