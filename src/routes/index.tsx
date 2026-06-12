@@ -142,7 +142,7 @@ function GateBanner({
       <div className="flex-1 text-sm">
         {!connected && (
           <p className="text-ink/70">
-            Hold at least <span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to
+            Hold&nbsp;<span className="font-bold text-ink">{MIN_TOKEN_BALANCE} token</span> to
             claim a field. Connect your wallet first.
           </p>
         )}
