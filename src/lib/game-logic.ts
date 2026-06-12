@@ -283,9 +283,15 @@ export function seedBagSpace(seeds: Record<string, number>): number {
 
 // ------------------------------------------------- leaderboard rewards
 
-/** Rewards are distributed every 3 hours, on a fixed UTC schedule. */
-export const REWARD_INTERVAL_MS = 3 * 60 * 60 * 1000;
-/** Recent winners sit out of the rankings for 24 hours. */
+/**
+ * Rewards are distributed once a day. Epochs sit on the Unix-time grid,
+ * so each round closes exactly at 00:00 UTC.
+ */
+export const REWARD_INTERVAL_MS = 24 * 60 * 60 * 1000;
+/**
+ * Champions rest for 24 hours (hidden from the rankings until the next
+ * 00:00 UTC reset) and can't win two rounds back to back.
+ */
 export const WINNER_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 /** Top N farmers win each round. */
 export const REWARD_TOP_N = 3;

@@ -90,10 +90,11 @@ polling, 12s TTL) — no websocket server needed.
 
 ### Leaderboard rewards
 
-Every 3 hours (fixed UTC grid) the top 3 farmers by gold are snapshotted as
-round winners — funded by **50% of the token's creator trading fees** (the
-other 50% funds development). Prizes are sent manually to winners' wallets;
-each winner then sits out a 24h cooldown so the podium rotates. The
+Every day at 00:00 UTC the top 3 farmers by gold are snapshotted as round
+winners — funded by **50% of the token's creator trading fees** (the
+other 50% funds development). Prizes are distributed to winners' wallets;
+each winner rests 24h (hidden until the next 00:00 UTC reset) and can't win
+back-to-back rounds, so the podium rotates. The
 leaderboard page shows a live countdown, the resting champions, and the full
 public history of previous winners (with copy-wallet buttons for payouts).
 Reward sizes follow trading activity and are never guaranteed.
@@ -135,7 +136,7 @@ All in `src/lib/api/game.functions.ts`, zod-validated:
 
 ## 7. Roadmap
 
-1. **Phase 1 — First seeds (LIVE):** everything above, incl. 3-hourly rewards.
+1. **Phase 1 — First seeds (LIVE):** everything above, incl. daily rewards.
 2. **Phase 2 — Personal plots:** farms visible on the town map, visiting,
    sign-in-with-Solana for account security.
 3. **Phase 3 — Seasons & festivals:** weather, seasonal crops, events,

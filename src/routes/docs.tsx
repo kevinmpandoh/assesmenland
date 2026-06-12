@@ -205,8 +205,8 @@ function DocsPage() {
           <h3 className="mt-5 text-sm font-bold text-ink">How a reward round works</h3>
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink/80">
             <li>
-              A round closes every <span className="font-semibold">3 hours</span> (fixed UTC
-              schedule — the live countdown is on the{" "}
+              A round closes <span className="font-semibold">every day at 00:00 UTC</span> (the live
+              countdown is on the{" "}
               <Link to="/leaderboard" className="font-semibold text-ocean hover:underline">
                 leaderboard
               </Link>
@@ -217,12 +217,13 @@ function DocsPage() {
               as winners — 🥇 🥈 🥉.
             </li>
             <li>
-              Prizes are sent <span className="font-semibold">manually by the team</span> to the
-              winners' wallets shortly after each round, proportional to the fees collected.
+              Prizes are distributed to the winners' wallets shortly after each round, proportional
+              to the fees collected during that round.
             </li>
             <li>
-              <span className="font-semibold">Fair-play cooldown:</span> each winner sits out the
-              rankings for 24 hours, so new farmers reach the podium every round.
+              <span className="font-semibold">Fair-play cooldown:</span> champions are hidden from
+              the rankings for 24 hours (until the next 00:00 UTC reset) and can't win two rounds
+              back to back, so new farmers reach the podium.
             </li>
             <li>
               Every past podium is recorded permanently in the{" "}
@@ -320,11 +321,11 @@ function DocsPage() {
               ],
               [
                 "Is gold worth real money?",
-                "Gold itself is an in-game currency with no monetary value and no withdrawal mechanism. However, ranking top 3 on the leaderboard wins real rewards from the trading-fee pool — see the Leaderboard Rewards section above.",
+                "Gold itself is an in-game currency with no monetary value and no withdrawal mechanism. However, finishing in the top 3 at the daily 00:00 UTC reset wins real rewards from the trading-fee pool — see the Leaderboard Rewards section above.",
               ],
               [
                 "How do I receive a leaderboard reward?",
-                "Nothing to claim — if you're top 3 when a round closes, your wallet is recorded automatically and the team sends the prize to that address shortly after. Make sure your progress shows the 'saved' badge so your score is synced.",
+                "Nothing to claim — if you're top 3 when a round closes, your wallet is recorded automatically and the prize is sent to that address shortly after. Make sure your progress shows the 'saved' badge so your score is synced.",
               ],
               [
                 "I won — why am I gone from the leaderboard?",
@@ -367,7 +368,7 @@ function DocsPage() {
                 phase: "Phase 1 — First seeds",
                 status: "LIVE",
                 items:
-                  "Token-gated access · 10 crops · endless levels · equipment shop · shared multiplayer town · 3-hourly top-3 leaderboard rewards funded by trading fees",
+                  "Token-gated access · 10 crops · endless levels · equipment shop · shared multiplayer town · daily top-3 leaderboard rewards (00:00 UTC) funded by trading fees",
               },
               {
                 phase: "Phase 2 — Personal plots",

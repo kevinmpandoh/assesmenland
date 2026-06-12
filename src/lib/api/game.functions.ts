@@ -45,23 +45,27 @@ export const syncPlayer = createServerFn({ method: "POST" })
 // ----------------------------------------------------------- leaderboard
 
 /**
- * Reward epochs run every 3h on a fixed UTC grid. On the first request
- * of a new epoch we snapshot the current top-3 as that round's winners
- * ("lazy cron" — no scheduler needed). Recent winners sit out a 24h
- * cooldown so the next farmers get their shot at the podium.
+ * Reward rounds close once a day, exactly at 00:00 UTC. On the first
+ * request of a new day we snapshot the current top-3 as that round's
+ * winners ("lazy cron" — no scheduler needed).
+ *
+ * Fair-play rules:
+ *  - a round's champions are hidden from the rankings until the next
+ *    00:00 UTC reset (24h cooldown), and
+ *  - the previous round's champions can't win two rounds back to back,
+ *    so the podium always rotates to new farmers.
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
-  const { currentEpochStart, WINNER_COOLDOWN_MS, REWARD_TOP_N } = await import("../game-logic");
+  const { currentEpochStart, REWARD_INTERVAL_MS, REWARD_TOP_N } = await import("../game-logic");
   const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
   const latest = await store.latestWinnerEpoch();
-  if (latest && latest >= epochIso) return; // this epoch already settled
+  if (latest && latest >= epochIso) return; // today's round already settled
 
-  const cooldownSince = new Date(Date.now() - WINNER_COOLDOWN_MS).toISOString();
-  const onCooldown = new Set(
-    (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
-  );
-  const eligible = (await store.topPlayers(REWARD_TOP_N + onCooldown.size + 10)).filter(
-    (p) => !onCooldown.has(p.wallet_address) && p.coins > 0,
+  // No back-to-back wins: yesterday's champions sit this snapshot out.
+  const prevEpochIso = new Date(currentEpochStart(Date.now()) - REWARD_INTERVAL_MS).toISOString();
+  const blocked = new Set((await store.winnersSince(prevEpochIso)).map((w) => w.wallet_address));
+  const eligible = (await store.topPlayers(REWARD_TOP_N + blocked.size + 10)).filter(
+    (p) => !blocked.has(p.wallet_address) && p.coins > 0,
   );
   if (eligible.length === 0) return; // nobody to crown yet — try again next request
   await store.recordWinners(
@@ -79,10 +83,11 @@ export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
-    const { WINNER_COOLDOWN_MS } = await import("../game-logic");
+    const { currentEpochStart } = await import("../game-logic");
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
-    const cooldownSince = new Date(Date.now() - WINNER_COOLDOWN_MS).toISOString();
+    // Today's champions rest until the next 00:00 UTC reset.
+    const cooldownSince = new Date(currentEpochStart(Date.now())).toISOString();
     const onCooldown = new Set(
       (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
     );
@@ -103,11 +108,13 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
 export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
   const store = getStore();
-  const { nextRewardAt, REWARD_INTERVAL_MS, WINNER_COOLDOWN_MS } = await import("../game-logic");
+  const { nextRewardAt, currentEpochStart, REWARD_INTERVAL_MS, WINNER_COOLDOWN_MS } =
+    await import("../game-logic");
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
-  const cooldownSince = new Date(now - WINNER_COOLDOWN_MS).toISOString();
+  // Resting champions: today's winners, back at the next 00:00 UTC reset.
+  const cooldownSince = new Date(currentEpochStart(now)).toISOString();
   const recent = await store.winnersSince(cooldownSince);
   const cooldown = recent.map((w) => ({
     wallet: w.wallet_address,

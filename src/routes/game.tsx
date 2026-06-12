@@ -685,7 +685,7 @@ function RewardCountdown() {
       to="/leaderboard"
       className="mt-3 flex items-center justify-between rounded-xl bg-sunset/25 px-3 py-2 text-xs ink-border transition hover:bg-sunset/40"
     >
-      <span className="font-semibold text-ink">🎁 Top 3 rewards in</span>
+      <span className="font-semibold text-ink">🎁 Daily rewards in</span>
       <span className="pixel text-[11px] text-ink">
         {String(h).padStart(2, "0")}:{String(m).padStart(2, "0")}:{String(sec).padStart(2, "0")}
       </span>

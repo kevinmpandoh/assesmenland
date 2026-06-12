@@ -93,11 +93,14 @@ describe("seed bag", () => {
 });
 
 describe("reward schedule", () => {
-  test("epochs are 3 hours on a fixed grid", () => {
-    expect(REWARD_INTERVAL_MS).toBe(3 * 60 * 60 * 1000);
+  test("rounds are daily and reset exactly at 00:00 UTC", () => {
+    expect(REWARD_INTERVAL_MS).toBe(24 * 60 * 60 * 1000);
     expect(WINNER_COOLDOWN_MS).toBe(24 * 60 * 60 * 1000);
     const now = Date.UTC(2026, 5, 12, 7, 30); // 07:30 UTC
-    expect(currentEpochStart(now)).toBe(Date.UTC(2026, 5, 12, 6, 0));
-    expect(nextRewardAt(now)).toBe(Date.UTC(2026, 5, 12, 9, 0));
+    expect(currentEpochStart(now)).toBe(Date.UTC(2026, 5, 12, 0, 0));
+    expect(nextRewardAt(now)).toBe(Date.UTC(2026, 5, 13, 0, 0));
+    // one second before midnight still belongs to the same round
+    const lateNight = Date.UTC(2026, 5, 12, 23, 59, 59);
+    expect(nextRewardAt(lateNight)).toBe(Date.UTC(2026, 5, 13, 0, 0));
   });
 });

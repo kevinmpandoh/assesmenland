@@ -17,7 +17,7 @@ export const Route = createFileRoute("/leaderboard")({
       {
         name: "description",
         content:
-          "Compete for the top of Agri Land. The top 3 farmers share a reward pool funded by 50% of trading fees, distributed every 3 hours.",
+          "Compete for the top of Agri Land. The top 3 farmers share a reward pool funded by 50% of trading fees, distributed daily at 00:00 UTC.",
       },
     ],
   }),
@@ -100,15 +100,15 @@ function LeaderboardPage() {
             </div>
           </div>
           <p className="mt-3 text-sm text-ink/80">
-            Every <span className="font-bold">3 hours</span>, the top 3 farmers on this board win a
-            share of the community reward pool — funded by{" "}
+            Every day at <span className="font-bold">00:00 UTC</span>, the top 3 farmers on this
+            board win a share of the community reward pool — funded by{" "}
             <span className="font-bold">50% of the token's trading fees</span> (the other half funds
-            development). Prizes are sent manually to winners' wallets after each round.
+            development). Prizes are distributed to winners' wallets after each round.
           </p>
           <p className="mt-2 text-xs text-ink/60">
-            Fair-play rule: each winner sits out the rankings for{" "}
-            <span className="font-semibold">24 hours</span> after winning, so the podium keeps
-            rotating. Prize amounts vary with trading activity and are not guaranteed.
+            Fair-play rule: champions rest for <span className="font-semibold">24 hours</span>{" "}
+            (hidden until the next 00:00 UTC reset) and can't win two rounds back to back, so the
+            podium keeps rotating. Prize amounts vary with trading activity and are not guaranteed.
           </p>
         </div>
 
@@ -242,8 +242,8 @@ function LeaderboardPage() {
             </ul>
           )}
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Winners are snapshotted automatically at the end of each round; prizes are then sent to
-            the listed wallets by the team.
+            Winners are snapshotted automatically at the end of each round; prizes are distributed
+            to the listed wallets.
           </p>
         </div>
       </main>
