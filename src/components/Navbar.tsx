@@ -27,7 +27,7 @@ export function Navbar() {
             <span>🏆</span> Leaderboard
           </Link>
           <a
-            href="https://x.com"
+            href="https://x.com/agrilandcc"
             target="_blank"
             rel="noreferrer"
             className="pill"
