@@ -56,20 +56,20 @@
 :root {
   --radius: 1rem;
 
-  /* Langit Voxel palette */
-  --sky: #bfe3ff;
-  --sky-deep: #7fc7ff;
-  --ocean: #3a82d4;
-  --foam: #eaf5ff;
+  /* Sawah Voxel palette — agri greens */
+  --sky: #cdebb0;
+  --sky-deep: #9ed87a;
+  --ocean: #4ca64c;
+  --foam: #eef9e2;
   --sunset: #ffb05a;
   --sunset-deep: #f48b2a;
-  --ink: #1b2240;
+  --ink: #1f3320;
   --leaf: #6cc26a;
   --gold: #ffd166;
   --sand: #fff1d6;
-  --cyan-soft: #d5ecff;
+  --cyan-soft: #def5c4;
 
-  --background: #f1f9ff;
+  --background: #f3fbe8;
   --foreground: var(--ink);
   --card: #ffffff;
   --card-foreground: var(--ink);
@@ -79,21 +79,22 @@
   --primary-foreground: var(--ink);
   --secondary: var(--foam);
   --secondary-foreground: var(--ink);
-  --muted: #e8f2fb;
-  --muted-foreground: #5a6480;
+  --muted: #ecf6df;
+  --muted-foreground: #5a6a4a;
   --accent: var(--sky-deep);
   --accent-foreground: var(--ink);
   --destructive: #e84a4a;
   --destructive-foreground: #ffffff;
-  --border: #c9def3;
-  --input: #dfeefd;
+  --border: #cfe6b3;
+  --input: #e2efce;
   --ring: var(--sunset-deep);
 
-  --gradient-sky: linear-gradient(180deg, #bfe3ff 0%, #e7f4ff 60%, #fff7e6 100%);
-  --gradient-ocean: linear-gradient(135deg, #3a82d4, #7fc7ff);
+  --gradient-sky: linear-gradient(180deg, #cdebb0 0%, #e8f6d2 60%, #fff7e6 100%);
+  --gradient-ocean: linear-gradient(135deg, #4ca64c, #9ed87a);
   --gradient-sunset: linear-gradient(180deg, #ffc481, #ffb05a 60%, #f48b2a);
-  --gradient-hero: radial-gradient(ellipse at 50% 0%, #bfe3ff 0%, #e7f4ff 55%, #fff5e2 100%);
+  --gradient-hero: radial-gradient(ellipse at 50% 0%, #cdebb0 0%, #e8f6d2 55%, #fff5e2 100%);
 }
+
 
 @layer base {
   * {
@@ -189,8 +190,9 @@
 }
 
 @utility chunky-btn-sky {
-  background: linear-gradient(180deg, #d6ecff, #9fd1ff);
+  background: linear-gradient(180deg, #e1f3c9, #b3e08a);
 }
+
 
 @utility cloud-float {
   animation: cloud-drift 22s ease-in-out infinite;
