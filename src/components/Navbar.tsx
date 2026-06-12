@@ -10,7 +10,7 @@ export function Navbar() {
             🧑‍🌾
           </span>
           <span className="pixel text-sm text-ink sm:text-base">
-            AGRI<span className="text-sunset-deep">LAND</span>
+            AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
           </span>
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
