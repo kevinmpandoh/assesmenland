@@ -260,3 +260,18 @@ export const rarityColor: Record<Rarity, string> = {
 
 /** Shared town field: a ready crop withers if not harvested in time. */
 export const WORLD_PLOT_WITHER_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/**
+ * A player's seed bag holds at most this many seeds in total — plant
+ * what you have before buying more, so nobody hoards seeds while other
+ * farmers wait for field space.
+ */
+export const MAX_SEED_BAG = 10;
+
+export function seedBagCount(seeds: Record<string, number>): number {
+  return Object.values(seeds).reduce((sum, n) => sum + n, 0);
+}
+
+export function seedBagSpace(seeds: Record<string, number>): number {
+  return Math.max(0, MAX_SEED_BAG - seedBagCount(seeds));
+}

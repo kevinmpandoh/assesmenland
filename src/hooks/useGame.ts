@@ -14,6 +14,8 @@ import {
   effectiveSellPrice,
   equipmentById,
   xpForLevel,
+  seedBagSpace,
+  MAX_SEED_BAG,
   type Crop,
 } from "@/lib/game-logic";
 import { syncPlayer, logFishCatch } from "@/lib/api/game.functions";
@@ -22,11 +24,13 @@ export {
   CROPS,
   EQUIPMENT,
   MAX_LEVEL,
+  MAX_SEED_BAG,
   UPGRADE_PLOT_COST,
   xpForLevel,
   cropsUnlockedAt,
   effectiveGrowMs,
   effectiveSellPrice,
+  seedBagSpace,
 };
 
 export type Tile = {
@@ -294,19 +298,25 @@ export function useGame(walletAddress: string | null = null) {
     return true;
   };
 
-  /** Seed Shop: buy seeds with gold. Returns gold spent (0 = failed). */
+  /**
+   * Seed Shop: buy seeds with gold. The bag holds MAX_SEED_BAG seeds in
+   * total (plant before buying more); requests are clamped to the space
+   * left. Returns the number of seeds actually bought (0 = failed).
+   */
   const buySeeds = (cropId: string, qty: number): number => {
     const crop = cropById(cropId);
     if (!crop || qty < 1) return 0;
     if (crop.unlockLevel > state.level) return 0;
-    const cost = crop.seedCost * qty;
+    const buyQty = Math.min(qty, seedBagSpace(state.seeds));
+    if (buyQty === 0) return 0;
+    const cost = crop.seedCost * buyQty;
     if (state.gold < cost) return 0;
     setState((s) => ({
       ...s,
       gold: s.gold - cost,
-      seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) + qty },
+      seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) + buyQty },
     }));
-    return cost;
+    return buyQty;
   };
 
   /** Seed Shop: sell seeds back at half price. Returns gold earned. */

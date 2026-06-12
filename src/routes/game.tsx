@@ -13,7 +13,9 @@ import {
   CROPS,
   EQUIPMENT,
   MAX_LEVEL,
+  MAX_SEED_BAG,
   UPGRADE_PLOT_COST,
+  seedBagSpace,
   cropsUnlockedAt,
   effectiveGrowMs,
   effectiveSellPrice,
@@ -551,9 +553,21 @@ function ShopPanel({ game }: { game: GameApi }) {
   const { state, buyEquipment, buySeeds } = game;
   return (
     <div className="card-pop p-6">
-      <h3 className="pixel flex items-center gap-2 text-sm text-ink">
-        <Sprout className="h-4 w-4 text-leaf" /> Seed Shop
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="pixel flex items-center gap-2 text-sm text-ink">
+          <Sprout className="h-4 w-4 text-leaf" /> Seed Shop
+        </h3>
+        <span
+          className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
+          title="Your seed bag — plant seeds to free up space"
+        >
+          🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        The bag holds {MAX_SEED_BAG} seeds in total — plant them before buying more so other farmers
+        get field space too.
+      </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {CROPS.map((c) => {
           const locked = c.unlockLevel > state.level;
@@ -585,10 +599,17 @@ function ShopPanel({ game }: { game: GameApi }) {
                       size="sm"
                       variant="outline"
                       className="h-7 rounded-lg px-2 text-[10px]"
-                      disabled={state.gold < c.seedCost * qty}
+                      disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
                       onClick={() => {
-                        const spent = buySeeds(c.id, qty);
-                        if (spent) toast.success(`+${qty} ${c.name} seeds (−${spent}g)`);
+                        if (seedBagSpace(state.seeds) === 0) {
+                          toast.error(`Seed bag full (${MAX_SEED_BAG}) — plant your seeds first!`);
+                          return;
+                        }
+                        const bought = buySeeds(c.id, qty);
+                        if (bought)
+                          toast.success(
+                            `+${bought} ${c.name} seed${bought > 1 ? "s" : ""} (−${bought * c.seedCost}g)`,
+                          );
                       }}
                     >
                       +{qty}

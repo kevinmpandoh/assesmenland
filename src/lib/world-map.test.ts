@@ -41,9 +41,20 @@ describe("world map", () => {
     expect(isWalkable(tiles, objects, sign.x, sign.y)).toBe(true);
   });
 
-  test("farm fields are walkable and flagged as farmland", () => {
-    expect(isWalkable(tiles, objects, 8, 30)).toBe(true);
-    expect(nearFarmland(tiles, 8, 30)).toBe(true);
+  test("all six farm fields are walkable and flagged as farmland", () => {
+    const fieldSpots: [number, number][] = [
+      [8, 30], // west, fenced
+      [8, 43], // south-west
+      [18, 43], // south
+      [6, 20], // north-west meadow
+      [43, 18], // east, by the lake
+      [28, 33], // below the plaza
+    ];
+    for (const [x, y] of fieldSpots) {
+      expect(isWalkable(tiles, objects, x, y)).toBe(true);
+      expect(nearFarmland(tiles, x, y)).toBe(true);
+      expect(tiles[y][x]).toBe("soil");
+    }
     expect(nearFarmland(tiles, SPAWN.x, SPAWN.y)).toBe(false);
   });
 

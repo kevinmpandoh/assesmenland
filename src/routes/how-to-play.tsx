@@ -38,7 +38,7 @@ const STEPS = [
   {
     icon: Sprout,
     title: "2 · Plant your field",
-    body: "Buy seeds at the Seed Shop (you start with 5 tomato seeds), then pick one and click an empty plot — planting costs 1 seed + 2 energy. A progress bar shows growth in real time.",
+    body: "Buy seeds at the Seed Shop (you start with 5 tomato seeds; the bag holds max 10 — plant before restocking), then pick one and click an empty plot. Planting costs 1 seed + 2 energy.",
   },
   {
     icon: Warehouse,
@@ -58,7 +58,7 @@ const STEPS = [
   {
     icon: Globe,
     title: "6 · Visit the town",
-    body: "Everyone shares ONE live map. Walk to the fenced fields and plant directly on shared soil — only you can harvest your own crop, and it withers 2 hours after ripening. The shop opens right inside the town, no page-switching.",
+    body: "Everyone shares ONE live map with six farm fields. Plant directly on shared soil — only you can harvest your own crop, and it withers 2 hours after ripening. The Seed Shop and Market open right inside the town.",
   },
 ];
 

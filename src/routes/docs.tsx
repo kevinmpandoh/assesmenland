@@ -119,7 +119,8 @@ function DocsPage() {
         <Section id="crops" title="🌱 Crops & Prices">
           <p className="mb-4 text-sm text-ink/80">
             One crop unlocks per level. Buy seeds at the Seed Shop first — planting costs 1 seed + 2
-            energy. Base values below — equipment can shorten grow times and raise sell prices.
+            energy. Your seed bag holds at most 10 seeds in total, so plant before restocking. Base
+            values below — equipment can shorten grow times and raise sell prices.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
@@ -269,7 +270,7 @@ function DocsPage() {
               ],
               [
                 "How does the shared field work?",
-                "Buy seeds at the Seed Shop, then plant them on any free soil tile in the fenced fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
+                "Buy seeds at the Seed Shop (the bag holds max 10 — plant before restocking), then plant them on any free soil tile in the six fields. Only you can harvest what you planted — others see a colored owner dot. A ready crop withers 2 hours after ripening, the plot opens up again, and the seed is lost, so come back in time!",
               ],
               [
                 "Why don't I see other players?",

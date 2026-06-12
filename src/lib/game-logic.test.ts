@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   CROPS,
+  MAX_SEED_BAG,
+  seedBagCount,
+  seedBagSpace,
   EQUIPMENT,
   MAX_LEVEL,
   applyXp,
@@ -66,5 +69,15 @@ describe("levels", () => {
   test("level is capped at 10", () => {
     expect(applyXp(9, 890, 99_999)).toEqual({ level: 10, xp: 0 });
     expect(applyXp(10, 0, 500)).toEqual({ level: 10, xp: 0 });
+  });
+});
+
+describe("seed bag", () => {
+  test("holds at most 10 seeds in total", () => {
+    expect(MAX_SEED_BAG).toBe(10);
+    expect(seedBagCount({ tomato: 4, corn: 3 })).toBe(7);
+    expect(seedBagSpace({ tomato: 4, corn: 3 })).toBe(3);
+    expect(seedBagSpace({ tomato: 10 })).toBe(0);
+    expect(seedBagSpace({})).toBe(MAX_SEED_BAG);
   });
 });

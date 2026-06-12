@@ -3,7 +3,14 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
-import { useGame, CROPS, EQUIPMENT, effectiveSellPrice } from "@/hooks/useGame";
+import {
+  useGame,
+  CROPS,
+  EQUIPMENT,
+  MAX_SEED_BAG,
+  effectiveSellPrice,
+  seedBagSpace,
+} from "@/hooks/useGame";
 import { cropById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import type { StallKind } from "@/lib/world-map";
@@ -130,7 +137,7 @@ const TILE_W = 64;
 const TILE_H = 32;
 const SPEED = 3.4; // tiles per second
 const PING_MS = 1_500;
-const BUBBLE_MS = 10_000;
+const BUBBLE_MS = 5_000;
 
 type Mover = { x: number; y: number; tx: number; ty: number; name: string; level: number };
 
@@ -157,10 +164,45 @@ const TILE_COLORS: Record<TileKind, [string, string]> = {
   water: ["#5fb6e8", "#54aade"],
 };
 
-function walletColor(wallet: string): string {
-  let h = 0;
-  for (let i = 0; i < wallet.length; i++) h = (h * 31 + wallet.charCodeAt(i)) % 360;
-  return `hsl(${h} 70% 55%)`;
+// 10 shirt colors × 10 hat colors = 100 avatar combos, picked
+// deterministically from the wallet (or NPC name) so everyone always
+// sees the same outfit for the same farmer. Duplicates can happen with
+// many players — that's fine, it's a town.
+const SHIRT_COLORS = [
+  "#3a82d4", // blue
+  "#e2574c", // red
+  "#6cc26a", // green
+  "#f48b2a", // orange
+  "#9b6dd6", // purple
+  "#2db3a0", // teal
+  "#d6589f", // pink
+  "#8a5a33", // brown
+  "#5b6478", // slate
+  "#e9c63f", // yellow
+];
+const HAT_COLORS = [
+  "#ffd166", // straw
+  "#f4f7fb", // white
+  "#f48b2a", // orange
+  "#6cc26a", // green
+  "#7fc7ff", // sky
+  "#d6589f", // pink
+  "#9b6dd6", // purple
+  "#e2574c", // red
+  "#1b2240", // ink
+  "#b07c4f", // leather
+];
+
+type Avatar = { shirt: string; hat: string };
+
+function avatarFor(key: string): Avatar {
+  let h1 = 0;
+  let h2 = 0;
+  for (let i = 0; i < key.length; i++) {
+    h1 = (h1 * 31 + key.charCodeAt(i)) >>> 0;
+    h2 = (h2 * 131 + key.charCodeAt(i) * 7) >>> 0;
+  }
+  return { shirt: SHIRT_COLORS[h1 % 10], hat: HAT_COLORS[h2 % 10] };
 }
 
 function World({ address }: { address: string }) {
@@ -184,7 +226,7 @@ function World({ address }: { address: string }) {
   );
   const keysRef = useRef<Set<string>>(new Set());
   const camRef = useRef({ x: 0, y: 0, ready: false });
-  const bubblesRef = useRef<Map<string, string>>(new Map());
+  const bubblesRef = useRef<Map<string, { text: string; at: number }>>(new Map());
 
   const plotsRef = useRef<Map<string, WorldPlot>>(new Map());
   const busyRef = useRef(false);
@@ -228,10 +270,16 @@ function World({ address }: { address: string }) {
   // Chat bubbles: latest fresh message per wallet.
   useEffect(() => {
     if (!messages.data) return;
-    const map = new Map<string, string>();
+    const map = new Map<string, { text: string; at: number }>();
     const cutoff = Date.now() - BUBBLE_MS;
     for (const m of messages.data) {
-      if (new Date(m.created_at).getTime() >= cutoff) map.set(m.wallet_address, m.body);
+      const at = new Date(m.created_at).getTime();
+      if (at >= cutoff) map.set(m.wallet_address, { text: m.body, at });
+    }
+    // keep my own just-sent bubble if it's fresher than the server copy
+    const mine = bubblesRef.current.get(address);
+    if (mine && Date.now() - mine.at < BUBBLE_MS && (map.get(address)?.at ?? 0) < mine.at) {
+      map.set(address, mine);
     }
     bubblesRef.current = map;
   }, [messages.data]);
@@ -719,7 +767,7 @@ function World({ address }: { address: string }) {
 
     const drawPerson = (
       m: { x: number; y: number; name: string; level?: number },
-      color: string,
+      av: Avatar,
       opts: { isMe?: boolean; isNpc?: boolean; bubble?: string },
     ) => {
       const [sx, sy] = iso(m.x, m.y);
@@ -727,7 +775,7 @@ function World({ address }: { address: string }) {
       ctx.beginPath();
       ctx.ellipse(sx, sy, 10, 5, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = color;
+      ctx.fillStyle = av.shirt;
       ctx.strokeStyle = "#1b2240";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -739,8 +787,8 @@ function World({ address }: { address: string }) {
       ctx.arc(sx, sy - 28, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // straw farmer hat
-      ctx.fillStyle = opts.isMe ? "#f48b2a" : opts.isNpc ? "#d9b87c" : "#ffd166";
+      // farmer hat in the avatar's own color
+      ctx.fillStyle = av.hat;
       ctx.beginPath();
       ctx.ellipse(sx, sy - 32, 11, 4, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -803,8 +851,8 @@ function World({ address }: { address: string }) {
         ctx.font = progress < 0.5 ? "10px serif" : "14px serif";
         ctx.fillText("🌱", sx, sy + 3);
       }
-      // owner marker
-      ctx.fillStyle = walletColor(p.wallet);
+      // owner marker matches the owner's shirt color
+      ctx.fillStyle = avatarFor(p.wallet).shirt;
       ctx.strokeStyle = "#1b2240";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -826,6 +874,10 @@ function World({ address }: { address: string }) {
       }
 
       const me = meRef.current;
+      const freshBubble = (wallet: string): string | undefined => {
+        const b = bubblesRef.current.get(wallet);
+        return b && Date.now() - b.at < BUBBLE_MS ? b.text : undefined;
+      };
       const drawables: { depth: number; fn: () => void }[] = [
         ...objects.map((o) => ({ depth: o.x + o.y, fn: () => drawObject(o, now) })),
         ...[...plotsRef.current.values()].map((p) => ({
@@ -837,17 +889,17 @@ function World({ address }: { address: string }) {
           fn: () =>
             drawPerson(
               { ...me, name: `⭐ ${nameRef.current}`, level: levelRef.current },
-              walletColor(address),
-              { isMe: true, bubble: bubblesRef.current.get(address) },
+              avatarFor(address),
+              { isMe: true, bubble: freshBubble(address) },
             ),
         },
         ...[...othersRef.current.entries()].map(([wallet, m]) => ({
           depth: m.x + m.y,
-          fn: () => drawPerson(m, walletColor(wallet), { bubble: bubblesRef.current.get(wallet) }),
+          fn: () => drawPerson(m, avatarFor(wallet), { bubble: freshBubble(wallet) }),
         })),
         ...npcsRef.current.map((npc) => ({
           depth: npc.x + npc.y,
-          fn: () => drawPerson(npc, "#a8b2c4", { isNpc: true }),
+          fn: () => drawPerson(npc, avatarFor(npc.name), { isNpc: true }),
         })),
       ];
       drawables.sort((a, b) => a.depth - b.depth);
@@ -900,7 +952,7 @@ function World({ address }: { address: string }) {
     const body = chatInput.trim();
     if (!body) return;
     setChatInput("");
-    bubblesRef.current.set(address, body);
+    bubblesRef.current.set(address, { text: body, at: Date.now() });
     send.mutate(
       { wallet: address, body },
       {
@@ -1054,6 +1106,14 @@ function WorldShop({
             {kind === "seed" ? "🌱 Seed Shop" : "🛠️ Market"}
           </h3>
           <div className="flex items-center gap-2">
+            {kind === "seed" && (
+              <span
+                className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
+                title="Your seed bag — plant seeds to free up space"
+              >
+                🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
+              </span>
+            )}
             <span className="flex items-center gap-1 rounded-full bg-sunset/40 px-2 py-0.5 text-xs font-bold text-ink">
               <Coins className="h-3 w-3" /> {state.gold.toLocaleString()}g
             </span>
@@ -1138,12 +1198,18 @@ function WorldShop({
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-lg px-2 text-[10px]"
-                              disabled={state.gold < c.seedCost * qty}
+                              disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
                               onClick={() => {
-                                const spent = buySeeds(c.id, qty);
-                                if (spent)
+                                if (seedBagSpace(state.seeds) === 0) {
+                                  toast.error(
+                                    `Seed bag full (${MAX_SEED_BAG}) — plant your seeds first!`,
+                                  );
+                                  return;
+                                }
+                                const bought = buySeeds(c.id, qty);
+                                if (bought)
                                   toast.success(
-                                    `+${qty} ${c.name} seed${qty > 1 ? "s" : ""} (−${spent}g)`,
+                                    `+${bought} ${c.name} seed${bought > 1 ? "s" : ""} (−${bought * c.seedCost}g)`,
                                   );
                               }}
                             >
