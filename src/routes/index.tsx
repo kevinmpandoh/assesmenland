@@ -34,7 +34,6 @@ function Landing() {
       <SkyBackdrop />
       <Navbar />
       <Hero />
-      <CropsMarquee />
       <HowItWorks />
       <TokenSection />
       <Roadmap />
@@ -169,27 +168,6 @@ function GateBanner({
   );
 }
 
-/* ---------- Crops marquee ---------- */
-
-function CropsMarquee() {
-  const row = [...CROPS, ...CROPS];
-  return (
-    <section
-      id="species"
-      className="relative my-8 overflow-hidden border-y-2 border-ink bg-foam py-4"
-    >
-      <div className="marquee gap-8 whitespace-nowrap pixel text-xs text-ink">
-        {row.map((c, i) => (
-          <span key={i} className="inline-flex items-center gap-2">
-            <span className="text-lg">{c.emoji}</span>
-            {c.name} <span className="text-sunset-deep">Lv{c.unlockLevel}</span>
-            <span className="text-ink/40">·</span>
-          </span>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 /* ---------- How it works ---------- */
 
