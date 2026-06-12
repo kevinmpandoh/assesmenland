@@ -18,8 +18,9 @@ export type Crop = {
   xp: number;
 };
 
-// One new crop unlocks per level. Later crops take longer but pay far
-// more per plot — the idle-game curve.
+// One new crop unlocks per level. Grow time scales with the crop level:
+// 5 seconds per level (tomato 5s … Golden Rice 50s), and later crops pay
+// far more per plot.
 export const CROPS: Crop[] = [
   {
     id: "tomato",
@@ -28,7 +29,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 1,
     seedCost: 4,
     sellPrice: 7,
-    growMs: 20_000,
+    growMs: 5_000,
     xp: 8,
   },
   {
@@ -38,7 +39,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 2,
     seedCost: 6,
     sellPrice: 11,
-    growMs: 30_000,
+    growMs: 10_000,
     xp: 12,
   },
   {
@@ -48,7 +49,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 3,
     seedCost: 9,
     sellPrice: 17,
-    growMs: 45_000,
+    growMs: 15_000,
     xp: 18,
   },
   {
@@ -58,7 +59,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 4,
     seedCost: 14,
     sellPrice: 26,
-    growMs: 60_000,
+    growMs: 20_000,
     xp: 25,
   },
   {
@@ -68,7 +69,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 5,
     seedCost: 20,
     sellPrice: 38,
-    growMs: 90_000,
+    growMs: 25_000,
     xp: 35,
   },
   {
@@ -78,7 +79,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 6,
     seedCost: 30,
     sellPrice: 58,
-    growMs: 120_000,
+    growMs: 30_000,
     xp: 50,
   },
   {
@@ -88,7 +89,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 7,
     seedCost: 45,
     sellPrice: 88,
-    growMs: 180_000,
+    growMs: 35_000,
     xp: 70,
   },
   {
@@ -98,7 +99,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 8,
     seedCost: 65,
     sellPrice: 130,
-    growMs: 240_000,
+    growMs: 40_000,
     xp: 95,
   },
   {
@@ -108,7 +109,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 9,
     seedCost: 95,
     sellPrice: 195,
-    growMs: 360_000,
+    growMs: 45_000,
     xp: 130,
   },
   {
@@ -118,7 +119,7 @@ export const CROPS: Crop[] = [
     unlockLevel: 10,
     seedCost: 140,
     sellPrice: 300,
-    growMs: 600_000,
+    growMs: 50_000,
     xp: 180,
   },
 ];

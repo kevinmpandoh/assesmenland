@@ -200,7 +200,7 @@ function HowItWorks() {
     {
       emo: "⏳",
       title: "GROW & HARVEST",
-      desc: "Crops grow in real time, from 20 seconds for tomatoes to 10 minutes for Golden Rice. Harvest when they sparkle, stash everything in your barn.",
+      desc: "Crops grow in real time — 5 seconds per crop level, from a 5s tomato to a 50s Golden Rice. Harvest when they sparkle, stash everything in your barn.",
     },
     {
       emo: "💰",
