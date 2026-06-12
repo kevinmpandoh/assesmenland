@@ -82,7 +82,7 @@ function Hero() {
         </div>
 
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
-          AGRI
+          AGRI&nbsp;
           <br />
           <span className="text-sunset-deep">LAND</span>
         </h1>
