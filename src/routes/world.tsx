@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
 import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/hooks/useGame";
-import { cropById, tierForBalance } from "@/lib/game-logic";
+import { cropById, tierForBalance, tierById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import type { StallKind } from "@/lib/world-map";
 import {
@@ -134,7 +134,15 @@ const SPEED = 3.4; // tiles per second
 const PING_MS = 1_500;
 const BUBBLE_MS = 5_000;
 
-type Mover = { x: number; y: number; tx: number; ty: number; name: string; level: number };
+type Mover = {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  name: string;
+  level: number;
+  tier: string;
+};
 
 type WorldPlot = {
   x: number;
@@ -209,7 +217,14 @@ function World({ address, balance }: { address: string; balance: number }) {
   // Mutable world state lives in refs so the rAF loop never depends on
   // React re-renders.
   const worldRef = useRef(buildMap());
-  const meRef = useRef<Mover>({ ...SPAWN, tx: SPAWN.x, ty: SPAWN.y, name: "", level: 1 });
+  const meRef = useRef<Mover>({
+    ...SPAWN,
+    tx: SPAWN.x,
+    ty: SPAWN.y,
+    name: "",
+    level: 1,
+    tier: "sprout",
+  });
   const othersRef = useRef<Map<string, Mover>>(new Map());
   const npcsRef = useRef(
     NPC_ROUTES.map((r) => ({
@@ -244,6 +259,8 @@ function World({ address, balance }: { address: string; balance: number }) {
   nameRef.current = myName;
   const levelRef = useRef(game.state.level);
   levelRef.current = game.state.level;
+  const tierRef = useRef(tier.id);
+  tierRef.current = tier.id;
 
   // Restore my last position so leaving/returning doesn't reset to spawn.
   useEffect(() => {
@@ -291,6 +308,7 @@ function World({ address, balance }: { address: string; balance: number }) {
             wallet: address,
             name: nameRef.current,
             level: levelRef.current,
+            tier: tierRef.current,
             x: me.x,
             y: me.y,
           },
@@ -306,6 +324,7 @@ function World({ address, balance }: { address: string; balance: number }) {
             existing.ty = p.y;
             existing.name = p.name;
             existing.level = p.level;
+            existing.tier = p.tier ?? "sprout";
           } else {
             othersRef.current.set(p.wallet_address, {
               x: p.x,
@@ -314,6 +333,7 @@ function World({ address, balance }: { address: string; balance: number }) {
               ty: p.y,
               name: p.name,
               level: p.level,
+              tier: p.tier ?? "sprout",
             });
           }
         }
@@ -762,7 +782,7 @@ function World({ address, balance }: { address: string; balance: number }) {
     };
 
     const drawPerson = (
-      m: { x: number; y: number; name: string; level?: number },
+      m: { x: number; y: number; name: string; level?: number; tier?: string },
       av: Avatar,
       opts: { isMe?: boolean; isNpc?: boolean; bubble?: string },
     ) => {
@@ -797,14 +817,14 @@ function World({ address, balance }: { address: string; balance: number }) {
       ctx.textAlign = "center";
       if (!opts.isNpc && m.level) {
         ctx.font = "bold 9px Nunito, sans-serif";
-        const lvl = `Lvl ${m.level}`;
-        const lw = ctx.measureText(lvl).width + 8;
+        const badge = `${tierById(m.tier ?? "sprout").emoji} Lvl ${m.level}`;
+        const lw = ctx.measureText(badge).width + 10;
         ctx.fillStyle = "#1b2240";
         ctx.beginPath();
         ctx.roundRect(sx - lw / 2, sy - 62, lw, 12, 5);
         ctx.fill();
         ctx.fillStyle = "#ffd166";
-        ctx.fillText(lvl, sx, sy - 53);
+        ctx.fillText(badge, sx, sy - 53);
       }
       ctx.font = "bold 11px Nunito, sans-serif";
       ctx.fillStyle = opts.isNpc ? "#5b6478" : "#1b2240";
@@ -884,7 +904,12 @@ function World({ address, balance }: { address: string; balance: number }) {
           depth: me.x + me.y,
           fn: () =>
             drawPerson(
-              { ...me, name: `⭐ ${nameRef.current}`, level: levelRef.current },
+              {
+                ...me,
+                name: `⭐ ${nameRef.current}`,
+                level: levelRef.current,
+                tier: tierRef.current,
+              },
               avatarFor(address),
               { isMe: true, bubble: freshBubble(address) },
             ),

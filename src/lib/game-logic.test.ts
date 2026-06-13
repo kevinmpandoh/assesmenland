@@ -116,10 +116,10 @@ describe("holding tiers", () => {
   test("balance maps to the right tier", () => {
     expect(tierForBalance(0).id).toBe("sprout"); // below 1 still floors to base tier object
     expect(tierForBalance(1).id).toBe("sprout");
-    expect(tierForBalance(49_999).id).toBe("sprout");
-    expect(tierForBalance(50_000).id).toBe("farmer");
-    expect(tierForBalance(250_000).id).toBe("rancher");
-    expect(tierForBalance(5_000_000).id).toBe("landlord");
+    expect(tierForBalance(499_999).id).toBe("sprout");
+    expect(tierForBalance(500_000).id).toBe("farmer");
+    expect(tierForBalance(2_500_000).id).toBe("rancher");
+    expect(tierForBalance(10_000_000).id).toBe("landlord");
   });
 
   test("perks increase monotonically with tier", () => {
@@ -134,8 +134,9 @@ describe("holding tiers", () => {
 
   test("nextTier points at the upgrade target", () => {
     expect(nextTier(1)?.id).toBe("farmer");
-    expect(nextTier(300_000)?.id).toBe("landlord");
-    expect(nextTier(2_000_000)).toBeNull();
+    expect(nextTier(600_000)?.id).toBe("rancher");
+    expect(nextTier(3_000_000)?.id).toBe("landlord");
+    expect(nextTier(20_000_000)).toBeNull();
   });
 
   test("tier growth bonus stacks on top of equipment", () => {

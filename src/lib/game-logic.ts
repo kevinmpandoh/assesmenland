@@ -326,7 +326,7 @@ export const TIERS: Tier[] = [
     id: "farmer",
     name: "Farmer",
     emoji: "🌾",
-    minHold: 50_000,
+    minHold: 500_000,
     seedBag: 16,
     energyRegenMs: 7_000,
     growthBonus: 0.05,
@@ -337,7 +337,7 @@ export const TIERS: Tier[] = [
     id: "rancher",
     name: "Rancher",
     emoji: "🚜",
-    minHold: 250_000,
+    minHold: 2_500_000,
     seedBag: 26,
     energyRegenMs: 5_000,
     growthBonus: 0.1,
@@ -348,7 +348,7 @@ export const TIERS: Tier[] = [
     id: "landlord",
     name: "Landlord",
     emoji: "👑",
-    minHold: 1_000_000,
+    minHold: 10_000_000,
     seedBag: 40,
     energyRegenMs: 4_000,
     growthBonus: 0.15,
@@ -356,6 +356,10 @@ export const TIERS: Tier[] = [
     blurb: "40-seed bag · +15% growth · gold crown badge",
   },
 ];
+
+export function tierById(id: string): Tier {
+  return TIERS.find((t) => t.id === id) ?? TIERS[0];
+}
 
 /** Highest tier whose threshold the balance meets. */
 export function tierForBalance(balance: number): Tier {

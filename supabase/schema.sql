@@ -159,3 +159,6 @@ create index if not exists winners_epoch_idx on public.leaderboard_winners (epoc
 
 alter table public.leaderboard_winners enable row level security;
 create policy "public read winners" on public.leaderboard_winners for select using (true);
+
+-- Holding tier shown above heads in the world (added with token tiers).
+alter table public.world_presence add column if not exists tier text not null default 'sprout';
