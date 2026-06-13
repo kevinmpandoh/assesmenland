@@ -71,14 +71,21 @@ async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const latest = await store.latestWinnerEpoch();
   if (latest && latest >= endedEpochIso) return; // last ended round already settled
 
+  // Skip if nobody was actually playing during the ended round — avoids
+  // snapshotting bogus winners for rounds that ended before launch.
+  const endedRoundEnd = currentEpochStart(Date.now());
+  const topAll = await store.topPlayers(50);
+  const playedDuringRound = topAll.some(
+    (p) => new Date(p.last_seen_at).getTime() < endedRoundEnd,
+  );
+  if (!playedDuringRound) return;
+
   // No back-to-back wins: the round before that sits this snapshot out.
   const twoBackIso = new Date(
     currentEpochStart(Date.now()) - 2 * REWARD_INTERVAL_MS,
   ).toISOString();
   const blocked = new Set((await store.winnersSince(twoBackIso)).map((w) => w.wallet_address));
-  const eligible = (await store.topPlayers(REWARD_TOP_N + blocked.size + 10)).filter(
-    (p) => !blocked.has(p.wallet_address) && p.coins > 0,
-  );
+  const eligible = topAll.filter((p) => !blocked.has(p.wallet_address) && p.coins > 0);
   if (eligible.length === 0) return;
   await store.recordWinners(
     eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
