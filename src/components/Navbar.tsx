@@ -13,7 +13,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-2 justify-self-center md:flex">
           <Link to="/docs" className="pill">
             <span>📚</span> Docs
           </Link>
