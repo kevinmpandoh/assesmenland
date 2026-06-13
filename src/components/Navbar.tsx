@@ -14,9 +14,6 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-2 md:flex">
-          <a href="/#species" className="pill">
-            <span>🌽</span> Crops
-          </a>
           <Link to="/docs" className="pill">
             <span>📚</span> Docs
           </Link>
