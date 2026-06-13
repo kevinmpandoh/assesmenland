@@ -83,6 +83,7 @@ describe("presence", () => {
       wallet_address: WALLET,
       name: "Tester",
       level: 3,
+      tier: "farmer",
       x: 14,
       y: 12.5,
     });
@@ -91,6 +92,7 @@ describe("presence", () => {
     expect(me?.x).toBe(14);
     expect(me?.name).toBe("Tester");
     expect(me?.level).toBe(3);
+    expect(me?.tier).toBe("farmer");
   });
 
   test("expires stale players", async () => {

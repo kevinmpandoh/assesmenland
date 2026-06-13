@@ -135,8 +135,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:description", content: "Claim a field, plant a seed, and grow your farm." },
       { name: "twitter:description", content: "Claim a field, plant a seed, and grow your farm." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36" },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36",
+      },
     ],
     links: [
       { rel: "icon", type: "image/png", href: logoAsset.url },

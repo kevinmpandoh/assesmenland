@@ -46,6 +46,7 @@ export type PresenceRow = {
   wallet_address: string;
   name: string;
   level: number;
+  tier: string;
   x: number;
   y: number;
   updated_at: string;

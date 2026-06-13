@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import {
   CROPS,
   EQUIPMENT,
+  TIERS,
+  DAILY_QUESTS,
   MAX_FARM_SIZE,
   MAX_LEVEL,
   PLANT_ENERGY,
@@ -15,14 +17,21 @@ import {
   equipmentById,
   xpForLevel,
   seedBagSpace,
+  streakBonus,
+  utcDayKey,
+  isYesterday,
   MAX_SEED_BAG,
   type Crop,
+  type Tier,
+  type QuestTrack,
 } from "@/lib/game-logic";
 import { syncPlayer, logFishCatch } from "@/lib/api/game.functions";
 
 export {
   CROPS,
   EQUIPMENT,
+  TIERS,
+  DAILY_QUESTS,
   MAX_LEVEL,
   MAX_SEED_BAG,
   UPGRADE_PLOT_COST,
@@ -31,7 +40,9 @@ export {
   effectiveGrowMs,
   effectiveSellPrice,
   seedBagSpace,
+  streakBonus,
 };
+export type { Tier };
 
 export type Tile = {
   id: number;
@@ -56,6 +67,13 @@ export type GameState = {
   seeds: Record<string, number>;
   /** harvested produce waiting to be sold, by crop id */
   barn: Record<string, number>;
+  /** daily quests (reset 00:00 UTC) */
+  questDay: string;
+  questProgress: Record<QuestTrack, number>;
+  questClaimed: string[];
+  /** login streak (consecutive UTC days played) */
+  streak: number;
+  lastActiveDay: string;
 };
 
 export type SyncState = "idle" | "syncing" | "synced" | "error";
@@ -86,6 +104,11 @@ const initial: GameState = {
   equipment: [],
   seeds: { tomato: 5 }, // a starter pack so new players can plant right away
   barn: {},
+  questDay: "",
+  questProgress: { harvest: 0, plant: 0, sell_gold: 0 },
+  questClaimed: [],
+  streak: 0,
+  lastActiveDay: "",
 };
 
 export function loadState(): GameState {
@@ -111,7 +134,7 @@ export function saveState(s: GameState) {
  * Saved locally on every change and synced to the server (debounced) so
  * the global leaderboard stays live.
  */
-export function useGame(walletAddress: string | null = null) {
+export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[0]) {
   const [state, setState] = useState<GameState>(initial);
   const [mounted, setMounted] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("idle");
@@ -119,6 +142,44 @@ export function useGame(walletAddress: string | null = null) {
   useEffect(() => {
     setState(loadState());
     setMounted(true);
+  }, []);
+
+  // Roll over daily quests at 00:00 UTC and keep the login streak.
+  useEffect(() => {
+    if (!mounted) return;
+    const today = utcDayKey();
+    setState((s) => {
+      if (s.questDay === today) return s;
+      const streak =
+        s.lastActiveDay === today
+          ? s.streak
+          : isYesterday(s.lastActiveDay, today)
+            ? s.streak + 1
+            : 1;
+      return {
+        ...s,
+        questDay: today,
+        questProgress: { harvest: 0, plant: 0, sell_gold: 0 },
+        questClaimed: [],
+        streak,
+        lastActiveDay: today,
+      };
+    });
+  }, [mounted]);
+
+  // Increment a quest counter, auto-resetting if the UTC day flipped.
+  const bumpQuest = useCallback((track: QuestTrack, amount: number) => {
+    setState((s) => {
+      const today = utcDayKey();
+      const fresh = s.questDay !== today;
+      const base = fresh ? { harvest: 0, plant: 0, sell_gold: 0 } : s.questProgress;
+      return {
+        ...s,
+        questDay: today,
+        questClaimed: fresh ? [] : s.questClaimed,
+        questProgress: { ...base, [track]: base[track] + amount },
+      };
+    });
   }, []);
 
   useEffect(() => {
@@ -180,13 +241,13 @@ export function useGame(walletAddress: string | null = null) {
     return () => clearInterval(t);
   }, []);
 
-  // energy regen
+  // energy regen — interval shortens with holding tier
   useEffect(() => {
     const t = setInterval(() => {
       setState((s) => (s.energy < 100 ? { ...s, energy: Math.min(100, s.energy + 1) } : s));
-    }, 8000);
+    }, tier.energyRegenMs);
     return () => clearInterval(t);
-  }, []);
+  }, [tier.energyRegenMs]);
 
   const grant = useCallback((xp: number, gold = 0) => {
     setState((s) => {
@@ -208,7 +269,7 @@ export function useGame(walletAddress: string | null = null) {
       if ((s.seeds[crop.id] ?? 0) < 1 || s.energy < PLANT_ENERGY) return s;
       const tile = s.tiles[idx];
       if (!tile || tile.state !== "empty") return s;
-      const growMs = effectiveGrowMs(crop, s.equipment);
+      const growMs = effectiveGrowMs(crop, s.equipment, tier.growthBonus);
       const tiles = s.tiles.map((t) =>
         t.id === idx
           ? { ...t, state: "growing" as const, plantedAt: Date.now(), crop: crop.id, growMs }
@@ -221,6 +282,7 @@ export function useGame(walletAddress: string | null = null) {
         energy: s.energy - PLANT_ENERGY,
       };
     });
+    bumpQuest("plant", 1);
   };
 
   const harvest = (idx: number): Crop | null => {
@@ -242,6 +304,7 @@ export function useGame(walletAddress: string | null = null) {
       };
     });
     grant(crop.xp);
+    bumpQuest("harvest", 1);
     // High-tier harvests show up in the village activity feed.
     if (walletAddress && crop.unlockLevel >= 5) {
       logFishCatch({
@@ -269,6 +332,7 @@ export function useGame(walletAddress: string | null = null) {
       delete barn[cropId];
       return { ...s, gold: s.gold + earned, barn };
     });
+    bumpQuest("sell_gold", earned);
     return earned;
   };
 
@@ -295,6 +359,7 @@ export function useGame(walletAddress: string | null = null) {
       seeds: { ...s.seeds, [crop.id]: (s.seeds[crop.id] ?? 0) - 1 },
       energy: s.energy - PLANT_ENERGY,
     }));
+    bumpQuest("plant", 1);
     return true;
   };
 
@@ -307,7 +372,7 @@ export function useGame(walletAddress: string | null = null) {
     const crop = cropById(cropId);
     if (!crop || qty < 1) return 0;
     if (crop.unlockLevel > state.level) return 0;
-    const buyQty = Math.min(qty, seedBagSpace(state.seeds));
+    const buyQty = Math.min(qty, seedBagSpace(state.seeds, tier.seedBag));
     if (buyQty === 0) return 0;
     const cost = crop.seedCost * buyQty;
     if (state.gold < cost) return 0;
@@ -345,6 +410,7 @@ export function useGame(walletAddress: string | null = null) {
       barn: { ...s.barn, [crop.id]: (s.barn[crop.id] ?? 0) + 1 },
     }));
     grant(crop.xp);
+    bumpQuest("harvest", 1);
     if (walletAddress && crop.unlockLevel >= 5) {
       logFishCatch({
         data: {
@@ -356,6 +422,34 @@ export function useGame(walletAddress: string | null = null) {
       }).catch((e) => console.warn("harvest log failed", e));
     }
     return crop;
+  };
+
+  /**
+   * Claim a finished daily quest's reward. Claiming the last one of the
+   * day also pays a streak bonus. Returns gold awarded (0 = not ready).
+   */
+  const claimQuest = (questId: string): number => {
+    const quest = DAILY_QUESTS.find((q) => q.id === questId);
+    if (!quest) return 0;
+    if (state.questClaimed.includes(questId)) return 0;
+    if ((state.questProgress[quest.track] ?? 0) < quest.goal) return 0;
+
+    const claimedAfter = [...state.questClaimed, questId];
+    const allDone = DAILY_QUESTS.every((q) => claimedAfter.includes(q.id));
+    const bonus = allDone ? streakBonus(state.streak) : 0;
+    const total = quest.reward + bonus;
+
+    setState((s) => {
+      const leveled = applyXp(s.level, s.xp, quest.xp);
+      return {
+        ...s,
+        xp: leveled.xp,
+        level: leveled.level,
+        gold: s.gold + total,
+        questClaimed: claimedAfter,
+      };
+    });
+    return total;
   };
 
   const upgradeFarm = () => {
@@ -387,5 +481,7 @@ export function useGame(walletAddress: string | null = null) {
     buySeeds,
     sellSeedsBack,
     gainHarvest,
+    claimQuest,
+    tier,
   };
 }

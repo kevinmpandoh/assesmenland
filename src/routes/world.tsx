@@ -3,15 +3,8 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
-import {
-  useGame,
-  CROPS,
-  EQUIPMENT,
-  MAX_SEED_BAG,
-  effectiveSellPrice,
-  seedBagSpace,
-} from "@/hooks/useGame";
-import { cropById } from "@/lib/game-logic";
+import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/hooks/useGame";
+import { cropById, tierForBalance, tierById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import type { StallKind } from "@/lib/world-map";
 import {
@@ -79,7 +72,9 @@ function WorldPage() {
       {gate.connected && gate.status === "error" && (
         <Gate icon={AlertCircle} title="Network is muddy" onRetry={gate.refresh} />
       )}
-      {gate.connected && gate.status === "granted" && <World address={gate.address!} />}
+      {gate.connected && gate.status === "granted" && (
+        <World address={gate.address!} balance={gate.balance} />
+      )}
     </div>
   );
 }
@@ -139,7 +134,15 @@ const SPEED = 3.4; // tiles per second
 const PING_MS = 1_500;
 const BUBBLE_MS = 5_000;
 
-type Mover = { x: number; y: number; tx: number; ty: number; name: string; level: number };
+type Mover = {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  name: string;
+  level: number;
+  tier: string;
+};
 
 type WorldPlot = {
   x: number;
@@ -205,15 +208,23 @@ function avatarFor(key: string): Avatar {
   return { shirt: SHIRT_COLORS[h1 % 10], hat: HAT_COLORS[h2 % 10] };
 }
 
-function World({ address }: { address: string }) {
-  const game = useGame(address);
+function World({ address, balance }: { address: string; balance: number }) {
+  const tier = tierForBalance(balance);
+  const game = useGame(address, tier);
   const { messages, send } = useChat();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Mutable world state lives in refs so the rAF loop never depends on
   // React re-renders.
   const worldRef = useRef(buildMap());
-  const meRef = useRef<Mover>({ ...SPAWN, tx: SPAWN.x, ty: SPAWN.y, name: "", level: 1 });
+  const meRef = useRef<Mover>({
+    ...SPAWN,
+    tx: SPAWN.x,
+    ty: SPAWN.y,
+    name: "",
+    level: 1,
+    tier: "sprout",
+  });
   const othersRef = useRef<Map<string, Mover>>(new Map());
   const npcsRef = useRef(
     NPC_ROUTES.map((r) => ({
@@ -248,6 +259,8 @@ function World({ address }: { address: string }) {
   nameRef.current = myName;
   const levelRef = useRef(game.state.level);
   levelRef.current = game.state.level;
+  const tierRef = useRef(tier.id);
+  tierRef.current = tier.id;
 
   // Restore my last position so leaving/returning doesn't reset to spawn.
   useEffect(() => {
@@ -295,6 +308,7 @@ function World({ address }: { address: string }) {
             wallet: address,
             name: nameRef.current,
             level: levelRef.current,
+            tier: tierRef.current,
             x: me.x,
             y: me.y,
           },
@@ -310,6 +324,7 @@ function World({ address }: { address: string }) {
             existing.ty = p.y;
             existing.name = p.name;
             existing.level = p.level;
+            existing.tier = p.tier ?? "sprout";
           } else {
             othersRef.current.set(p.wallet_address, {
               x: p.x,
@@ -318,6 +333,7 @@ function World({ address }: { address: string }) {
               ty: p.y,
               name: p.name,
               level: p.level,
+              tier: p.tier ?? "sprout",
             });
           }
         }
@@ -766,7 +782,7 @@ function World({ address }: { address: string }) {
     };
 
     const drawPerson = (
-      m: { x: number; y: number; name: string; level?: number },
+      m: { x: number; y: number; name: string; level?: number; tier?: string },
       av: Avatar,
       opts: { isMe?: boolean; isNpc?: boolean; bubble?: string },
     ) => {
@@ -801,14 +817,14 @@ function World({ address }: { address: string }) {
       ctx.textAlign = "center";
       if (!opts.isNpc && m.level) {
         ctx.font = "bold 9px Nunito, sans-serif";
-        const lvl = `Lvl ${m.level}`;
-        const lw = ctx.measureText(lvl).width + 8;
+        const badge = `${tierById(m.tier ?? "sprout").emoji} Lvl ${m.level}`;
+        const lw = ctx.measureText(badge).width + 10;
         ctx.fillStyle = "#1b2240";
         ctx.beginPath();
         ctx.roundRect(sx - lw / 2, sy - 62, lw, 12, 5);
         ctx.fill();
         ctx.fillStyle = "#ffd166";
-        ctx.fillText(lvl, sx, sy - 53);
+        ctx.fillText(badge, sx, sy - 53);
       }
       ctx.font = "bold 11px Nunito, sans-serif";
       ctx.fillStyle = opts.isNpc ? "#5b6478" : "#1b2240";
@@ -888,7 +904,12 @@ function World({ address }: { address: string }) {
           depth: me.x + me.y,
           fn: () =>
             drawPerson(
-              { ...me, name: `⭐ ${nameRef.current}`, level: levelRef.current },
+              {
+                ...me,
+                name: `⭐ ${nameRef.current}`,
+                level: levelRef.current,
+                tier: tierRef.current,
+              },
               avatarFor(address),
               { isMe: true, bubble: freshBubble(address) },
             ),
@@ -970,6 +991,9 @@ function World({ address }: { address: string }) {
       <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2">
         <div className="pointer-events-auto card-pop flex items-center gap-3 px-3 py-2 text-xs">
           <span className="pixel text-[10px] text-ink">{myName}</span>
+          <span className="rounded-full bg-cyan-soft px-1.5 py-0.5 text-[10px] font-bold text-ink">
+            {tier.emoji} {tier.name}
+          </span>
           <span className="flex items-center gap-1 text-ink/80">
             <Trophy className="h-3.5 w-3.5 text-sunset-deep" /> lv {game.state.level}
           </span>
@@ -1082,7 +1106,8 @@ function WorldShop({
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<"buy" | "sell">("buy");
-  const { state, sellCrop, buySeeds, sellSeedsBack, buyEquipment } = game;
+  const { state, sellCrop, buySeeds, sellSeedsBack, buyEquipment, tier } = game;
+  const bagMax = tier.seedBag;
 
   const barnEntries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
   const barnTotal = barnEntries.reduce((sum, [id, qty]) => {
@@ -1109,7 +1134,7 @@ function WorldShop({
                 className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
                 title="Your seed bag, plant seeds to free up space"
               >
-                🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
+                🎒 {bagMax - seedBagSpace(state.seeds, bagMax)}/{bagMax}
               </span>
             )}
             <span className="flex items-center gap-1 rounded-full bg-sunset/40 px-2 py-0.5 text-xs font-bold text-ink">
@@ -1196,12 +1221,12 @@ function WorldShop({
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-lg px-2 text-[10px]"
-                              disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
+                              disabled={
+                                state.gold < c.seedCost || seedBagSpace(state.seeds, bagMax) === 0
+                              }
                               onClick={() => {
-                                if (seedBagSpace(state.seeds) === 0) {
-                                  toast.error(
-                                    `Seed bag full (${MAX_SEED_BAG}), plant your seeds first!`,
-                                  );
+                                if (seedBagSpace(state.seeds, bagMax) === 0) {
+                                  toast.error(`Seed bag full (${bagMax}), plant your seeds first!`);
                                   return;
                                 }
                                 const bought = buySeeds(c.id, qty);

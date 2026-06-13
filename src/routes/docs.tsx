@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { CROPS, EQUIPMENT, MAX_LEVEL, xpForLevel } from "@/lib/game-logic";
+import { CROPS, EQUIPMENT, MAX_LEVEL, TIERS, DAILY_QUESTS, xpForLevel } from "@/lib/game-logic";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, TOKEN_MINT } from "@/lib/solana-config";
 
 export const Route = createFileRoute("/docs")({
@@ -21,8 +21,10 @@ export const Route = createFileRoute("/docs")({
 const SECTIONS = [
   { id: "getting-started", label: "Getting Started" },
   { id: "token", label: "Token Access" },
+  { id: "tiers", label: "Holding Tiers" },
   { id: "crops", label: "Crops & Prices" },
   { id: "levels", label: "Levels & XP" },
+  { id: "quests", label: "Daily Quests" },
   { id: "rewards", label: "Leaderboard Rewards" },
   { id: "equipment", label: "Equipment" },
   { id: "town", label: "The Town" },
@@ -116,6 +118,47 @@ function DocsPage() {
           </a>
         </Section>
 
+        {/* Tiers */}
+        <Section id="tiers" title="🏅 Holding Tiers">
+          <p className="mb-4 text-sm text-ink/80">
+            Holding 1 token unlocks the game — but the more $AGRI you hold, the more the town opens
+            up. Tiers are read-only perks (balance is checked, never spent or staked) and pure
+            gameplay quality-of-life, not a financial promise.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="pixel text-left text-[10px] text-ink/60">
+                  <th className="pb-2">Tier</th>
+                  <th className="pb-2">Hold</th>
+                  <th className="pb-2">Seed bag</th>
+                  <th className="pb-2">Energy</th>
+                  <th className="pb-2">Growth</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TIERS.map((t) => (
+                  <tr key={t.id} className="border-t border-ink/10">
+                    <td className={`py-2 font-semibold ${t.color}`}>
+                      {t.emoji} {t.name}
+                    </td>
+                    <td className="py-2">{t.minHold.toLocaleString()}+</td>
+                    <td className="py-2">{t.seedBag} seeds</td>
+                    <td className="py-2">+1 / {t.energyRegenMs / 1000}s</td>
+                    <td className="py-2 text-leaf">
+                      {t.growthBonus > 0 ? `+${Math.round(t.growthBonus * 100)}% faster` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Your tier updates automatically when your balance changes — sell below a threshold and
+            you simply drop back down. Thresholds may be tuned as the game grows.
+          </p>
+        </Section>
+
         {/* Crops */}
         <Section id="crops" title="🌱 Crops & Prices">
           <p className="mb-4 text-sm text-ink/80">
@@ -179,6 +222,28 @@ function DocsPage() {
               );
             })}
           </div>
+        </Section>
+
+        {/* Quests */}
+        <Section id="quests" title="✅ Daily Quests">
+          <p className="mb-4 text-sm text-ink/80">
+            Three quests refresh every day at 00:00 UTC. Finish all three for a streak bonus that
+            grows the longer you keep your daily streak alive — a reason to drop by every day.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {DAILY_QUESTS.map((q) => (
+              <div key={q.id} className="rounded-xl bg-foam p-3 text-center ink-border">
+                <div className="text-xl">{q.emoji}</div>
+                <div className="text-xs font-semibold text-ink">{q.label}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Goal {q.goal} · +{q.reward}g · +{q.xp} XP
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Quest gold and XP are in-game progression with no monetary value.
+          </p>
         </Section>
 
         {/* Rewards */}

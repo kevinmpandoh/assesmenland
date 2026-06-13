@@ -12,15 +12,16 @@ import {
   useGame,
   CROPS,
   EQUIPMENT,
-  MAX_SEED_BAG,
+  DAILY_QUESTS,
   UPGRADE_PLOT_COST,
   seedBagSpace,
+  streakBonus,
   cropsUnlockedAt,
   effectiveGrowMs,
   effectiveSellPrice,
   xpForLevel,
 } from "@/hooks/useGame";
-import { cropById, rarityColor } from "@/lib/game-logic";
+import { cropById, rarityColor, tierForBalance, nextTier } from "@/lib/game-logic";
 import { useLeaderboard, useChat, useRecentCatches, useRewards } from "@/hooks/useVillage";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { toast } from "sonner";
@@ -44,6 +45,8 @@ import {
   RefreshCw,
   Warehouse,
   Wrench,
+  ListChecks,
+  Flame,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -166,7 +169,12 @@ function ErrorGate({ onRetry }: { onRetry: () => void }) {
 }
 
 function Dashboard({ address, balance }: { address: string; balance: number }) {
-  const game = useGame(address);
+  const tier = tierForBalance(balance);
+  const game = useGame(address, tier);
+  const claimable = DAILY_QUESTS.filter(
+    (q) =>
+      !game.state.questClaimed.includes(q.id) && (game.state.questProgress[q.track] ?? 0) >= q.goal,
+  ).length;
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">
@@ -189,10 +197,19 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
           <span className="pill text-xs">Enter ➜</span>
         </Link>
         <Tabs defaultValue="farm" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl bg-foam p-1 ink-border">
+          <TabsList className="grid w-full grid-cols-4 rounded-xl bg-foam p-1 ink-border">
             <TabsTrigger value="farm" className="rounded-lg">
               <Sprout className="mr-1.5 h-4 w-4" />
               Farm
+            </TabsTrigger>
+            <TabsTrigger value="quests" className="relative rounded-lg">
+              <ListChecks className="mr-1.5 h-4 w-4" />
+              Quests
+              {claimable > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-sunset-deep text-[9px] font-bold text-white">
+                  {claimable}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="barn" className="rounded-lg">
               <Warehouse className="mr-1.5 h-4 w-4" />
@@ -205,6 +222,9 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
           </TabsList>
           <TabsContent value="farm" className="mt-4">
             <FarmPanel game={game} />
+          </TabsContent>
+          <TabsContent value="quests" className="mt-4">
+            <QuestsPanel game={game} />
           </TabsContent>
           <TabsContent value="barn" className="mt-4">
             <BarnPanel game={game} />
@@ -303,12 +323,17 @@ function ProfileCard({
               </button>
             )}
             <Badge className="bg-leaf/20 text-ink hover:bg-leaf/30">
-              <Sparkles className="mr-1 h-3 w-3" /> Access granted
+              <span className="mr-1">{game.tier.emoji}</span> {game.tier.name}
             </Badge>
+            {game.state.streak > 0 && (
+              <Badge className="bg-sunset/30 text-ink hover:bg-sunset/40">
+                <Flame className="mr-1 h-3 w-3 text-sunset-deep" /> {game.state.streak}d streak
+              </Badge>
+            )}
             <SyncBadge syncState={syncState} />
           </div>
           <p className="text-xs text-muted-foreground">
-            {shortAddress(address)} · {balance.toLocaleString()} token
+            {shortAddress(address)} · {balance.toLocaleString()} token · {game.tier.blurb}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -338,6 +363,17 @@ function ProfileCard({
           <Progress value={state.energy} className="h-2" />
         </div>
       </div>
+      {(() => {
+        const up = nextTier(balance);
+        if (!up) return null;
+        const need = (up.minHold - balance).toLocaleString();
+        return (
+          <p className="mt-4 rounded-xl bg-sunset/15 px-3 py-2 text-center text-xs text-ink ink-border">
+            Hold <span className="font-bold">{need}</span> more $AGRI to reach {up.emoji}{" "}
+            <span className="font-bold">{up.name}</span> — {up.blurb}
+          </p>
+        );
+      })()}
     </div>
   );
 }
@@ -355,7 +391,7 @@ function Stat({ label, value, icon: Icon }: { label: string; value: number; icon
 }
 
 function FarmPanel({ game }: { game: GameApi }) {
-  const { state, plant, harvest, upgradeFarm } = game;
+  const { state, plant, harvest, upgradeFarm, tier } = game;
   const unlocked = cropsUnlockedAt(state.level);
   const [selected, setSelected] = useState(unlocked[unlocked.length - 1].id);
   const selectedCrop = cropById(selected) ?? unlocked[0];
@@ -472,9 +508,10 @@ function FarmPanel({ game }: { game: GameApi }) {
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
         {selectedCrop.emoji} {selectedCrop.name}: {state.seeds[selectedCrop.id] ?? 0} seeds in bag ·
-        grows in {Math.round(effectiveGrowMs(selectedCrop, state.equipment) / 1000)}s · sells for{" "}
-        {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP, buy seeds in
-        the Shop tab
+        grows in{" "}
+        {Math.round(effectiveGrowMs(selectedCrop, state.equipment, tier.growthBonus) / 1000)}s ·
+        sells for {effectiveSellPrice(selectedCrop, state.equipment)}g · +{selectedCrop.xp} XP, buy
+        seeds in the Shop tab
       </p>
     </div>
   );
@@ -549,8 +586,77 @@ function BarnPanel({ game }: { game: GameApi }) {
   );
 }
 
+function QuestsPanel({ game }: { game: GameApi }) {
+  const { state, claimQuest } = game;
+  const allClaimed = DAILY_QUESTS.every((q) => state.questClaimed.includes(q.id));
+  return (
+    <div className="card-pop p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="pixel flex items-center gap-2 text-sm text-ink">
+          <ListChecks className="h-4 w-4 text-leaf" /> Daily Quests
+        </h3>
+        <span className="flex items-center gap-1 rounded-full bg-sunset/30 px-2 py-0.5 text-xs font-bold text-ink">
+          <Flame className="h-3 w-3 text-sunset-deep" /> {state.streak}-day streak
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Resets at 00:00 UTC. Finish all three for a streak bonus of{" "}
+        <span className="font-semibold">{streakBonus(state.streak)}g</span> — the longer your
+        streak, the bigger it grows.
+      </p>
+
+      <ul className="mt-4 space-y-2">
+        {DAILY_QUESTS.map((q) => {
+          const progress = Math.min(state.questProgress[q.track] ?? 0, q.goal);
+          const done = progress >= q.goal;
+          const claimed = state.questClaimed.includes(q.id);
+          return (
+            <li key={q.id} className="rounded-xl bg-foam p-3 ink-border">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                  <span className="text-lg">{q.emoji}</span> {q.label}
+                </span>
+                {claimed ? (
+                  <span className="rounded-full bg-leaf/30 px-2 py-0.5 text-[10px] font-bold text-ink">
+                    ✓ Claimed
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="h-7 rounded-lg px-3 text-[11px]"
+                    disabled={!done}
+                    onClick={() => {
+                      const got = claimQuest(q.id);
+                      if (got) toast.success(`Quest done! +${got}g +${q.xp} XP`);
+                    }}
+                  >
+                    {done ? `Claim +${q.reward}g` : `+${q.reward}g`}
+                  </Button>
+                )}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <Progress value={(progress / q.goal) * 100} className="h-2 flex-1" />
+                <span className="shrink-0 text-[11px] text-muted-foreground">
+                  {progress.toLocaleString()}/{q.goal.toLocaleString()}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {allClaimed && (
+        <p className="mt-4 rounded-xl bg-leaf/15 p-3 text-center text-sm font-semibold text-ink ink-border">
+          🎉 All quests done for today — come back after 00:00 UTC to keep your streak alive!
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ShopPanel({ game }: { game: GameApi }) {
-  const { state, buyEquipment, buySeeds } = game;
+  const { state, buyEquipment, buySeeds, tier } = game;
+  const bagMax = tier.seedBag;
   return (
     <div className="card-pop p-6">
       <div className="flex items-center justify-between">
@@ -561,12 +667,12 @@ function ShopPanel({ game }: { game: GameApi }) {
           className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
           title="Your seed bag, plant seeds to free up space"
         >
-          🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
+          🎒 {bagMax - seedBagSpace(state.seeds, bagMax)}/{bagMax}
         </span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        The bag holds {MAX_SEED_BAG} seeds in total, plant them before buying more so other players
-        get field space too.
+        The bag holds {bagMax} seeds at your {tier.emoji} {tier.name} tier — hold more $AGRI to
+        carry more. Plant before buying so other players get field space too.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {CROPS.map((c) => {
@@ -599,10 +705,10 @@ function ShopPanel({ game }: { game: GameApi }) {
                       size="sm"
                       variant="outline"
                       className="h-7 rounded-lg px-2 text-[10px]"
-                      disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
+                      disabled={state.gold < c.seedCost || seedBagSpace(state.seeds, bagMax) === 0}
                       onClick={() => {
-                        if (seedBagSpace(state.seeds) === 0) {
-                          toast.error(`Seed bag full (${MAX_SEED_BAG}), plant your seeds first!`);
+                        if (seedBagSpace(state.seeds, bagMax) === 0) {
+                          toast.error(`Seed bag full (${bagMax}), plant your seeds first!`);
                           return;
                         }
                         const bought = buySeeds(c.id, qty);

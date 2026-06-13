@@ -200,6 +200,7 @@ export const pingWorld = createServerFn({ method: "POST" })
       wallet: wallet,
       name: z.string().trim().min(1).max(20),
       level: z.number().int().min(1).max(100_000).default(1),
+      tier: z.enum(["sprout", "farmer", "rancher", "landlord"]).default("sprout"),
       x: z.number().min(0).max(200),
       y: z.number().min(0).max(200),
     }),
@@ -210,6 +211,7 @@ export const pingWorld = createServerFn({ method: "POST" })
       wallet_address: data.wallet,
       name: data.name,
       level: data.level,
+      tier: data.tier,
       x: Math.round(data.x * 100) / 100,
       y: Math.round(data.y * 100) / 100,
     });
