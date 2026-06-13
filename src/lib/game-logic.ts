@@ -214,12 +214,16 @@ export function equipmentById(id: string): Equipment | undefined {
   return EQUIPMENT.find((e) => e.id === id);
 }
 
-/** Effective grow time for a crop given owned equipment ids. */
-export function effectiveGrowMs(crop: Crop, owned: string[]): number {
+/**
+ * Effective grow time for a crop. Equipment speed is capped at
+ * MAX_SPEED_BONUS; an optional holding-tier bonus stacks multiplicatively
+ * on top, so higher tiers always shave a little more off.
+ */
+export function effectiveGrowMs(crop: Crop, owned: string[], tierBonus = 0): number {
   let speed = 0;
   for (const id of owned) speed += equipmentById(id)?.speedBonus ?? 0;
   speed = Math.min(speed, MAX_SPEED_BONUS);
-  return Math.round(crop.growMs * (1 - speed));
+  return Math.round(crop.growMs * (1 - speed) * (1 - tierBonus));
 }
 
 /** Effective sell price for a crop given owned equipment ids. */
@@ -277,8 +281,145 @@ export function seedBagCount(seeds: Record<string, number>): number {
   return Object.values(seeds).reduce((sum, n) => sum + n, 0);
 }
 
-export function seedBagSpace(seeds: Record<string, number>): number {
-  return Math.max(0, MAX_SEED_BAG - seedBagCount(seeds));
+export function seedBagSpace(seeds: Record<string, number>, max: number = MAX_SEED_BAG): number {
+  return Math.max(0, max - seedBagCount(seeds));
+}
+
+// --------------------------------------------------- holding tiers
+
+/**
+ * The more $AGRI a wallet holds, the more the town opens up. Perks are
+ * pure quality-of-life/cosmetic gameplay utility — never a financial
+ * promise. The balance is read-only; nothing is ever spent or staked.
+ *
+ * Thresholds are easy to tune; pick values that fit the token supply.
+ */
+export type Tier = {
+  id: "sprout" | "farmer" | "rancher" | "landlord";
+  name: string;
+  emoji: string;
+  minHold: number;
+  /** seed-bag capacity at this tier */
+  seedBag: number;
+  /** energy regen interval (ms) — lower is faster */
+  energyRegenMs: number;
+  /** passive growth speed-up, stacks on top of equipment */
+  growthBonus: number;
+  /** tailwind text color for the badge */
+  color: string;
+  blurb: string;
+};
+
+export const TIERS: Tier[] = [
+  {
+    id: "sprout",
+    name: "Sprout",
+    emoji: "🌱",
+    minHold: 1,
+    seedBag: 10,
+    energyRegenMs: 8_000,
+    growthBonus: 0,
+    color: "text-leaf",
+    blurb: "Town access · 10-seed bag",
+  },
+  {
+    id: "farmer",
+    name: "Farmer",
+    emoji: "🌾",
+    minHold: 50_000,
+    seedBag: 16,
+    energyRegenMs: 7_000,
+    growthBonus: 0.05,
+    color: "text-ocean",
+    blurb: "16-seed bag · +5% growth · faster energy",
+  },
+  {
+    id: "rancher",
+    name: "Rancher",
+    emoji: "🚜",
+    minHold: 250_000,
+    seedBag: 26,
+    energyRegenMs: 5_000,
+    growthBonus: 0.1,
+    color: "text-violet-500",
+    blurb: "26-seed bag · +10% growth · 2× energy",
+  },
+  {
+    id: "landlord",
+    name: "Landlord",
+    emoji: "👑",
+    minHold: 1_000_000,
+    seedBag: 40,
+    energyRegenMs: 4_000,
+    growthBonus: 0.15,
+    color: "text-sunset-deep",
+    blurb: "40-seed bag · +15% growth · gold crown badge",
+  },
+];
+
+/** Highest tier whose threshold the balance meets. */
+export function tierForBalance(balance: number): Tier {
+  let result = TIERS[0];
+  for (const t of TIERS) if (balance >= t.minHold) result = t;
+  return result;
+}
+
+/** Next tier up (for "hold X more to reach…" hints), or null at the top. */
+export function nextTier(balance: number): Tier | null {
+  return TIERS.find((t) => balance < t.minHold) ?? null;
+}
+
+// --------------------------------------------------- daily quests
+
+export type QuestTrack = "harvest" | "plant" | "sell_gold";
+
+export type Quest = {
+  id: string;
+  label: string;
+  emoji: string;
+  track: QuestTrack;
+  goal: number;
+  reward: number; // gold
+  xp: number;
+};
+
+export const DAILY_QUESTS: Quest[] = [
+  {
+    id: "harvest",
+    label: "Harvest crops",
+    emoji: "🧺",
+    track: "harvest",
+    goal: 12,
+    reward: 50,
+    xp: 30,
+  },
+  { id: "plant", label: "Plant seeds", emoji: "🌱", track: "plant", goal: 10, reward: 35, xp: 20 },
+  {
+    id: "earn",
+    label: "Earn gold from sales",
+    emoji: "💰",
+    track: "sell_gold",
+    goal: 200,
+    reward: 70,
+    xp: 40,
+  },
+];
+
+/** Bonus gold for finishing all daily quests, scaling with login streak. */
+export function streakBonus(streak: number): number {
+  return 50 + Math.min(streak, 7) * 25; // day 1: 75g … day 7+: 225g
+}
+
+/** UTC calendar day key (YYYY-MM-DD). Quests reset at 00:00 UTC. */
+export function utcDayKey(now: number = Date.now()): string {
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+/** Whether `prev` day key is exactly the day before `today` (streak keeps). */
+export function isYesterday(prev: string, today: string): boolean {
+  const a = new Date(prev + "T00:00:00Z").getTime();
+  const b = new Date(today + "T00:00:00Z").getTime();
+  return b - a === 24 * 60 * 60 * 1000;
 }
 
 // ------------------------------------------------- leaderboard rewards

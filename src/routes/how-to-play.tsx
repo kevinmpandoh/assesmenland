@@ -56,8 +56,13 @@ const STEPS = [
     body: "Each level needs level × 100 XP. All ten crops unlock by level 10, but levels never stop — keep climbing for the leaderboard. Every day at 00:00 UTC the top 3 farmers win real rewards from the trading-fee pool.",
   },
   {
+    icon: Trophy,
+    title: "6 · Hold more, farm better",
+    body: "Holding 1 token unlocks the game; holding more raises your tier (Sprout → Farmer → Rancher → Landlord) for a bigger seed bag, faster energy, and faster-growing crops. It's read-only — you never spend or stake. Finish 3 daily quests for streak bonuses too.",
+  },
+  {
     icon: Globe,
-    title: "6 · Visit the town",
+    title: "7 · Visit the town",
     body: "Everyone shares ONE live map with six farm fields. Plant directly on shared soil, only you can harvest your own crop, and it withers 2 hours after ripening. The Seed Shop and Market open right inside the town.",
   },
 ];

@@ -3,15 +3,8 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/WalletButton";
 import { useTokenGate } from "@/hooks/useTokenGate";
-import {
-  useGame,
-  CROPS,
-  EQUIPMENT,
-  MAX_SEED_BAG,
-  effectiveSellPrice,
-  seedBagSpace,
-} from "@/hooks/useGame";
-import { cropById } from "@/lib/game-logic";
+import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/hooks/useGame";
+import { cropById, tierForBalance } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import type { StallKind } from "@/lib/world-map";
 import {
@@ -79,7 +72,9 @@ function WorldPage() {
       {gate.connected && gate.status === "error" && (
         <Gate icon={AlertCircle} title="Network is muddy" onRetry={gate.refresh} />
       )}
-      {gate.connected && gate.status === "granted" && <World address={gate.address!} />}
+      {gate.connected && gate.status === "granted" && (
+        <World address={gate.address!} balance={gate.balance} />
+      )}
     </div>
   );
 }
@@ -205,8 +200,9 @@ function avatarFor(key: string): Avatar {
   return { shirt: SHIRT_COLORS[h1 % 10], hat: HAT_COLORS[h2 % 10] };
 }
 
-function World({ address }: { address: string }) {
-  const game = useGame(address);
+function World({ address, balance }: { address: string; balance: number }) {
+  const tier = tierForBalance(balance);
+  const game = useGame(address, tier);
   const { messages, send } = useChat();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -970,6 +966,9 @@ function World({ address }: { address: string }) {
       <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2">
         <div className="pointer-events-auto card-pop flex items-center gap-3 px-3 py-2 text-xs">
           <span className="pixel text-[10px] text-ink">{myName}</span>
+          <span className="rounded-full bg-cyan-soft px-1.5 py-0.5 text-[10px] font-bold text-ink">
+            {tier.emoji} {tier.name}
+          </span>
           <span className="flex items-center gap-1 text-ink/80">
             <Trophy className="h-3.5 w-3.5 text-sunset-deep" /> lv {game.state.level}
           </span>
@@ -1082,7 +1081,8 @@ function WorldShop({
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<"buy" | "sell">("buy");
-  const { state, sellCrop, buySeeds, sellSeedsBack, buyEquipment } = game;
+  const { state, sellCrop, buySeeds, sellSeedsBack, buyEquipment, tier } = game;
+  const bagMax = tier.seedBag;
 
   const barnEntries = Object.entries(state.barn).filter(([, qty]) => qty > 0);
   const barnTotal = barnEntries.reduce((sum, [id, qty]) => {
@@ -1109,7 +1109,7 @@ function WorldShop({
                 className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-ink"
                 title="Your seed bag, plant seeds to free up space"
               >
-                🎒 {MAX_SEED_BAG - seedBagSpace(state.seeds)}/{MAX_SEED_BAG}
+                🎒 {bagMax - seedBagSpace(state.seeds, bagMax)}/{bagMax}
               </span>
             )}
             <span className="flex items-center gap-1 rounded-full bg-sunset/40 px-2 py-0.5 text-xs font-bold text-ink">
@@ -1196,12 +1196,12 @@ function WorldShop({
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-lg px-2 text-[10px]"
-                              disabled={state.gold < c.seedCost || seedBagSpace(state.seeds) === 0}
+                              disabled={
+                                state.gold < c.seedCost || seedBagSpace(state.seeds, bagMax) === 0
+                              }
                               onClick={() => {
-                                if (seedBagSpace(state.seeds) === 0) {
-                                  toast.error(
-                                    `Seed bag full (${MAX_SEED_BAG}), plant your seeds first!`,
-                                  );
+                                if (seedBagSpace(state.seeds, bagMax) === 0) {
+                                  toast.error(`Seed bag full (${bagMax}), plant your seeds first!`);
                                   return;
                                 }
                                 const bought = buySeeds(c.id, qty);
