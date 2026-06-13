@@ -124,16 +124,17 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
-  // Resting champions: today's winners, back at the next 00:00 UTC reset.
-  const cooldownSince = new Date(currentEpochStart(now)).toISOString();
-  const recent = await store.winnersSince(cooldownSince);
+  // Resting = winners of the last ENDED round, back at the next reset.
+  const restSince = new Date(currentEpochStart(now) - REWARD_INTERVAL_MS).toISOString();
+  const recent = await store.winnersSince(restSince);
   const cooldown = recent.map((w) => ({
     wallet: w.wallet_address,
     name: w.name,
     rank: w.rank,
-    until: new Date(new Date(w.epoch).getTime() + WINNER_COOLDOWN_MS).toISOString(),
+    until: new Date(new Date(w.epoch).getTime() + 2 * REWARD_INTERVAL_MS).toISOString(),
   }));
-  const winners = (await store.listWinners(50)).filter((w) => w.epoch < cooldownSince).slice(0, 15);
+  // Previous winners = older completed rounds (not the one still resting).
+  const winners = (await store.listWinners(50)).filter((w) => w.epoch < restSince).slice(0, 15);
   return {
     nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
     intervalMs: REWARD_INTERVAL_MS,
