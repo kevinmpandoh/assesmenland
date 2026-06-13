@@ -190,29 +190,37 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   // more progressed than local (e.g. fresh browser/incognito). Prevents
   // the next debounced sync from overwriting cloud progress with a
   // freshly-initialized local state.
+  const [hydrated, setHydrated] = useState(false);
   const hydratedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!mounted || !walletAddress) return;
+    if (!mounted) return;
+    if (!walletAddress) {
+      setHydrated(true);
+      return;
+    }
     if (hydratedFor.current === walletAddress) return;
     hydratedFor.current = walletAddress;
+    setHydrated(false);
     (async () => {
       try {
         const remote = await fetchPlayer({ data: { wallet: walletAddress } });
-        if (!remote) return;
-        setState((s) => {
-          // Take the more progressed side per-field so we never regress.
-          if (remote.xp <= s.xp && remote.level <= s.level && remote.coins <= s.gold) return s;
-          return {
-            ...s,
-            username: s.username || remote.username || "",
-            level: Math.max(s.level, remote.level),
-            xp: Math.max(s.xp, remote.xp),
-            gold: Math.max(s.gold, remote.coins),
-            harvests: Math.max(s.harvests, remote.rice_harvested ?? 0),
-          };
-        });
+        if (remote) {
+          setState((s) => {
+            if (remote.xp <= s.xp && remote.level <= s.level && remote.coins <= s.gold) return s;
+            return {
+              ...s,
+              username: s.username || remote.username || "",
+              level: Math.max(s.level, remote.level),
+              xp: Math.max(s.xp, remote.xp),
+              gold: Math.max(s.gold, remote.coins),
+              harvests: Math.max(s.harvests, remote.rice_harvested ?? 0),
+            };
+          });
+        }
       } catch (e) {
         console.warn("hydrate from cloud failed", e);
+      } finally {
+        setHydrated(true);
       }
     })();
   }, [mounted, walletAddress]);
