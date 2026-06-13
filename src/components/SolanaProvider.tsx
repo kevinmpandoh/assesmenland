@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentType } from "react";
 import { TokenGateContext, defaultGateState, type GateState } from "@/hooks/useTokenGate";
+import { loadWalletModules } from "@/lib/wallet-loader";
 
 // Buffer global is provided by vite-plugin-node-polyfills on the client.
 // All wallet libraries are lazy-loaded client-side only so SSR never
-// touches them.
+// touches them. Loader is shared with WalletButton so both finish at the
+// same instant — otherwise WalletButton can render WalletMultiButton
+// before WalletProvider mounts and throw "WalletContext without provider".
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
   const [Inner, setInner] = useState<ComponentType<{ children: ReactNode }> | null>(null);
@@ -12,23 +15,18 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
     if (import.meta.env.SSR) return;
     let cancelled = false;
     (async () => {
-      const [reactMod, uiMod, phantomMod, solflareMod, web3Mod, cfg] = await Promise.all([
-        import("@solana/wallet-adapter-react"),
-        import("@solana/wallet-adapter-react-ui"),
-        import("@solana/wallet-adapter-phantom"),
-        import("@solana/wallet-adapter-solflare"),
-        import("@solana/web3.js"),
-        import("@/lib/solana-config"),
-      ]);
+      const mods = await loadWalletModules();
+      const cfg = await import("@/lib/solana-config");
       if (cancelled) return;
-
-      const { ConnectionProvider, WalletProvider, useConnection, useWallet } = reactMod;
-      const { WalletModalProvider } = uiMod;
-      const { PublicKey } = web3Mod;
-      const wallets = [
-        new phantomMod.PhantomWalletAdapter(),
-        new solflareMod.SolflareWalletAdapter(),
-      ];
+      const {
+        ConnectionProvider,
+        WalletProvider,
+        WalletModalProvider,
+        useConnection,
+        useWallet,
+        PublicKey,
+        wallets,
+      } = mods;
 
       function GateBridge({ children }: { children: ReactNode }) {
         const { connection } = useConnection();
@@ -52,13 +50,18 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
           }));
           (async () => {
             try {
-              const mint = new PublicKey(cfg.TOKEN_MINT);
-              const resp = await connection.getParsedTokenAccountsByOwner(publicKey, { mint });
+              const mint = new (PublicKey as unknown as new (v: string) => unknown)(cfg.TOKEN_MINT);
+              const resp = await (
+                connection as unknown as {
+                  getParsedTokenAccountsByOwner: (
+                    owner: unknown,
+                    f: { mint: unknown },
+                  ) => Promise<{ value: Array<{ account: { data: { parsed: { info: { tokenAmount?: { uiAmount?: number | null } } } } } }> }>;
+                }
+              ).getParsedTokenAccountsByOwner(publicKey, { mint });
               let total = 0;
               for (const acc of resp.value) {
-                const info = acc.account.data.parsed.info as {
-                  tokenAmount?: { uiAmount?: number | null };
-                };
+                const info = acc.account.data.parsed.info;
                 total += Number(info.tokenAmount?.uiAmount ?? 0);
               }
               if (cancel) return;
@@ -82,15 +85,27 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
         return <TokenGateContext.Provider value={state}>{children}</TokenGateContext.Provider>;
       }
 
-      const Comp: ComponentType<{ children: ReactNode }> = ({ children }) => (
-        <ConnectionProvider endpoint={cfg.RPC_ENDPOINT}>
-          <WalletProvider wallets={wallets} autoConnect>
-            <WalletModalProvider>
-              <GateBridge>{children}</GateBridge>
-            </WalletModalProvider>
-          </WalletProvider>
-        </ConnectionProvider>
-      );
+      const Comp: ComponentType<{ children: ReactNode }> = ({ children }) => {
+        const CP = ConnectionProvider as unknown as ComponentType<{
+          endpoint: string;
+          children: ReactNode;
+        }>;
+        const WP = WalletProvider as unknown as ComponentType<{
+          wallets: unknown[];
+          autoConnect?: boolean;
+          children: ReactNode;
+        }>;
+        const MP = WalletModalProvider as unknown as ComponentType<{ children: ReactNode }>;
+        return (
+          <CP endpoint={cfg.RPC_ENDPOINT}>
+            <WP wallets={wallets} autoConnect>
+              <MP>
+                <GateBridge>{children}</GateBridge>
+              </MP>
+            </WP>
+          </CP>
+        );
+      };
       setInner(() => Comp);
     })();
     return () => {
