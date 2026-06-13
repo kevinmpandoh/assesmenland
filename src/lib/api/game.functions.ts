@@ -63,20 +63,26 @@ export const syncPlayer = createServerFn({ method: "POST" })
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const { REWARD_TOP_N } = await import("../game-logic");
-  const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
+  // Snapshot the round that JUST ENDED (the previous 24h window). The
+  // current round is still in progress — players are competing.
+  const endedEpochIso = new Date(
+    currentEpochStart(Date.now()) - REWARD_INTERVAL_MS,
+  ).toISOString();
   const latest = await store.latestWinnerEpoch();
-  if (latest && latest >= epochIso) return; // today's round already settled
+  if (latest && latest >= endedEpochIso) return; // last ended round already settled
 
-  // No back-to-back wins: yesterday's champions sit this snapshot out.
-  const prevEpochIso = new Date(currentEpochStart(Date.now()) - REWARD_INTERVAL_MS).toISOString();
-  const blocked = new Set((await store.winnersSince(prevEpochIso)).map((w) => w.wallet_address));
+  // No back-to-back wins: the round before that sits this snapshot out.
+  const twoBackIso = new Date(
+    currentEpochStart(Date.now()) - 2 * REWARD_INTERVAL_MS,
+  ).toISOString();
+  const blocked = new Set((await store.winnersSince(twoBackIso)).map((w) => w.wallet_address));
   const eligible = (await store.topPlayers(REWARD_TOP_N + blocked.size + 10)).filter(
     (p) => !blocked.has(p.wallet_address) && p.coins > 0,
   );
-  if (eligible.length === 0) return; // nobody to crown yet — try again next request
+  if (eligible.length === 0) return;
   await store.recordWinners(
     eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
-      epoch: epochIso,
+      epoch: endedEpochIso,
       rank: i + 1,
       wallet_address: p.wallet_address,
       name: p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`,
