@@ -253,7 +253,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
     };
-  }, [mounted, walletAddress, state.username, state.level, state.xp, state.gold, state.harvests]);
+  }, [mounted, hydrated, walletAddress, state.username, state.level, state.xp, state.gold, state.harvests]);
 
   // 1s tick: re-render growth bars and flip grown tiles to ready.
   const [, force] = useState(0);
