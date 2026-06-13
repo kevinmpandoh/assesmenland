@@ -14,9 +14,12 @@ function createSupabaseClient() {
       ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(
+      `[Supabase] Missing environment variable(s): ${missing.join(
+        ", "
+      )}. Realtime and database features are disabled. Connect Supabase in Lovable Cloud to enable them.`
+    );
+    return createNoOpClient();
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -26,6 +29,41 @@ function createSupabaseClient() {
       autoRefreshToken: true,
     },
   });
+}
+
+function createNoOpClient(): any {
+  const chain: any = new Proxy(() => {}, {
+    get(_, prop) {
+      if (prop === "then") return undefined;
+      if (prop === "single") return () => Promise.resolve({ data: null, error: null });
+      if (prop === "maybeSingle") return () => Promise.resolve({ data: null, error: null });
+      if (prop === "csv") return () => Promise.resolve("");
+      return chain;
+    },
+    apply() {
+      return chain;
+    },
+  });
+
+  return {
+    channel: () => chain,
+    removeChannel: () => {},
+    removeAllChannels: () => {},
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signOut: () => Promise.resolve({ error: null }),
+    },
+    from: () => chain,
+    storage: {
+      from: () => ({
+        upload: () => Promise.resolve({ data: null, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: "" } }),
+      }),
+    },
+    rpc: () => Promise.resolve({ data: null, error: null }),
+  };
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
