@@ -73,10 +73,10 @@ async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   if (latest && latest >= endedEpochIso) return; // last ended round already settled
 
   // Skip pre-launch rounds. A reward round is valid only if the game already
-  // had players at that round's start; otherwise a fresh launch would crown
+  // had players before that round ended; otherwise a fresh launch would crown
   // fake "previous" winners immediately.
   const firstPlayerCreatedAt = await store.firstPlayerCreatedAt();
-  if (!firstPlayerCreatedAt || new Date(firstPlayerCreatedAt).getTime() >= endedEpochStart) return;
+  if (!firstPlayerCreatedAt || new Date(firstPlayerCreatedAt).getTime() >= currentEpoch) return;
 
   const topAll = await store.topPlayers(50);
   const playedDuringRound = topAll.some((p) => new Date(p.last_seen_at).getTime() < currentEpoch);
