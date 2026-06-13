@@ -228,7 +228,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   // Debounced cloud sync for the leaderboard/profile.
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!mounted || !walletAddress) return;
+    if (!mounted || !walletAddress || !hydrated) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(async () => {
       setSyncState("syncing");
