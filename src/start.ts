@@ -1,7 +1,24 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+
+// Safe auth attacher: if the Supabase client throws (e.g. missing
+// VITE_SUPABASE_* env vars in a preview bundle), don't break unrelated
+// server-fn calls like the public leaderboard. Just continue without
+// an auth header.
+const safeAttachSupabaseAuth = createMiddleware({ type: "function" }).client(
+  async ({ next }) => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      return next({ headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    } catch (e) {
+      console.warn("[auth-attacher] skipped:", e);
+      return next({ headers: {} });
+    }
+  },
+);
 
 const SERVER_FN_BASE = "/_serverFn/";
 
@@ -33,7 +50,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachSupabaseAuth],
+  functionMiddleware: [safeAttachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
   serverFns: {
     fetch: serverFnFetch,
