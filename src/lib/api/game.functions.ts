@@ -63,27 +63,27 @@ export const syncPlayer = createServerFn({ method: "POST" })
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const { REWARD_TOP_N } = await import("../game-logic");
+  const now = Date.now();
+  const currentEpoch = currentEpochStart(now);
   // Snapshot the round that JUST ENDED (the previous 24h window). The
   // current round is still in progress — players are competing.
-  const endedEpochIso = new Date(
-    currentEpochStart(Date.now()) - REWARD_INTERVAL_MS,
-  ).toISOString();
+  const endedEpochStart = currentEpoch - REWARD_INTERVAL_MS;
+  const endedEpochIso = new Date(endedEpochStart).toISOString();
   const latest = await store.latestWinnerEpoch();
   if (latest && latest >= endedEpochIso) return; // last ended round already settled
 
-  // Skip if nobody was actually playing during the ended round — avoids
-  // snapshotting bogus winners for rounds that ended before launch.
-  const endedRoundEnd = currentEpochStart(Date.now());
+  // Skip pre-launch rounds. A reward round is valid only if the game already
+  // had players before that round ended; otherwise a fresh launch would crown
+  // fake "previous" winners immediately.
+  const firstPlayerCreatedAt = await store.firstPlayerCreatedAt();
+  if (!firstPlayerCreatedAt || new Date(firstPlayerCreatedAt).getTime() >= currentEpoch) return;
+
   const topAll = await store.topPlayers(50);
-  const playedDuringRound = topAll.some(
-    (p) => new Date(p.last_seen_at).getTime() < endedRoundEnd,
-  );
+  const playedDuringRound = topAll.some((p) => new Date(p.last_seen_at).getTime() < currentEpoch);
   if (!playedDuringRound) return;
 
   // No back-to-back wins: the round before that sits this snapshot out.
-  const twoBackIso = new Date(
-    currentEpochStart(Date.now()) - 2 * REWARD_INTERVAL_MS,
-  ).toISOString();
+  const twoBackIso = new Date(currentEpoch - 2 * REWARD_INTERVAL_MS).toISOString();
   const blocked = new Set((await store.winnersSince(twoBackIso)).map((w) => w.wallet_address));
   const eligible = topAll.filter((p) => !blocked.has(p.wallet_address) && p.coins > 0);
   if (eligible.length === 0) return;

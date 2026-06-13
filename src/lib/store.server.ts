@@ -21,6 +21,7 @@ export type PlayerRow = {
   coins: number;
   rice_harvested: number;
   fish_caught: number;
+  created_at?: string;
   last_seen_at: string;
 };
 
@@ -77,6 +78,7 @@ export type WinnerRow = {
 export interface GameStore {
   upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow>;
   getPlayer(wallet: string): Promise<PlayerRow | null>;
+  firstPlayerCreatedAt(): Promise<string | null>;
   topPlayers(limit: number): Promise<PlayerRow[]>;
   listChat(limit: number): Promise<ChatRow[]>;
   insertChat(wallet: string, body: string): Promise<ChatRow>;
@@ -129,6 +131,17 @@ class SupabaseStore implements GameStore {
       .maybeSingle();
     if (error) throw new Error(`getPlayer: ${error.message}`);
     return (data as PlayerRow) ?? null;
+  }
+
+  async firstPlayerCreatedAt(): Promise<string | null> {
+    const { data, error } = await this.db
+      .from("users")
+      .select("created_at")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(`firstPlayerCreatedAt: ${error.message}`);
+    return data?.created_at ?? null;
   }
 
   async topPlayers(limit: number): Promise<PlayerRow[]> {
@@ -339,10 +352,12 @@ class FileStore implements GameStore {
 
   async upsertPlayer(p: Omit<PlayerRow, "last_seen_at">): Promise<PlayerRow> {
     const data = await this.load();
+    const now = new Date().toISOString();
     const row: PlayerRow = {
       ...data.players[p.wallet_address],
       ...p,
-      last_seen_at: new Date().toISOString(),
+      created_at: data.players[p.wallet_address]?.created_at ?? now,
+      last_seen_at: now,
     };
     data.players[p.wallet_address] = row;
     await this.save(data);
@@ -352,6 +367,14 @@ class FileStore implements GameStore {
   async getPlayer(wallet: string): Promise<PlayerRow | null> {
     const data = await this.load();
     return data.players[wallet] ?? null;
+  }
+
+  async firstPlayerCreatedAt(): Promise<string | null> {
+    const data = await this.load();
+    const createdAt = Object.values(data.players)
+      .map((p) => p.created_at ?? p.last_seen_at)
+      .sort()[0];
+    return createdAt ?? null;
   }
 
   async topPlayers(limit: number): Promise<PlayerRow[]> {
