@@ -48,6 +48,12 @@ export const syncPlayer = createServerFn({ method: "POST" })
     });
   });
 
+export const fetchPlayer = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ wallet: wallet }))
+  .handler(async ({ data }) => {
+    return getStore().getPlayer(data.wallet);
+  });
+
 // ----------------------------------------------------------- leaderboard
 
 /**
