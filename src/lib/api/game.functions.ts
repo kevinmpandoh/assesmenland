@@ -97,8 +97,10 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const store = getStore();
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
-    // Today's champions rest until the next 00:00 UTC reset.
-    const cooldownSince = new Date(currentEpochStart(Date.now())).toISOString();
+    // Champions of the most recently ENDED round rest until the next reset.
+    const cooldownSince = new Date(
+      currentEpochStart(Date.now()) - REWARD_INTERVAL_MS,
+    ).toISOString();
     const onCooldown = new Set(
       (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
     );
