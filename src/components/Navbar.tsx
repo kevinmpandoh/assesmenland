@@ -5,8 +5,8 @@ import { Logo } from "./Logo";
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
-        <Link to="/" className="flex min-w-0 items-center gap-2">
+      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           <Logo className="h-8 w-8 shrink-0 boat-bob sm:h-9 sm:w-9" />
           <span className="pixel truncate text-xs text-ink sm:text-base">
             AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
