@@ -186,6 +186,37 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     if (mounted) saveState(state);
   }, [state, mounted]);
 
+  // On wallet connect, hydrate from the server if the cloud profile is
+  // more progressed than local (e.g. fresh browser/incognito). Prevents
+  // the next debounced sync from overwriting cloud progress with a
+  // freshly-initialized local state.
+  const hydratedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!mounted || !walletAddress) return;
+    if (hydratedFor.current === walletAddress) return;
+    hydratedFor.current = walletAddress;
+    (async () => {
+      try {
+        const remote = await fetchPlayer({ data: { wallet: walletAddress } });
+        if (!remote) return;
+        setState((s) => {
+          // Take the more progressed side per-field so we never regress.
+          if (remote.xp <= s.xp && remote.level <= s.level && remote.coins <= s.gold) return s;
+          return {
+            ...s,
+            username: s.username || remote.username || "",
+            level: Math.max(s.level, remote.level),
+            xp: Math.max(s.xp, remote.xp),
+            gold: Math.max(s.gold, remote.coins),
+            harvests: Math.max(s.harvests, remote.rice_harvested ?? 0),
+          };
+        });
+      } catch (e) {
+        console.warn("hydrate from cloud failed", e);
+      }
+    })();
+  }, [mounted, walletAddress]);
+
   // Debounced cloud sync for the leaderboard/profile.
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
