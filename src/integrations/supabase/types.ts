@@ -181,6 +181,7 @@ export type Database = {
         Row: {
           level: number
           name: string
+          tier: string
           updated_at: string
           wallet_address: string
           x: number
@@ -189,6 +190,7 @@ export type Database = {
         Insert: {
           level?: number
           name: string
+          tier?: string
           updated_at?: string
           wallet_address: string
           x?: number
@@ -197,6 +199,7 @@ export type Database = {
         Update: {
           level?: number
           name?: string
+          tier?: string
           updated_at?: string
           wallet_address?: string
           x?: number
