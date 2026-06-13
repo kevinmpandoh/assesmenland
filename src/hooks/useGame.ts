@@ -25,7 +25,7 @@ import {
   type Tier,
   type QuestTrack,
 } from "@/lib/game-logic";
-import { syncPlayer, logFishCatch } from "@/lib/api/game.functions";
+import { syncPlayer, logFishCatch, fetchPlayer } from "@/lib/api/game.functions";
 
 export {
   CROPS,
