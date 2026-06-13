@@ -33,7 +33,7 @@ export function Navbar() {
             <span>𝕏</span>
           </a>
         </nav>
-        <WalletButton />
+        <div className="justify-self-end"><WalletButton /></div>
       </div>
     </header>
   );
