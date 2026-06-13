@@ -14,7 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          wallet_address: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          wallet_address: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_wallet_address_fkey"
+            columns: ["wallet_address"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["wallet_address"]
+          },
+        ]
+      }
+      fish_catches: {
+        Row: {
+          caught_at: string
+          fish_name: string
+          id: string
+          rarity: string
+          value: number
+          wallet_address: string
+        }
+        Insert: {
+          caught_at?: string
+          fish_name: string
+          id?: string
+          rarity: string
+          value?: number
+          wallet_address: string
+        }
+        Update: {
+          caught_at?: string
+          fish_name?: string
+          id?: string
+          rarity?: string
+          value?: number
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fish_catches_wallet_address_fkey"
+            columns: ["wallet_address"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["wallet_address"]
+          },
+        ]
+      }
+      leaderboard_winners: {
+        Row: {
+          coins: number
+          created_at: string
+          epoch: string
+          id: string
+          name: string
+          rank: number
+          wallet_address: string
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          epoch: string
+          id?: string
+          name: string
+          rank: number
+          wallet_address: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          epoch?: string
+          id?: string
+          name?: string
+          rank?: number
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          coins: number
+          created_at: string
+          fish_caught: number
+          last_seen_at: string
+          level: number
+          rice_harvested: number
+          username: string | null
+          wallet_address: string
+          xp: number
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          fish_caught?: number
+          last_seen_at?: string
+          level?: number
+          rice_harvested?: number
+          username?: string | null
+          wallet_address: string
+          xp?: number
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          fish_caught?: number
+          last_seen_at?: string
+          level?: number
+          rice_harvested?: number
+          username?: string | null
+          wallet_address?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      world_plots: {
+        Row: {
+          crop: string
+          expires_at: string
+          planted_at: string
+          plot_key: string
+          ready_at: string
+          wallet_address: string
+          x: number
+          y: number
+        }
+        Insert: {
+          crop: string
+          expires_at: string
+          planted_at?: string
+          plot_key: string
+          ready_at: string
+          wallet_address: string
+          x: number
+          y: number
+        }
+        Update: {
+          crop?: string
+          expires_at?: string
+          planted_at?: string
+          plot_key?: string
+          ready_at?: string
+          wallet_address?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      world_presence: {
+        Row: {
+          level: number
+          name: string
+          updated_at: string
+          wallet_address: string
+          x: number
+          y: number
+        }
+        Insert: {
+          level?: number
+          name: string
+          updated_at?: string
+          wallet_address: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          level?: number
+          name?: string
+          updated_at?: string
+          wallet_address?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
