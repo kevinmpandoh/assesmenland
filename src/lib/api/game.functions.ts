@@ -37,14 +37,16 @@ export const syncPlayer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const store = getStore();
     const existing = await store.getPlayer(data.wallet);
+    // Never regress progression. A stale client (incognito, different device,
+    // freshly-cleared localStorage) must not overwrite higher cloud values.
     return store.upsertPlayer({
       wallet_address: data.wallet,
       username: data.username ?? existing?.username ?? null,
-      level: data.level,
-      xp: data.xp,
-      coins: data.coins,
-      rice_harvested: data.riceHarvested,
-      fish_caught: data.fishCaught,
+      level: Math.max(data.level, existing?.level ?? 1),
+      xp: Math.max(data.xp, existing?.xp ?? 0),
+      coins: Math.max(data.coins, existing?.coins ?? 0),
+      rice_harvested: Math.max(data.riceHarvested, existing?.rice_harvested ?? 0),
+      fish_caught: Math.max(data.fishCaught, existing?.fish_caught ?? 0),
     });
   });
 
