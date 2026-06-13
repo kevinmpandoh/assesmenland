@@ -17,16 +17,25 @@ import { supabase } from "@/integrations/supabase/client";
 function useRealtimeInvalidate(channel: string, table: string, queryKey: unknown[]) {
   const queryClient = useQueryClient();
   useEffect(() => {
-    const sub = supabase
-      .channel(channel)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
+    let sub: any;
+    try {
+      sub = supabase
+        .channel(channel)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table },
+          () => queryClient.invalidateQueries({ queryKey }),
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn("[Realtime] Subscription failed:", err);
+    }
     return () => {
-      supabase.removeChannel(sub);
+      try {
+        if (sub) supabase.removeChannel(sub);
+      } catch (err) {
+        console.warn("[Realtime] Cleanup failed:", err);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
