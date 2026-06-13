@@ -63,20 +63,26 @@ export const syncPlayer = createServerFn({ method: "POST" })
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const { REWARD_TOP_N } = await import("../game-logic");
-  const epochIso = new Date(currentEpochStart(Date.now())).toISOString();
+  // Snapshot the round that JUST ENDED (the previous 24h window). The
+  // current round is still in progress — players are competing.
+  const endedEpochIso = new Date(
+    currentEpochStart(Date.now()) - REWARD_INTERVAL_MS,
+  ).toISOString();
   const latest = await store.latestWinnerEpoch();
-  if (latest && latest >= epochIso) return; // today's round already settled
+  if (latest && latest >= endedEpochIso) return; // last ended round already settled
 
-  // No back-to-back wins: yesterday's champions sit this snapshot out.
-  const prevEpochIso = new Date(currentEpochStart(Date.now()) - REWARD_INTERVAL_MS).toISOString();
-  const blocked = new Set((await store.winnersSince(prevEpochIso)).map((w) => w.wallet_address));
+  // No back-to-back wins: the round before that sits this snapshot out.
+  const twoBackIso = new Date(
+    currentEpochStart(Date.now()) - 2 * REWARD_INTERVAL_MS,
+  ).toISOString();
+  const blocked = new Set((await store.winnersSince(twoBackIso)).map((w) => w.wallet_address));
   const eligible = (await store.topPlayers(REWARD_TOP_N + blocked.size + 10)).filter(
     (p) => !blocked.has(p.wallet_address) && p.coins > 0,
   );
-  if (eligible.length === 0) return; // nobody to crown yet — try again next request
+  if (eligible.length === 0) return;
   await store.recordWinners(
     eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
-      epoch: epochIso,
+      epoch: endedEpochIso,
       rank: i + 1,
       wallet_address: p.wallet_address,
       name: p.username?.trim() || `${p.wallet_address.slice(0, 4)}…${p.wallet_address.slice(-4)}`,
@@ -91,8 +97,10 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const store = getStore();
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
-    // Today's champions rest until the next 00:00 UTC reset.
-    const cooldownSince = new Date(currentEpochStart(Date.now())).toISOString();
+    // Champions of the most recently ENDED round rest until the next reset.
+    const cooldownSince = new Date(
+      currentEpochStart(Date.now()) - REWARD_INTERVAL_MS,
+    ).toISOString();
     const onCooldown = new Set(
       (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
     );
@@ -116,16 +124,17 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
-  // Resting champions: today's winners, back at the next 00:00 UTC reset.
-  const cooldownSince = new Date(currentEpochStart(now)).toISOString();
-  const recent = await store.winnersSince(cooldownSince);
+  // Resting = winners of the last ENDED round, back at the next reset.
+  const restSince = new Date(currentEpochStart(now) - REWARD_INTERVAL_MS).toISOString();
+  const recent = await store.winnersSince(restSince);
   const cooldown = recent.map((w) => ({
     wallet: w.wallet_address,
     name: w.name,
     rank: w.rank,
-    until: new Date(new Date(w.epoch).getTime() + WINNER_COOLDOWN_MS).toISOString(),
+    until: new Date(new Date(w.epoch).getTime() + 2 * REWARD_INTERVAL_MS).toISOString(),
   }));
-  const winners = (await store.listWinners(50)).filter((w) => w.epoch < cooldownSince).slice(0, 15);
+  // Previous winners = older completed rounds (not the one still resting).
+  const winners = (await store.listWinners(50)).filter((w) => w.epoch < restSince).slice(0, 15);
   return {
     nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
     intervalMs: REWARD_INTERVAL_MS,
