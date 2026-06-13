@@ -125,7 +125,7 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
     rank: w.rank,
     until: new Date(new Date(w.epoch).getTime() + WINNER_COOLDOWN_MS).toISOString(),
   }));
-  const winners = await store.listWinners(15);
+  const winners = (await store.listWinners(50)).filter((w) => w.epoch < cooldownSince).slice(0, 15);
   return {
     nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
     intervalMs: REWARD_INTERVAL_MS,

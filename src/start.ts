@@ -1,6 +1,7 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
+import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 // Safe auth attacher: if the Supabase client throws (e.g. missing
 // VITE_SUPABASE_* env vars in a preview bundle), don't break unrelated
@@ -50,7 +51,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [safeAttachSupabaseAuth],
+  functionMiddleware: [attachSupabaseAuth, safeAttachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
   serverFns: {
     fetch: serverFnFetch,
