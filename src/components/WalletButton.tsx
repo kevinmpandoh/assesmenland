@@ -9,7 +9,12 @@ export function WalletButton() {
     );
   }, []);
   if (!Btn) {
-    return <div className="h-10 w-36 animate-pulse rounded-xl bg-secondary" aria-hidden />;
+    return (
+      <div
+        className="h-[38px] w-28 animate-pulse rounded-xl bg-secondary sm:h-11 sm:w-36"
+        aria-hidden
+      />
+    );
   }
   return <Btn />;
 }

@@ -273,7 +273,7 @@ export const WORLD_PLOT_WITHER_MS = 2 * 60 * 60 * 1000; // 2 hours
 /**
  * A player's seed bag holds at most this many seeds in total — plant
  * what you have before buying more, so nobody hoards seeds while other
- * farmers wait for field space.
+ * players wait for field space.
  */
 export const MAX_SEED_BAG = 10;
 
@@ -438,7 +438,7 @@ export const REWARD_INTERVAL_MS = 24 * 60 * 60 * 1000;
  * 00:00 UTC reset) and can't win two rounds back to back.
  */
 export const WINNER_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-/** Top N farmers win each round. */
+/** Top N players win each round. */
 export const REWARD_TOP_N = 3;
 
 export function currentEpochStart(now: number): number {

@@ -53,7 +53,7 @@ const STEPS = [
   {
     icon: Trophy,
     title: "5 · Level up — forever",
-    body: "Each level needs level × 100 XP. All ten crops unlock by level 10, but levels never stop — keep climbing for the leaderboard. Every day at 00:00 UTC the top 3 farmers win real rewards from the trading-fee pool.",
+    body: "Each level needs level × 100 XP. All ten crops unlock by level 10, but levels never stop — keep climbing for the leaderboard. Every day at 00:00 UTC the top 3 players win real rewards from the trading-fee pool.",
   },
   {
     icon: Trophy,

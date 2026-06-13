@@ -102,7 +102,7 @@ const initial: GameState = {
   tiles: makeTiles(DEFAULT_SIZE),
   harvests: 0,
   equipment: [],
-  seeds: { tomato: 5 }, // a starter pack so new farmers can plant right away
+  seeds: { tomato: 5 }, // a starter pack so new players can plant right away
   barn: {},
   questDay: "",
   questProgress: { harvest: 0, plant: 0, sell_gold: 0 },

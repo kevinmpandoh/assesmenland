@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other farmers on one live map.",
+          "A cozy farming game on Solana. Connect your wallet, plant seeds, and watch your land grow, all in the browser, together with other players on one live map.",
       },
     ],
   }),
@@ -50,11 +50,12 @@ function SkyBackdrop() {
       <div className="absolute inset-0 bg-[image:var(--gradient-hero)]" />
       {/* warm sun */}
       <div
-        className="absolute right-[8%] top-16 h-40 w-40 rounded-full ink-border"
+        className="absolute right-[6%] top-12 h-24 w-24 rounded-full ink-border sm:top-16 sm:h-40 sm:w-40"
         style={{
           background: "radial-gradient(circle at 35% 35%, #ffe9a8, #f3a14a 70%, #b8501e)",
           boxShadow: "0 0 80px 10px rgba(240, 161, 74, 0.35)",
           animation: "sun-pulse 6s ease-in-out infinite",
+          opacity: 0.55,
         }}
       />
       {/* wheat sprigs scattered */}
@@ -97,7 +98,6 @@ function Hero() {
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
-            ["🧪", "OPEN BETA"],
             ["🎁", "DAILY TOP-3 REWARDS"],
             ["✅", "NO DOWNLOAD"],
             ["🌐", "ONE SHARED MAP"],
@@ -272,7 +272,7 @@ function Roadmap() {
     {
       q: "PHASE 2",
       t: "Personal plots in town",
-      d: "Your farm appears on the world map, visit other farmers' fields, water their crops, leave a note.",
+      d: "Your farm appears on the world map, visit other players' fields, water their crops, leave a note.",
     },
     {
       q: "PHASE 3",
@@ -282,7 +282,7 @@ function Roadmap() {
     {
       q: "PHASE 4",
       t: "Marketplace & cosmetics",
-      d: "Player-to-player crop trading, farmhouse skins, pets, and custom hats for your farmer.",
+      d: "Player-to-player crop trading, farmhouse skins, pets, and custom hats for your player.",
     },
   ];
   return (

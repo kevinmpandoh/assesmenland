@@ -73,7 +73,7 @@ function GamePage() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
         {!gate.connected && <ConnectGate />}
         {gate.connected && gate.status === "loading" && <LoadingGate />}
         {gate.connected && gate.status === "insufficient" && (
@@ -101,13 +101,13 @@ function GateShell({
   tone?: "ocean" | "gold";
 }) {
   return (
-    <div className="mx-auto mt-8 max-w-xl card-pop p-10 text-center">
+    <div className="mx-auto mt-6 max-w-xl card-pop p-6 text-center sm:mt-8 sm:p-10">
       <div
         className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ink-border ${tone === "ocean" ? "bg-sky-deep text-ink" : "bg-sunset text-ink"}`}
       >
         <Icon className="h-7 w-7" />
       </div>
-      <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
+      <h2 className="pixel mt-5 text-base text-ink sm:text-xl">{title}</h2>
       {children}
       <div className="mt-6 flex justify-center">
         <Link to="/" className="pill text-xs">
@@ -190,7 +190,7 @@ function Dashboard({ address, balance }: { address: string; balance: number }) {
             <div>
               <div className="pixel text-xs text-ink">Visit the Town</div>
               <p className="text-xs text-muted-foreground">
-                Walk around, meet other farmers, everyone shares one live map.
+                Walk around, meet other players, everyone shares one live map.
               </p>
             </div>
           </div>
@@ -309,7 +309,7 @@ function ProfileCard({
                   onChange={(e) => setDraft(e.target.value)}
                   maxLength={20}
                   autoFocus
-                  placeholder="Your farmer name"
+                  placeholder="Your player name"
                   className="h-8 w-40 rounded-lg border-2 border-ink bg-foam px-2 text-sm outline-none focus:border-sunset-deep"
                 />
                 <Button type="submit" size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -318,7 +318,7 @@ function ProfileCard({
               </form>
             ) : (
               <button onClick={startEdit} className="group flex items-center gap-1.5">
-                <h3 className="pixel text-base text-ink">{state.username || "Farmer"}</h3>
+                <h3 className="pixel text-base text-ink">{state.username || "Player"}</h3>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
               </button>
             )}
@@ -672,7 +672,7 @@ function ShopPanel({ game }: { game: GameApi }) {
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
         The bag holds {bagMax} seeds at your {tier.emoji} {tier.name} tier — hold more $AGRI to
-        carry more. Plant before buying so other farmers get field space too.
+        carry more. Plant before buying so other players get field space too.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {CROPS.map((c) => {
@@ -829,7 +829,7 @@ function Leaderboard({ meAddress }: { meAddress: string }) {
       )}
       {data && data.length === 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          No farmers ranked yet, keep playing, your progress syncs automatically.
+          No players ranked yet, keep playing, your progress syncs automatically.
         </p>
       )}
       {data && data.length > 0 && (
@@ -932,7 +932,7 @@ function ChatPanel({ address }: { address: string }) {
           <p className="text-xs text-muted-foreground">Chat is unreachable right now.</p>
         )}
         {messages.data && messages.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet, say hi, farmer! 👋</p>
+          <p className="text-xs text-muted-foreground">No messages yet, say hi, player! 👋</p>
         )}
         {messages.data?.map((m) => (
           <div key={m.id} className="rounded-lg bg-foam px-3 py-1.5">

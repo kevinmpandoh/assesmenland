@@ -50,7 +50,7 @@ export const Route = createFileRoute("/world")({
       { title: "The Town · Agri Land" },
       {
         name: "description",
-        content: "Walk around the Agri Land town, meet other farmers, and tend the shared fields.",
+        content: "Walk around the Agri Land town, meet other players, and tend the shared fields.",
       },
     ],
   }),
@@ -169,7 +169,7 @@ const TILE_COLORS: Record<TileKind, [string, string]> = {
 
 // 10 shirt colors × 10 hat colors = 100 avatar combos, picked
 // deterministically from the wallet (or NPC name) so everyone always
-// sees the same outfit for the same farmer. Duplicates can happen with
+// sees the same outfit for the same player. Duplicates can happen with
 // many players, that's fine, it's a town.
 const SHIRT_COLORS = [
   "#3a82d4", // blue
@@ -397,7 +397,7 @@ function World({ address, balance }: { address: string; balance: number }) {
 
     if (plot) {
       if (plot.wallet !== address) {
-        toast.info("This plant belongs to another farmer 🌱");
+        toast.info("This plant belongs to another player 🌱");
         return;
       }
       if (Date.now() < plot.readyAt) {
@@ -803,7 +803,7 @@ function World({ address, balance }: { address: string; balance: number }) {
       ctx.arc(sx, sy - 28, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // farmer hat in the avatar's own color
+      // player hat in the avatar's own color
       ctx.fillStyle = av.hat;
       ctx.beginPath();
       ctx.ellipse(sx, sy - 32, 11, 4, 0, 0, Math.PI * 2);
