@@ -535,8 +535,23 @@ let store: GameStore | null = null;
 let storeIsPersistent = false;
 
 export function getStore(): GameStore {
-  // Re-evaluate env each call until we get a persistent (Supabase) store.
   if (store && storeIsPersistent) return store;
+  try {
+    // Use the integration-managed admin client (proxy that lazily reads env
+    // vars on first access). This is the same path that works elsewhere in
+    // the app, so if persistent storage is available at all, this finds it.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { supabaseAdmin } = require("@/integrations/supabase/client.server") as {
+      supabaseAdmin: SupabaseClient;
+    };
+    // Touch a property to force the proxy to instantiate; throws if env missing.
+    void supabaseAdmin.auth;
+    store = new SupabaseStore(supabaseAdmin);
+    storeIsPersistent = true;
+    return store;
+  } catch (e) {
+    console.warn("[store] admin client unavailable, trying public fallback", e);
+  }
   const env = (process.env ?? {}) as Record<string, string | undefined>;
   const url = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const key =
