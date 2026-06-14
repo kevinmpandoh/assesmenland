@@ -1,13 +1,14 @@
 import process from "node:process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Server-only persistence for SawahVerse.
 //
 // Two backends behind one interface:
-//   - SupabaseStore: used when SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are
-//     set (schema in supabase/schema.sql). All writes go through these
-//     trusted server functions, so the service-role key never reaches the
-//     browser and RLS can stay locked down.
+//   - SupabaseStore: used when SUPABASE_URL plus a server/admin or publishable
+//     key are set (schema in supabase/schema.sql). Writes need the server key;
+//     public reads can still use the publishable key so leaderboards don't
+//     disappear if the privileged key is temporarily unavailable in preview.
 //   - FileStore: zero-config fallback for local dev — persists to
 //     .data/sawahverse.json so the app runs end-to-end without any env vars.
 
@@ -534,43 +535,35 @@ class FileStore implements GameStore {
 let store: GameStore | null = null;
 let storeIsPersistent = false;
 
-// Resolve Supabase credentials from whatever the host exposes to the server.
-// Lovable Cloud does NOT inject SUPABASE_SERVICE_ROLE_KEY into the server
-// runtime — it only ships the project URL + the publishable (anon) key. So we
-// accept the service-role key when present (full local/self-host setups) and
-// otherwise fall back to the anon key. Anon writes still reach the real shared
-// database, which is what makes the leaderboard and player data survive
-// redeploys instead of resetting with the ephemeral FileStore. The RLS write
-// policies in supabase/schema.sql allow these anon writes on the game tables.
-function resolveSupabaseEnv(): { url: string; key: string } | null {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    process.env.SUPABASE_PROJECT_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY;
-  if (url && key) return { url, key };
-  return null;
-}
-
 export function getStore(): GameStore {
-  // Re-evaluate env each call until we get a persistent (Supabase) store.
-  // Without this, a single early call with missing env locks the worker
-  // into the ephemeral FileStore — different workers then return different
-  // leaderboard winners, which looks like the data is changing randomly.
   if (store && storeIsPersistent) return store;
-  const env = resolveSupabaseEnv();
-  if (env) {
-    store = new SupabaseStore(
-      createClient(env.url, env.key, { auth: { persistSession: false } }),
-    );
+  try {
+    // supabaseAdmin is a Proxy: accessing a property forces it to read env
+    // vars and build the client. Throws if SUPABASE_URL / SERVICE_ROLE_KEY
+    // are missing.
+    void supabaseAdmin.auth;
+    store = new SupabaseStore(supabaseAdmin as unknown as SupabaseClient);
     storeIsPersistent = true;
-  } else if (!store) {
-    store = new FileStore();
+    return store;
+  } catch (e) {
+    console.warn("[store] admin client unavailable, trying public fallback", (e as Error)?.message);
+  }
+  const env = (process.env ?? {}) as Record<string, string | undefined>;
+  const url = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const key =
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (url && key) {
+    store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
+    storeIsPersistent = true;
+  } else {
+    if (!store) store = new FileStore();
+    console.warn("[store] persistent store unavailable", {
+      hasUrl: !!url,
+      hasServiceKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
+      hasPublishableKey: !!(env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY),
+    });
   }
   return store;
 }
