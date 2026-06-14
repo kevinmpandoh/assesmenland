@@ -6,13 +6,9 @@ import { useTokenGate } from "@/hooks/useTokenGate";
 import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/hooks/useGame";
 import { cropById, tierForBalance, tierById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
+import { supabase } from "@/integrations/supabase/client";
 import type { StallKind } from "@/lib/world-map";
-import {
-  pingWorld,
-  getWorldPlots,
-  plantWorldPlot,
-  harvestWorldPlot,
-} from "@/lib/api/game.functions";
+import { getWorldPlots, plantWorldPlot, harvestWorldPlot } from "@/lib/api/game.functions";
 import {
   MAP_SIZE,
   NPC_ROUTES,
@@ -297,60 +293,89 @@ function World({ address, balance }: { address: string; balance: number }) {
     bubblesRef.current = map;
   }, [messages.data]);
 
-  // Presence ping: send my position + level, receive everyone.
+  // Presence via Supabase Realtime "presence" — every player tracks their
+  // position on one shared channel and reads everyone else's live. This
+  // works on Lovable Cloud's client Supabase (already connected) without
+  // any DB writes or RLS, unlike the old server ping which fell back to
+  // per-instance memory and left players invisible to each other.
   useEffect(() => {
-    let stopped = false;
-    const tick = async () => {
-      const me = meRef.current;
-      try {
-        const players = await pingWorld({
-          data: {
-            wallet: address,
-            name: nameRef.current,
-            level: levelRef.current,
-            tier: tierRef.current,
-            x: me.x,
-            y: me.y,
-          },
-        });
-        if (stopped) return;
-        const seen = new Set<string>();
-        for (const p of players) {
-          if (p.wallet_address === address) continue;
-          seen.add(p.wallet_address);
-          const existing = othersRef.current.get(p.wallet_address);
-          if (existing) {
-            existing.tx = p.x;
-            existing.ty = p.y;
-            existing.name = p.name;
-            existing.level = p.level;
-            existing.tier = p.tier ?? "sprout";
-          } else {
-            othersRef.current.set(p.wallet_address, {
-              x: p.x,
-              y: p.y,
-              tx: p.x,
-              ty: p.y,
-              name: p.name,
-              level: p.level,
-              tier: p.tier ?? "sprout",
-            });
-          }
-        }
-        for (const key of othersRef.current.keys()) {
-          if (!seen.has(key)) othersRef.current.delete(key);
-        }
-        setOnlineCount(seen.size + 1);
-        sessionStorage.setItem(POS_KEY, JSON.stringify({ x: me.x, y: me.y }));
-      } catch (e) {
-        console.warn("presence ping failed", e);
-      }
+    type Meta = {
+      wallet: string;
+      name: string;
+      level: number;
+      tier: string;
+      x: number;
+      y: number;
     };
-    tick();
-    const t = setInterval(tick, PING_MS);
+
+    const channel = supabase.channel("agriland-world", {
+      config: { presence: { key: address } },
+    });
+
+    const applyState = () => {
+      const everyone = channel.presenceState() as Record<string, Meta[]>;
+      const seen = new Set<string>();
+      for (const key of Object.keys(everyone)) {
+        const meta = everyone[key]?.[0];
+        if (!meta || !meta.wallet || meta.wallet === address) continue;
+        seen.add(meta.wallet);
+        const existing = othersRef.current.get(meta.wallet);
+        if (existing) {
+          existing.tx = meta.x;
+          existing.ty = meta.y;
+          existing.name = meta.name;
+          existing.level = meta.level;
+          existing.tier = meta.tier ?? "sprout";
+        } else {
+          othersRef.current.set(meta.wallet, {
+            x: meta.x,
+            y: meta.y,
+            tx: meta.x,
+            ty: meta.y,
+            name: meta.name,
+            level: meta.level,
+            tier: meta.tier ?? "sprout",
+          });
+        }
+      }
+      for (const key of othersRef.current.keys()) {
+        if (!seen.has(key)) othersRef.current.delete(key);
+      }
+      setOnlineCount(seen.size + 1);
+    };
+
+    const trackMe = () => {
+      const me = meRef.current;
+      sessionStorage.setItem(POS_KEY, JSON.stringify({ x: me.x, y: me.y }));
+      return channel.track({
+        wallet: address,
+        name: nameRef.current,
+        level: levelRef.current,
+        tier: tierRef.current,
+        x: Math.round(me.x * 100) / 100,
+        y: Math.round(me.y * 100) / 100,
+      });
+    };
+
+    channel
+      .on("presence", { event: "sync" }, applyState)
+      .on("presence", { event: "join" }, applyState)
+      .on("presence", { event: "leave" }, applyState)
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") {
+          Promise.resolve(trackMe()).catch(() => {});
+        }
+      });
+
+    // Re-broadcast my position so others see me move (presence diffs only
+    // when the tracked payload changes).
+    const t = setInterval(() => {
+      Promise.resolve(trackMe()).catch(() => {});
+    }, PING_MS);
+
     return () => {
-      stopped = true;
       clearInterval(t);
+      supabase.removeChannel(channel);
     };
   }, [address]);
 
