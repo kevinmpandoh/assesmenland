@@ -534,16 +534,40 @@ class FileStore implements GameStore {
 let store: GameStore | null = null;
 let storeIsPersistent = false;
 
+// Resolve Supabase credentials from whatever the host exposes to the server.
+// Lovable Cloud does NOT inject SUPABASE_SERVICE_ROLE_KEY into the server
+// runtime — it only ships the project URL + the publishable (anon) key. So we
+// accept the service-role key when present (full local/self-host setups) and
+// otherwise fall back to the anon key. Anon writes still reach the real shared
+// database, which is what makes the leaderboard and player data survive
+// redeploys instead of resetting with the ephemeral FileStore. The RLS write
+// policies in supabase/schema.sql allow these anon writes on the game tables.
+function resolveSupabaseEnv(): { url: string; key: string } | null {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL ||
+    process.env.SUPABASE_PROJECT_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY;
+  if (url && key) return { url, key };
+  return null;
+}
+
 export function getStore(): GameStore {
   // Re-evaluate env each call until we get a persistent (Supabase) store.
   // Without this, a single early call with missing env locks the worker
   // into the ephemeral FileStore — different workers then return different
   // leaderboard winners, which looks like the data is changing randomly.
   if (store && storeIsPersistent) return store;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (url && key) {
-    store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
+  const env = resolveSupabaseEnv();
+  if (env) {
+    store = new SupabaseStore(
+      createClient(env.url, env.key, { auth: { persistSession: false } }),
+    );
     storeIsPersistent = true;
   } else if (!store) {
     store = new FileStore();
