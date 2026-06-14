@@ -23,6 +23,8 @@ import {
   effectiveGrowMs,
   effectiveSellPrice,
   xpForLevel,
+  EXCLUDED_WALLETS,
+  isExcludedWallet,
 } from "./game-logic";
 
 describe("crops", () => {
@@ -109,6 +111,18 @@ describe("reward schedule", () => {
     // one second before midnight still belongs to the same round
     const lateNight = Date.UTC(2026, 5, 12, 23, 59, 59);
     expect(nextRewardAt(lateNight)).toBe(Date.UTC(2026, 5, 13, 0, 0));
+  });
+});
+
+describe("retired wallets", () => {
+  test("already-paid wallets are excluded from the prize pool", () => {
+    expect(EXCLUDED_WALLETS.size).toBe(3);
+    expect(isExcludedWallet("25wptZ1he8XnyfNKNGTiBpZCU9zwT3Z8XZLRkBZtjbHK")).toBe(true);
+    expect(isExcludedWallet("4mT2xsLjsFZ6MKb7zr62H9APFMyVoTwrhhWUK5N3Ae6E")).toBe(true);
+    expect(isExcludedWallet("AGNZbek7keAWvyKP61mpaTcU3cU5GEdZUgKp2VE22LL2")).toBe(true);
+  });
+  test("ordinary wallets are not excluded", () => {
+    expect(isExcludedWallet("So11111111111111111111111111111111111111112")).toBe(false);
   });
 });
 

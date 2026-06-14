@@ -441,6 +441,24 @@ export const WINNER_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 /** Top N players win each round. */
 export const REWARD_TOP_N = 3;
 
+/**
+ * Wallets that have already received their prize via manual transfer and are
+ * permanently retired from the prize pool. They are hidden from the public
+ * leaderboard and skipped when snapshotting each round's winners, so the
+ * podium keeps rotating to players who haven't been paid yet. Stored as a Set
+ * for O(1) lookups; add new wallets here as prizes are sent.
+ */
+export const EXCLUDED_WALLETS = new Set<string>([
+  "25wptZ1he8XnyfNKNGTiBpZCU9zwT3Z8XZLRkBZtjbHK",
+  "4mT2xsLjsFZ6MKb7zr62H9APFMyVoTwrhhWUK5N3Ae6E",
+  "AGNZbek7keAWvyKP61mpaTcU3cU5GEdZUgKp2VE22LL2",
+]);
+
+/** True when a wallet is retired from the prize pool / leaderboard. */
+export function isExcludedWallet(wallet: string): boolean {
+  return EXCLUDED_WALLETS.has(wallet);
+}
+
 export function currentEpochStart(now: number): number {
   return Math.floor(now / REWARD_INTERVAL_MS) * REWARD_INTERVAL_MS;
 }
