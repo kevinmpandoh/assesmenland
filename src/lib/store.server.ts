@@ -536,20 +536,23 @@ let storeIsPersistent = false;
 
 export function getStore(): GameStore {
   // Re-evaluate env each call until we get a persistent (Supabase) store.
-  // Without this, a single early call with missing env locks the worker
-  // into the ephemeral FileStore — different workers then return different
-  // leaderboard winners, which looks like the data is changing randomly.
   if (store && storeIsPersistent) return store;
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const env = (process.env ?? {}) as Record<string, string | undefined>;
+  const url = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (url && key) {
     store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
     storeIsPersistent = true;
-  } else if (!store) {
-    store = new FileStore();
+  } else {
+    if (!store) store = new FileStore();
+    console.warn("[store] persistent store unavailable", {
+      hasUrl: !!url,
+      hasServiceKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
+      hasPublishableKey: !!(env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY),
+    });
   }
   return store;
 }
