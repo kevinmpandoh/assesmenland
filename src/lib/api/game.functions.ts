@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getStore } from "../store.server";
+import { getStore, isPersistentStore } from "../store.server";
 import {
   currentEpochStart,
   nextRewardAt,
@@ -70,6 +70,10 @@ export const fetchPlayer = createServerFn({ method: "POST" })
  *    so the podium always rotates to new players.
  */
 async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
+  // Only snapshot winners against the shared persistent store. An ephemeral
+  // FileStore worker would record a different "top 3" on each cold start,
+  // making the Champions Resting list flip between random players.
+  if (!isPersistentStore()) return;
   const { REWARD_TOP_N } = await import("../game-logic");
   const now = Date.now();
   const currentEpoch = currentEpochStart(now);
