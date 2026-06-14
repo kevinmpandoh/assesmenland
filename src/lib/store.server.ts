@@ -1,5 +1,6 @@
 import process from "node:process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Server-only persistence for SawahVerse.
 //
