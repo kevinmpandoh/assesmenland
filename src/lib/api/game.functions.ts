@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getStore } from "../store.server";
+import { getStore, isPersistentStore } from "../store.server";
 import {
   currentEpochStart,
   nextRewardAt,
