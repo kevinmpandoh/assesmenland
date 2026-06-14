@@ -94,10 +94,8 @@ async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const playedDuringRound = topAll.some((p) => new Date(p.last_seen_at).getTime() < currentEpoch);
   if (!playedDuringRound) return;
 
-  // No back-to-back wins: the round before that sits this snapshot out.
-  const twoBackIso = new Date(currentEpoch - 2 * REWARD_INTERVAL_MS).toISOString();
-  const blocked = new Set((await store.winnersSince(twoBackIso)).map((w) => w.wallet_address));
-  const eligible = topAll.filter((p) => !blocked.has(p.wallet_address) && p.coins > 0);
+  // Winner snapshot is the straight top coin holders for the ended season.
+  const eligible = topAll.filter((p) => p.coins > 0);
   if (eligible.length === 0) return;
   await store.recordWinners(
     eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
@@ -114,6 +112,10 @@ export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
+    if (!isPersistentStore()) {
+      console.warn("leaderboard unavailable: persistent game store not ready");
+      return [];
+    }
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
     // Champions of the most recently ENDED round rest until the next reset.
@@ -140,6 +142,17 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
 export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
   const store = getStore();
+  if (!isPersistentStore()) {
+    console.warn("rewards unavailable: persistent game store not ready");
+    const now = Date.now();
+    return {
+      nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
+      intervalMs: REWARD_INTERVAL_MS,
+      cooldownMs: WINNER_COOLDOWN_MS,
+      winners: [],
+      cooldown: [],
+    };
+  }
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
