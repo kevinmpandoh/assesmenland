@@ -4,10 +4,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // Server-only persistence for SawahVerse.
 //
 // Two backends behind one interface:
-//   - SupabaseStore: used when SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are
-//     set (schema in supabase/schema.sql). All writes go through these
-//     trusted server functions, so the service-role key never reaches the
-//     browser and RLS can stay locked down.
+//   - SupabaseStore: used when SUPABASE_URL plus a server/admin or publishable
+//     key are set (schema in supabase/schema.sql). Writes need the server key;
+//     public reads can still use the publishable key so leaderboards don't
+//     disappear if the privileged key is temporarily unavailable in preview.
 //   - FileStore: zero-config fallback for local dev — persists to
 //     .data/sawahverse.json so the app runs end-to-end without any env vars.
 
@@ -540,8 +540,11 @@ export function getStore(): GameStore {
   // into the ephemeral FileStore — different workers then return different
   // leaderboard winners, which looks like the data is changing randomly.
   if (store && storeIsPersistent) return store;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (url && key) {
     store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
     storeIsPersistent = true;
