@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState, type ReactNode, type ComponentType } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+  type ComponentType,
+} from "react";
 import { TokenGateContext, defaultGateState, type GateState } from "@/hooks/useTokenGate";
 import { loadWalletModules } from "@/lib/wallet-loader";
 
@@ -8,6 +16,12 @@ import { loadWalletModules } from "@/lib/wallet-loader";
 // same instant — otherwise WalletButton can render WalletMultiButton
 // before WalletProvider mounts and throw "WalletContext without provider".
 
+const SolanaWalletReadyContext = createContext(false);
+
+export function useSolanaWalletReady() {
+  return useContext(SolanaWalletReadyContext);
+}
+
 export function SolanaProvider({ children }: { children: ReactNode }) {
   const [Inner, setInner] = useState<ComponentType<{ children: ReactNode }> | null>(null);
 
@@ -15,18 +29,19 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
     if (import.meta.env.SSR) return;
     let cancelled = false;
     (async () => {
-      const mods = await loadWalletModules();
-      const cfg = await import("@/lib/solana-config");
-      if (cancelled) return;
-      const {
-        ConnectionProvider,
-        WalletProvider,
-        WalletModalProvider,
-        useConnection,
-        useWallet,
-        PublicKey,
-        wallets,
-      } = mods;
+      try {
+        const mods = await loadWalletModules();
+        const cfg = await import("@/lib/solana-config");
+        if (cancelled) return;
+        const {
+          ConnectionProvider,
+          WalletProvider,
+          WalletModalProvider,
+          useConnection,
+          useWallet,
+          PublicKey,
+          wallets,
+        } = mods;
 
       function GateBridge({ children }: { children: ReactNode }) {
         const { connection } = useConnection();
@@ -106,13 +121,22 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
           </CP>
         );
       };
-      setInner(() => Comp);
+        setInner(() => Comp);
+      } catch (error) {
+        if (!cancelled) console.warn("Solana wallet modules unavailable", error);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (!Inner) return <>{children}</>;
-  return <Inner>{children}</Inner>;
+  if (!Inner) {
+    return <SolanaWalletReadyContext.Provider value={false}>{children}</SolanaWalletReadyContext.Provider>;
+  }
+  return (
+    <SolanaWalletReadyContext.Provider value={true}>
+      <Inner>{children}</Inner>
+    </SolanaWalletReadyContext.Provider>
+  );
 }
