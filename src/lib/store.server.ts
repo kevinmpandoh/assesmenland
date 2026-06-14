@@ -532,15 +532,25 @@ class FileStore implements GameStore {
 // ----------------------------------------------------------------- Factory
 
 let store: GameStore | null = null;
+let storeIsPersistent = false;
 
 export function getStore(): GameStore {
-  if (store) return store;
+  // Re-evaluate env each call until we get a persistent (Supabase) store.
+  // Without this, a single early call with missing env locks the worker
+  // into the ephemeral FileStore — different workers then return different
+  // leaderboard winners, which looks like the data is changing randomly.
+  if (store && storeIsPersistent) return store;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (url && key) {
     store = new SupabaseStore(createClient(url, key, { auth: { persistSession: false } }));
-  } else {
+    storeIsPersistent = true;
+  } else if (!store) {
     store = new FileStore();
   }
   return store;
+}
+
+export function isPersistentStore(): boolean {
+  return storeIsPersistent;
 }
