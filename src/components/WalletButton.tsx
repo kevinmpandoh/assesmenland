@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
+import { useSolanaWalletReady } from "@/components/SolanaProvider";
 import { loadWalletModules } from "@/lib/wallet-loader";
 
 // Wait for the SAME loader SolanaProvider uses, so WalletMultiButton is
@@ -7,19 +8,22 @@ import { loadWalletModules } from "@/lib/wallet-loader";
 // boundary ("This page didn't load").
 
 export function WalletButton() {
+  const ready = useSolanaWalletReady();
   const [Btn, setBtn] = useState<ComponentType | null>(null);
   useEffect(() => {
-    if (import.meta.env.SSR) return;
+    if (import.meta.env.SSR || !ready) return;
     let cancelled = false;
-    loadWalletModules().then((m) => {
-      if (cancelled) return;
-      setBtn(() => m.WalletMultiButton as unknown as ComponentType);
-    });
+    loadWalletModules()
+      .then((m) => {
+        if (cancelled) return;
+        setBtn(() => m.WalletMultiButton as unknown as ComponentType);
+      })
+      .catch((error) => console.warn("Wallet button unavailable", error));
     return () => {
       cancelled = true;
     };
-  }, []);
-  if (!Btn) {
+  }, [ready]);
+  if (!ready || !Btn) {
     return (
       <div
         className="h-[38px] w-28 animate-pulse rounded-xl bg-secondary sm:h-11 sm:w-36"
