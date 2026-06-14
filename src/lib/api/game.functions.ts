@@ -114,6 +114,10 @@ export const getLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.object({ limit: z.number().int().min(1).max(100).default(20) }).optional())
   .handler(async ({ data }) => {
     const store = getStore();
+    if (!isPersistentStore()) {
+      console.warn("leaderboard unavailable: persistent game store not ready");
+      return [];
+    }
     await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
     // Champions of the most recently ENDED round rest until the next reset.
@@ -140,6 +144,17 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
 export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async () => {
   const store = getStore();
+  if (!isPersistentStore()) {
+    console.warn("rewards unavailable: persistent game store not ready");
+    const now = Date.now();
+    return {
+      nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
+      intervalMs: REWARD_INTERVAL_MS,
+      cooldownMs: WINNER_COOLDOWN_MS,
+      winners: [],
+      cooldown: [],
+    };
+  }
   await settleRewardEpoch(store).catch((e) => console.warn("epoch settle failed", e));
 
   const now = Date.now();
