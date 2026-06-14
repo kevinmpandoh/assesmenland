@@ -3,14 +3,10 @@ import { z } from "zod";
 import { getStore, isPersistentStore } from "../store.server";
 import {
   currentEpochStart,
-  EXCLUDED_WALLETS,
-  isExcludedWallet,
   nextRewardAt,
   REWARD_INTERVAL_MS,
   WINNER_COOLDOWN_MS,
 } from "../game-logic";
-
-const EXCLUDED_COUNT = EXCLUDED_WALLETS.size;
 
 // SawahVerse game API. Each function runs server-side only; the client
 // calls them like async functions. Storage backend is resolved in
@@ -98,9 +94,8 @@ async function settleRewardEpoch(store: ReturnType<typeof getStore>) {
   const playedDuringRound = topAll.some((p) => new Date(p.last_seen_at).getTime() < currentEpoch);
   if (!playedDuringRound) return;
 
-  // Winner snapshot is the straight top coin holders for the ended season,
-  // minus wallets already paid out (retired from the prize pool).
-  const eligible = topAll.filter((p) => p.coins > 0 && !isExcludedWallet(p.wallet_address));
+  // Winner snapshot is the straight top coin holders for the ended season.
+  const eligible = topAll.filter((p) => p.coins > 0);
   if (eligible.length === 0) return;
   await store.recordWinners(
     eligible.slice(0, REWARD_TOP_N).map((p, i) => ({
@@ -131,11 +126,8 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       (await store.winnersSince(cooldownSince)).map((w) => w.wallet_address),
     );
     const limit = data?.limit ?? 20;
-    // Over-fetch so that excluding cooldown + retired wallets still leaves a
-    // full page of rankings.
-    const skip = onCooldown.size + EXCLUDED_COUNT;
-    const players = (await store.topPlayers(limit + skip)).filter(
-      (p) => !onCooldown.has(p.wallet_address) && !isExcludedWallet(p.wallet_address),
+    const players = (await store.topPlayers(limit + onCooldown.size)).filter(
+      (p) => !onCooldown.has(p.wallet_address),
     );
     return players.slice(0, limit).map((p, i) => ({
       rank: i + 1,
@@ -166,9 +158,7 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
   const now = Date.now();
   // Resting = winners of the last ENDED round, back at the next reset.
   const restSince = new Date(currentEpochStart(now) - REWARD_INTERVAL_MS).toISOString();
-  const recent = (await store.winnersSince(restSince)).filter(
-    (w) => !isExcludedWallet(w.wallet_address),
-  );
+  const recent = await store.winnersSince(restSince);
   const cooldown = recent.map((w) => ({
     wallet: w.wallet_address,
     name: w.name,
@@ -178,9 +168,7 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
   // Previous winners = the most recently ended round (same wallets as the
   // "Champions Resting" list) plus older completed rounds, so the podium
   // and cooldown card always reflect yesterday's top 3.
-  const winners = (await store.listWinners(50))
-    .filter((w) => !isExcludedWallet(w.wallet_address))
-    .slice(0, 15);
+  const winners = (await store.listWinners(50)).slice(0, 15);
   return {
     nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
     intervalMs: REWARD_INTERVAL_MS,
