@@ -165,8 +165,10 @@ export const getRewardsStatus = createServerFn({ method: "GET" }).handler(async 
     rank: w.rank,
     until: new Date(new Date(w.epoch).getTime() + 2 * REWARD_INTERVAL_MS).toISOString(),
   }));
-  // Previous winners = older completed rounds (not the one still resting).
-  const winners = (await store.listWinners(50)).filter((w) => w.epoch < restSince).slice(0, 15);
+  // Previous winners = the most recently ended round (same wallets as the
+  // "Champions Resting" list) plus older completed rounds, so the podium
+  // and cooldown card always reflect yesterday's top 3.
+  const winners = (await store.listWinners(50)).slice(0, 15);
   return {
     nextRewardAt: new Date(nextRewardAt(now)).toISOString(),
     intervalMs: REWARD_INTERVAL_MS,
