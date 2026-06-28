@@ -358,7 +358,11 @@ function World({ address, balance }: { address: string; balance: number }) {
   useEffect(() => {
     let room: any = null;
     const connectColyseus = async () => {
-      const colyseusUrl = import.meta.env.VITE_COLYSEUS_URL || "ws://localhost:2567";
+      const colyseusUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+          ? "ws://localhost:2567"
+          : "wss://ansemland-production.up.railway.app";
       const client = new ColyseusClient(colyseusUrl);
       
       try {
