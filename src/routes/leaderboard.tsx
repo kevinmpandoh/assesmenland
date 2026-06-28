@@ -159,8 +159,8 @@ function LeaderboardPage() {
                   <span className="w-9 shrink-0 text-center text-sm font-bold text-muted-foreground">
                     {MEDALS[r.rank - 1] ?? `#${r.rank}`}
                   </span>
-                  <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl bg-cyan-soft ink-border">
-                    <Logo className="h-7 w-7" />
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-soft ink-border text-lg">
+                    🧑‍🌾
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{r.name}</div>
