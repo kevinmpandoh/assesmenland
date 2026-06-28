@@ -516,6 +516,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   return {
     state,
     syncState,
+    isGuest,
     setUsername,
     plant,
     harvest,
