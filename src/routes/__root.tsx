@@ -108,11 +108,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         property: "og:image",
-        content: logoAsset.url,
+        content: ansemLogo.url,
       },
       {
         name: "twitter:image",
-        content: logoAsset.url,
+        content: ansemLogo.url,
       },
       { name: "description", content: "Claim a field, plant a seed, and grow your farm." },
       {
