@@ -237,7 +237,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
       try {
         await syncPlayer({
           data: {
-            wallet: walletAddress,
+            wallet: cloudWallet,
             username: state.username || undefined,
             level: state.level,
             xp: state.xp,
@@ -347,10 +347,10 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     grant(crop.xp);
     bumpQuest("harvest", 1);
     // High-tier harvests show up in the village activity feed.
-    if (walletAddress && crop.unlockLevel >= 5) {
+    if (cloudWallet && crop.unlockLevel >= 5) {
       logFishCatch({
         data: {
-          wallet: walletAddress,
+          wallet: cloudWallet,
           fishName: crop.name,
           rarity: cropTier(crop),
           value: crop.sellPrice,
@@ -452,10 +452,10 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     }));
     grant(crop.xp);
     bumpQuest("harvest", 1);
-    if (walletAddress && crop.unlockLevel >= 5) {
+    if (cloudWallet && crop.unlockLevel >= 5) {
       logFishCatch({
         data: {
-          wallet: walletAddress,
+          wallet: cloudWallet,
           fishName: crop.name,
           rarity: cropTier(crop),
           value: crop.sellPrice,
