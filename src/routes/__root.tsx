@@ -10,7 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import logoAsset from "@/assets/agriland-logo.png.asset.json";
+import ansemLogo from "@/assets/ansem-logo.jpg.asset.json";
 // Wallet adapter base styles, vendored into src/wallet-adapter.css. The
 // package's own styles.css starts with a remote Google Fonts @import that
 // lightningcss can't resolve (the old "Vite 500 CSS error"), so we keep a
