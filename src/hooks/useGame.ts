@@ -146,6 +146,13 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     setMounted(true);
   }, []);
 
+  // Guests are always capped at level 1 with no XP, even if local storage
+  // carries progress from a previous wallet session on this device.
+  useEffect(() => {
+    if (!mounted || !isGuest) return;
+    setState((s) => (s.level === 1 && s.xp === 0 ? s : { ...s, level: 1, xp: 0 }));
+  }, [mounted, isGuest]);
+
   // Roll over daily quests at 00:00 UTC and keep the login streak.
   useEffect(() => {
     if (!mounted) return;
