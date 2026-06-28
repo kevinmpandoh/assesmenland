@@ -53,12 +53,45 @@ export const Route = createFileRoute("/world")({
   component: WorldPage,
 });
 
+const GUEST_KEY = "agriland-guest-address";
+
+function getOrCreateGuestAddress(): string {
+  if (typeof window === "undefined") return "guest";
+  let id = window.localStorage.getItem(GUEST_KEY);
+  if (!id) {
+    id = "guest-" + Math.random().toString(36).slice(2, 10);
+    window.localStorage.setItem(GUEST_KEY, id);
+  }
+  return id;
+}
+
+function guestDisplayName(addr: string) {
+  return "Guest-" + addr.replace(/^guest-/, "").slice(0, 4).toUpperCase();
+}
+
 function WorldPage() {
   const gate = useTokenGate();
+  const [guest, setGuest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem(GUEST_KEY)) setGuest(getOrCreateGuestAddress());
+  }, []);
+
+  const enterGuest = () => setGuest(getOrCreateGuestAddress());
+  const exitGuest = () => {
+    if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_KEY);
+    setGuest(null);
+  };
+
+  const useGuest = !!guest && !gate.connected;
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      {!gate.connected && <Gate icon={Wallet} title="Connect wallet to enter town" connect />}
+      {!gate.connected && !useGuest && (
+        <Gate icon={Wallet} title="Connect wallet to enter town" connect onGuest={enterGuest} />
+      )}
       {gate.connected && gate.status === "loading" && (
         <Gate icon={Sparkles} title="Checking your wallet…" />
       )}
@@ -70,6 +103,17 @@ function WorldPage() {
       )}
       {gate.connected && gate.status === "granted" && (
         <World address={gate.address!} balance={gate.balance} />
+      )}
+      {useGuest && (
+        <>
+          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center justify-between gap-3 rounded-xl bg-sunset/20 px-4 py-2 text-xs text-ink ink-border">
+            <span>🎮 Guest mode — progress saved on this device only.</span>
+            <button onClick={exitGuest} className="pill text-xs">
+              Exit guest
+            </button>
+          </div>
+          <World address={guest!} balance={0} />
+        </>
       )}
     </div>
   );
