@@ -308,7 +308,9 @@ function World({ address, balance }: { address: string; balance: number }) {
   const gameRef = useRef(game);
   gameRef.current = game;
 
-  const myName = game.state.username || shortAddress(address);
+  const myName =
+    game.state.username ||
+    (address.startsWith("guest-") ? guestDisplayName(address) : shortAddress(address));
   const nameRef = useRef(myName);
   nameRef.current = myName;
   const levelRef = useRef(game.state.level);
