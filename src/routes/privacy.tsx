@@ -27,7 +27,7 @@ function Privacy() {
         <p className="mt-6 text-ink/80 leading-relaxed">
           This Privacy Policy explains what information Ansem Land ("we", "the game") collects when
           you visit{" "}
-          <a href="https://agriland.cc" className="text-ocean underline">
+          <a href="https://ansemland.cc" className="text-ocean underline">
             agriland.cc
           </a>{" "}
           and how we use it. Our goal is to collect as little as possible.
@@ -76,12 +76,12 @@ function Privacy() {
           our active relationship with you. You can request deletion of your game data by contacting
           us on X at{" "}
           <a
-            href="https://x.com/agrilandcc"
+            href="https://x.com/ansemlandcc"
             target="_blank"
             rel="noreferrer"
             className="text-ocean underline"
           >
-            @agrilandcc
+            @ansemlandcc
           </a>
           .
         </p>
