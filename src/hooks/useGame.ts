@@ -292,10 +292,14 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
 
   const grant = useCallback((xp: number, gold = 0) => {
     setState((s) => {
+      if (isGuest) {
+        // Guests can earn coins but stay at level 1 with no XP progress.
+        return { ...s, gold: s.gold + gold };
+      }
       const leveled = applyXp(s.level, s.xp, xp);
       return { ...s, xp: leveled.xp, level: leveled.level, gold: s.gold + gold };
     });
-  }, []);
+  }, [isGuest]);
 
   const setUsername = (name: string) => {
     setState((s) => ({ ...s, username: name.trim().slice(0, 20) }));
