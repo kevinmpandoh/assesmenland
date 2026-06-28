@@ -5,11 +5,11 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy · Agri Land" },
+      { title: "Privacy Policy · Ansem Land" },
       {
         name: "description",
         content:
-          "How Agri Land handles your data. We collect the minimum needed to run the game and never sell your information.",
+          "How Ansem Land handles your data. We collect the minimum needed to run the game and never sell your information.",
       },
     ],
   }),
@@ -25,7 +25,7 @@ function Privacy() {
         <p className="mt-2 text-xs text-ink/60">Last updated: June 12, 2026</p>
 
         <p className="mt-6 text-ink/80 leading-relaxed">
-          This Privacy Policy explains what information Agri Land ("we", "the game") collects when
+          This Privacy Policy explains what information Ansem Land ("we", "the game") collects when
           you visit{" "}
           <a href="https://agriland.cc" className="text-ocean underline">
             agriland.cc

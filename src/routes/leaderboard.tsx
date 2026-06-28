@@ -13,11 +13,11 @@ export const Route = createFileRoute("/leaderboard")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Leaderboard & Rewards · Agri Land" },
+      { title: "Leaderboard & Rewards · Ansem Land" },
       {
         name: "description",
         content:
-          "Compete for the top of Agri Land. The top 3 players share a reward pool funded by 50% of trading fees, distributed daily at 00:00 UTC.",
+          "Compete for the top of Ansem Land. The top 3 players share a reward pool funded by 50% of trading fees, distributed daily at 00:00 UTC.",
       },
     ],
   }),

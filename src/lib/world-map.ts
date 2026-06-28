@@ -1,4 +1,4 @@
-// The Agri Land town map. Pure data + helpers shared by the canvas
+// The Ansem Land town map. Pure data + helpers shared by the canvas
 // renderer and tests. Coordinates are tile units.
 
 export const MAP_SIZE = 48;
@@ -90,7 +90,7 @@ export function buildMap(): { tiles: TileKind[][]; objects: WorldObject[] } {
     { kind: "fountain", x: 24, y: 24 },
     { kind: "stall", x: 20, y: 20, label: "SEED SHOP" },
     { kind: "stall", x: 29, y: 20, label: "MARKET" },
-    { kind: "sign", x: 21, y: 29, label: "AGRI LAND" },
+    { kind: "sign", x: 21, y: 29, label: "ANSEM LAND" },
     { kind: "well", x: 28, y: 28 },
 
     // housing district (north-west & north-centre)

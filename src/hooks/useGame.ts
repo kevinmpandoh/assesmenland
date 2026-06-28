@@ -129,7 +129,7 @@ export function saveState(s: GameState) {
 }
 
 /**
- * The Agri Land loop: buy seeds → plant → wait → harvest → sell → level
+ * The Ansem Land loop: buy seeds → plant → wait → harvest → sell → level
  * up → unlock bigger crops → invest gold in equipment → repeat.
  * Saved locally on every change and synced to the server (debounced) so
  * the global leaderboard stays live.

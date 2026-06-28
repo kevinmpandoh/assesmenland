@@ -7,7 +7,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:px-6">
         <div className="flex items-center gap-2">
           <Logo className="h-7 w-7" />
-          <span className="pixel text-xs text-ink">AGRI&nbsp;LAND</span>
+          <span className="pixel text-xs text-ink">ANSEM&nbsp;LAND</span>
         </div>
 
         <p className="max-w-md text-sm text-muted-foreground">
@@ -49,7 +49,7 @@ export function Footer() {
           </a>
         </div>
         <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Agri Land · Open Beta on Solana
+          © {new Date().getFullYear()} Ansem Land · Open Beta on Solana
         </div>
       </div>
     </footer>

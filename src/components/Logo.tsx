@@ -2,7 +2,7 @@ import logoAsset from "@/assets/agriland-logo.png.asset.json";
 
 export function Logo({
   className = "h-8 w-8",
-  alt = "Agri Land logo",
+  alt = "Ansem Land logo",
 }: {
   className?: string;
   alt?: string;

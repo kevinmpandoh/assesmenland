@@ -1,4 +1,4 @@
-// Pure game rules for Agri Land — shared by the React hook, the UI
+// Pure game rules for Ansem Land — shared by the React hook, the UI
 // tables (shop, docs), and unit tests. Keep React/browser APIs out.
 
 /**
@@ -288,7 +288,7 @@ export function seedBagSpace(seeds: Record<string, number>, max: number = MAX_SE
 // --------------------------------------------------- holding tiers
 
 /**
- * The more $AGRI a wallet holds, the more the town opens up. Perks are
+ * The more $ANSEM a wallet holds, the more the town opens up. Perks are
  * pure quality-of-life/cosmetic gameplay utility — never a financial
  * promise. The balance is read-only; nothing is ever spent or staked.
  *
