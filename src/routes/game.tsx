@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Logo } from "@/components/Logo";
+
 
 type GameApi = ReturnType<typeof useGame>;
 
@@ -337,8 +337,8 @@ function ProfileCard({
   return (
     <div className="card-pop p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-ink ink-border overflow-hidden">
-          <Logo className="h-12 w-12" />
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-sky-deep text-ink ink-border text-2xl">
+          🧑‍🌾
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
