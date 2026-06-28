@@ -196,16 +196,16 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   const hydratedFor = useRef<string | null>(null);
   useEffect(() => {
     if (!mounted) return;
-    if (!walletAddress) {
+    if (!cloudWallet) {
       setHydrated(true);
       return;
     }
-    if (hydratedFor.current === walletAddress) return;
-    hydratedFor.current = walletAddress;
+    if (hydratedFor.current === cloudWallet) return;
+    hydratedFor.current = cloudWallet;
     setHydrated(false);
     (async () => {
       try {
-        const remote = await fetchPlayer({ data: { wallet: walletAddress } });
+        const remote = await fetchPlayer({ data: { wallet: cloudWallet } });
         if (remote) {
           setState((s) => {
             if (remote.xp <= s.xp && remote.level <= s.level && remote.coins <= s.gold) return s;
@@ -225,19 +225,19 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
         setHydrated(true);
       }
     })();
-  }, [mounted, walletAddress]);
+  }, [mounted, cloudWallet]);
 
   // Debounced cloud sync for the leaderboard/profile.
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!mounted || !walletAddress || !hydrated) return;
+    if (!mounted || !cloudWallet || !hydrated) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(async () => {
       setSyncState("syncing");
       try {
         await syncPlayer({
           data: {
-            wallet: cloudWallet,
+            wallet: walletAddress,
             username: state.username || undefined,
             level: state.level,
             xp: state.xp,
@@ -255,7 +255,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
     };
-  }, [mounted, hydrated, walletAddress, state.username, state.level, state.xp, state.gold, state.harvests]);
+  }, [mounted, hydrated, cloudWallet, state.username, state.level, state.xp, state.gold, state.harvests]);
 
   // 1s tick: re-render growth bars and flip grown tiles to ready.
   const [, force] = useState(0);
