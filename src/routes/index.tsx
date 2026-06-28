@@ -6,7 +6,7 @@ import { useTokenGate } from "@/hooks/useTokenGate";
 import { CROPS } from "@/lib/game-logic";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { CheckCircle2, AlertCircle, Wallet, ArrowDown } from "lucide-react";
-import { Logo } from "@/components/Logo";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({

@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Logo } from "@/components/Logo";
+
 
 type GameApi = ReturnType<typeof useGame>;
 

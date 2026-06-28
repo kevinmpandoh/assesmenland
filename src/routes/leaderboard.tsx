@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLeaderboard, useRewards } from "@/hooks/useVillage";
 import { toast } from "sonner";
 import { Trophy, Sprout, ArrowRight, RefreshCw, Copy, Timer, Gift, History } from "lucide-react";
-import { Logo } from "@/components/Logo";
+
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/leaderboard")({
