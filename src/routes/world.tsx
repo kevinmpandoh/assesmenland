@@ -883,20 +883,33 @@ function World({ address, balance }: { address: string; balance: number }) {
       ctx.roundRect(sx - 8, sy - 22, 16, 20, 7);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = "#ffe3c1";
+      ctx.fillStyle = "#8d5845"; // Brown skin tone
       ctx.beginPath();
       ctx.arc(sx, sy - 28, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      // player hat in the avatar's own color
-      ctx.fillStyle = av.hat;
+      
+      // Face (Eyes and white smile)
+      ctx.fillStyle = "#1b2240";
       ctx.beginPath();
-      ctx.ellipse(sx, sy - 32, 11, 4, 0, 0, Math.PI * 2);
+      ctx.arc(sx - 3, sy - 30, 1.5, 0, Math.PI * 2); // left eye
+      ctx.arc(sx + 3, sy - 30, 1.5, 0, Math.PI * 2); // right eye
+      ctx.fill();
+      
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(sx, sy - 26, 3.5, 0, Math.PI); // smile
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      
+      // Afro Hair
+      ctx.fillStyle = "#1b2240";
       ctx.beginPath();
-      ctx.arc(sx, sy - 33, 6, Math.PI, 0);
-      ctx.closePath();
+      ctx.arc(sx - 6, sy - 34, 5, 0, Math.PI * 2); // left puff
+      ctx.arc(sx + 6, sy - 34, 5, 0, Math.PI * 2); // right puff
+      ctx.arc(sx, sy - 38, 6, 0, Math.PI * 2);     // top puff
+      ctx.arc(sx, sy - 34, 6, 0, Math.PI * 2);     // center fill
       ctx.fill();
 
       ctx.textAlign = "center";
