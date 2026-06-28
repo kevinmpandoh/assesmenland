@@ -28,7 +28,7 @@ function Privacy() {
           This Privacy Policy explains what information Ansem Land ("we", "the game") collects when
           you visit{" "}
           <a href="https://ansemland.cc" className="text-ocean underline">
-            agriland.cc
+            ansemland.cc
           </a>{" "}
           and how we use it. Our goal is to collect as little as possible.
         </p>

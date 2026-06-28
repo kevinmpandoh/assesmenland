@@ -27,7 +27,7 @@ function Terms() {
         <p className="mt-6 text-ink/80 leading-relaxed">
           By using Ansem Land at{" "}
           <a href="https://ansemland.cc" className="text-ocean underline">
-            agriland.cc
+            ansemland.cc
           </a>{" "}
           you agree to these terms. If you don't agree, please don't use the game.
         </p>
