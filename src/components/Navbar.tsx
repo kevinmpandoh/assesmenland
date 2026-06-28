@@ -9,7 +9,7 @@ export function Navbar() {
         <Link to="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           <Logo className="h-8 w-8 shrink-0 boat-bob sm:h-9 sm:w-9" />
           <span className="pixel truncate text-xs text-ink sm:text-base">
-            AGRI&nbsp;<span className="text-sunset-deep">LAND</span>
+            ANSEM&nbsp;<span className="text-sunset-deep">LAND</span>
           </span>
         </Link>
 

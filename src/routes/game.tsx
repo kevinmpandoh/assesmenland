@@ -415,7 +415,7 @@ function ProfileCard({
         const need = (up.minHold - balance).toLocaleString();
         return (
           <p className="mt-4 rounded-xl bg-sunset/15 px-3 py-2 text-center text-xs text-ink ink-border">
-            Hold <span className="font-bold">{need}</span> more $AGRI to reach {up.emoji}{" "}
+            Hold <span className="font-bold">{need}</span> more $ANSEM to reach {up.emoji}{" "}
             <span className="font-bold">{up.name}</span> — {up.blurb}
           </p>
         );
@@ -717,7 +717,7 @@ function ShopPanel({ game }: { game: GameApi }) {
         </span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        The bag holds {bagMax} seeds at your {tier.emoji} {tier.name} tier — hold more $AGRI to
+        The bag holds {bagMax} seeds at your {tier.emoji} {tier.name} tier — hold more $ANSEM to
         carry more. Plant before buying so other players get field space too.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">

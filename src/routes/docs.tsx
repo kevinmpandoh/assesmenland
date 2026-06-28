@@ -121,7 +121,7 @@ function DocsPage() {
         {/* Tiers */}
         <Section id="tiers" title="🏅 Holding Tiers">
           <p className="mb-4 text-sm text-ink/80">
-            Holding 1 token unlocks the game — but the more $AGRI you hold, the more the town opens
+            Holding 1 token unlocks the game — but the more $ANSEM you hold, the more the town opens
             up. Tiers are read-only perks (balance is checked, never spent or staked) and pure
             gameplay quality-of-life, not a financial promise.
           </p>
