@@ -53,12 +53,45 @@ export const Route = createFileRoute("/world")({
   component: WorldPage,
 });
 
+const GUEST_KEY = "agriland-guest-address";
+
+function getOrCreateGuestAddress(): string {
+  if (typeof window === "undefined") return "guest";
+  let id = window.localStorage.getItem(GUEST_KEY);
+  if (!id) {
+    id = "guest-" + Math.random().toString(36).slice(2, 10);
+    window.localStorage.setItem(GUEST_KEY, id);
+  }
+  return id;
+}
+
+function guestDisplayName(addr: string) {
+  return "Guest-" + addr.replace(/^guest-/, "").slice(0, 4).toUpperCase();
+}
+
 function WorldPage() {
   const gate = useTokenGate();
+  const [guest, setGuest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem(GUEST_KEY)) setGuest(getOrCreateGuestAddress());
+  }, []);
+
+  const enterGuest = () => setGuest(getOrCreateGuestAddress());
+  const exitGuest = () => {
+    if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_KEY);
+    setGuest(null);
+  };
+
+  const useGuest = !!guest && !gate.connected;
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      {!gate.connected && <Gate icon={Wallet} title="Connect wallet to enter town" connect />}
+      {!gate.connected && !useGuest && (
+        <Gate icon={Wallet} title="Connect wallet to enter town" connect onGuest={enterGuest} />
+      )}
       {gate.connected && gate.status === "loading" && (
         <Gate icon={Sparkles} title="Checking your wallet…" />
       )}
@@ -71,6 +104,17 @@ function WorldPage() {
       {gate.connected && gate.status === "granted" && (
         <World address={gate.address!} balance={gate.balance} />
       )}
+      {useGuest && (
+        <>
+          <div className="mx-auto mt-3 flex w-full max-w-3xl items-center justify-between gap-3 rounded-xl bg-sunset/20 px-4 py-2 text-xs text-ink ink-border">
+            <span>🎮 Guest mode — progress saved on this device only.</span>
+            <button onClick={exitGuest} className="pill text-xs">
+              Exit guest
+            </button>
+          </div>
+          <World address={guest!} balance={0} />
+        </>
+      )}
     </div>
   );
 }
@@ -81,12 +125,14 @@ function Gate({
   connect,
   getToken,
   onRetry,
+  onGuest,
 }: {
   icon: LucideIcon;
   title: string;
   connect?: boolean;
   getToken?: boolean;
   onRetry?: () => void;
+  onGuest?: () => void;
 }) {
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-10">
@@ -96,8 +142,20 @@ function Gate({
         </div>
         <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
         {connect && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-col items-center gap-3">
             <WalletButton />
+            {onGuest && (
+              <>
+                <p className="text-xs text-muted-foreground">or</p>
+                <button onClick={onGuest} className="chunky-btn chunky-btn-sky text-ink">
+                  🎮 Enter as Guest
+                </button>
+                <p className="max-w-xs text-[11px] text-ink/60">
+                  Walk around the town without a wallet. Guests stay at level 1 and aren't ranked
+                  on the leaderboard.
+                </p>
+              </>
+            )}
           </div>
         )}
         {getToken && (
@@ -250,7 +308,9 @@ function World({ address, balance }: { address: string; balance: number }) {
   const gameRef = useRef(game);
   gameRef.current = game;
 
-  const myName = game.state.username || shortAddress(address);
+  const myName =
+    game.state.username ||
+    (address.startsWith("guest-") ? guestDisplayName(address) : shortAddress(address));
   const nameRef = useRef(myName);
   nameRef.current = myName;
   const levelRef = useRef(game.state.level);
