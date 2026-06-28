@@ -237,7 +237,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
       try {
         await syncPlayer({
           data: {
-            wallet: walletAddress,
+            wallet: cloudWallet,
             username: state.username || undefined,
             level: state.level,
             xp: state.xp,
