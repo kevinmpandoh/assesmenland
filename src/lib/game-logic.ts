@@ -1,4 +1,4 @@
-// Pure game rules for Agri Land — shared by the React hook, the UI
+// Pure game rules for Ansem Land — shared by the React hook, the UI
 // tables (shop, docs), and unit tests. Keep React/browser APIs out.
 
 /**

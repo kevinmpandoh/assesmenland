@@ -5,13 +5,13 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About · Agri Land" },
+      { title: "About · Ansem Land" },
       {
         name: "description",
         content:
-          "Agri Land is a cozy, browser-based farming game built by a small indie team. Learn about our vision, the people behind it, and how to reach us.",
+          "Ansem Land is a cozy, browser-based farming game built by a small indie team. Learn about our vision, the people behind it, and how to reach us.",
       },
-      { property: "og:title", content: "About Agri Land" },
+      { property: "og:title", content: "About Ansem Land" },
       {
         property: "og:description",
         content:
@@ -27,9 +27,9 @@ function About() {
     <div className="relative min-h-screen">
       <Navbar />
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <h1 className="pixel text-3xl text-ink sm:text-4xl">About Agri Land</h1>
+        <h1 className="pixel text-3xl text-ink sm:text-4xl">About Ansem Land</h1>
         <p className="mt-6 text-ink/80 leading-relaxed">
-          Agri Land is a cozy, browser-based farming game where players plant, grow, and harvest
+          Ansem Land is a cozy, browser-based farming game where players plant, grow, and harvest
           crops together on one shared map. It started as a small weekend project and grew into an
           open beta you can play right now, no download, no install, just open the page and farm.
         </p>
@@ -44,7 +44,7 @@ function About() {
 
         <h2 className="pixel mt-10 text-xl text-ink">Who we are</h2>
         <p className="mt-4 text-ink/80 leading-relaxed">
-          Agri Land is built by a tiny independent team of game and web developers. We work in the
+          Ansem Land is built by a tiny independent team of game and web developers. We work in the
           open and listen closely to feedback from our beta players. If you have an idea or want to
           help shape the next season, come say hi on X.
         </p>

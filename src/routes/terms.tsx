@@ -5,11 +5,11 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service · Agri Land" },
+      { title: "Terms of Service · Ansem Land" },
       {
         name: "description",
         content:
-          "The rules for playing Agri Land. A cozy farming game provided as-is during open beta, with no financial promises.",
+          "The rules for playing Ansem Land. A cozy farming game provided as-is during open beta, with no financial promises.",
       },
     ],
   }),
@@ -25,7 +25,7 @@ function Terms() {
         <p className="mt-2 text-xs text-ink/60">Last updated: June 12, 2026</p>
 
         <p className="mt-6 text-ink/80 leading-relaxed">
-          By using Agri Land at{" "}
+          By using Ansem Land at{" "}
           <a href="https://agriland.cc" className="text-ocean underline">
             agriland.cc
           </a>{" "}
@@ -34,7 +34,7 @@ function Terms() {
 
         <h2 className="pixel mt-10 text-xl text-ink">1. The game</h2>
         <p className="mt-4 text-ink/80 leading-relaxed">
-          Agri Land is a free-to-play, browser-based farming game currently in open beta. Features,
+          Ansem Land is a free-to-play, browser-based farming game currently in open beta. Features,
           balance, and game economy may change at any time. The service is provided "as is" without
           warranties of any kind.
         </p>
@@ -48,7 +48,7 @@ function Terms() {
 
         <h2 className="pixel mt-10 text-xl text-ink">3. Token disclaimer</h2>
         <p className="mt-4 text-ink/80 leading-relaxed">
-          Agri Land may reference a community token used for cosmetics and in-game events. This
+          Ansem Land may reference a community token used for cosmetics and in-game events. This
           token is <strong>not an investment</strong>, not a security, and carries no promise of
           financial return. Do not purchase any token expecting profit. Always do your own research
           and only spend what you can afford to lose.
@@ -73,7 +73,7 @@ function Terms() {
 
         <h2 className="pixel mt-10 text-xl text-ink">6. Limitation of liability</h2>
         <p className="mt-4 text-ink/80 leading-relaxed">
-          To the maximum extent permitted by law, Agri Land and its creators are not liable for any
+          To the maximum extent permitted by law, Ansem Land and its creators are not liable for any
           indirect, incidental, or consequential damages arising from your use of the game,
           including loss of in-game progress, wallet activity, or third-party services.
         </p>

@@ -86,13 +86,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Agri Land" },
+      { title: "Ansem Land" },
       {
         name: "description",
         content:
           "A cozy multiplayer farming game on Solana. Plant crops, level up, and grow your land right in the browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land" },
+      { property: "og:title", content: "Ansem Land" },
       {
         property: "og:description",
         content:
@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Agri Land" },
+      { name: "twitter:title", content: "Ansem Land" },
       {
         name: "twitter:description",
         content:
@@ -117,11 +117,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Claim a field, plant a seed, and grow your farm." },
       {
         property: "og:description",
-        content: "Agri Land is a relaxing multiplayer Solana farming.",
+        content: "Ansem Land is a relaxing multiplayer Solana farming.",
       },
       {
         name: "twitter:description",
-        content: "Agri Land is a relaxing multiplayer Solana farming.",
+        content: "Ansem Land is a relaxing multiplayer Solana farming.",
       },
       {
         property: "og:image",

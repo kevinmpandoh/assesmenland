@@ -18,7 +18,7 @@ import {
 export const Route = createFileRoute("/how-to-play")({
   head: () => ({
     meta: [
-      { title: "How to Play · Agri Land" },
+      { title: "How to Play · Ansem Land" },
       {
         name: "description",
         content:
@@ -33,7 +33,7 @@ const STEPS = [
   {
     icon: Wallet,
     title: "1 · Connect & hold the token",
-    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds 1 Agri Land token. That's your deed to the land, nothing else is required.",
+    body: "Connect Phantom or Solflare. The game checks (read-only, no signing) that your wallet holds 1 Ansem Land token. That's your deed to the land, nothing else is required.",
   },
   {
     icon: Sprout,
@@ -75,7 +75,7 @@ function HowToPlayPage() {
         <div className="text-center">
           <h1 className="pixel text-2xl text-ink sm:text-3xl">How to Play</h1>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Agri Land is meant to be slow and cozy. The full loop: plant → wait → harvest → sell →
+            Ansem Land is meant to be slow and cozy. The full loop: plant → wait → harvest → sell →
             upgrade → repeat.
           </p>
         </div>
@@ -139,7 +139,7 @@ function HowToPlayPage() {
               <Coins className="h-4 w-4 text-sunset-deep" /> A note on the token
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              The token is a game key, nothing more. Agri Land makes no promise of profit, yield, or
+              The token is a game key, nothing more. Ansem Land makes no promise of profit, yield, or
               returns, gold is in-game currency with no monetary value. It's here so you can plant,
               grow, and chill.
             </p>

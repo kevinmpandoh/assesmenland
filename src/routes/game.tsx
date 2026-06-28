@@ -58,10 +58,10 @@ export const Route = createFileRoute("/game")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "My Farm · Agri Land" },
+      { title: "My Farm · Ansem Land" },
       {
         name: "description",
-        content: "Plant, grow, harvest, and sell. Build your farm in Agri Land, wallet required.",
+        content: "Plant, grow, harvest, and sell. Build your farm in Ansem Land, wallet required.",
       },
     ],
   }),
@@ -160,7 +160,7 @@ function ConnectGate({ onGuest }: { onGuest: () => void }) {
   return (
     <GateShell icon={Wallet} title="Connect wallet to start farming">
       <p className="mt-3 text-ink/70">
-        Hold {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
+        Hold {MIN_TOKEN_BALANCE} Ansem Land token to claim your farm.
       </p>
       <div className="mt-6 flex flex-col items-center gap-3">
         <WalletButton />

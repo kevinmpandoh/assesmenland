@@ -11,13 +11,13 @@ import { Logo } from "@/components/Logo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Agri Land · Plant, Grow, Prosper on Solana" },
+      { title: "Ansem Land · Plant, Grow, Prosper on Solana" },
       {
         name: "description",
         content:
           "Claim a field, plant your first tomato, and grow it into a farming empire. A chill multiplayer Solana game that runs right in your browser. Open beta.",
       },
-      { property: "og:title", content: "Agri Land · Plant, Grow, Prosper" },
+      { property: "og:title", content: "Ansem Land · Plant, Grow, Prosper" },
       {
         property: "og:description",
         content:
@@ -235,7 +235,7 @@ function TokenSection() {
             </span>
             <h2 className="pixel mt-4 text-2xl text-ink sm:text-3xl">A SMALL PART OF THE WORLD</h2>
             <p className="mt-4 max-w-md text-ink/80">
-              Agri Land has a community token used for cosmetics, seasonal events, and town
+              Ansem Land has a community token used for cosmetics, seasonal events, and town
               features. It is not an investment, not a promise of returns, and not financial advice.
               You can enjoy the game without it. Farm slowly, enjoy the seasons.
             </p>

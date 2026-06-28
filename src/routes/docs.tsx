@@ -7,11 +7,11 @@ import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, TOKEN_MINT } from "@/lib/solana-config
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Docs · Agri Land" },
+      { title: "Docs · Ansem Land" },
       {
         name: "description",
         content:
-          "Everything about Agri Land: token access, crops, prices, grow times, equipment, levels, the shared town, and the roadmap.",
+          "Everything about Ansem Land: token access, crops, prices, grow times, equipment, levels, the shared town, and the roadmap.",
       },
     ],
   }),
@@ -43,7 +43,7 @@ function DocsPage() {
       <Navbar />
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         <div className="text-center">
-          <h1 className="pixel text-2xl text-ink sm:text-3xl">Agri Land Docs</h1>
+          <h1 className="pixel text-2xl text-ink sm:text-3xl">Ansem Land Docs</h1>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             Everything in the game, with exact numbers. Updated with every release.
           </p>
@@ -67,7 +67,7 @@ function DocsPage() {
               <span className="font-semibold">Connect Wallet</span>.
             </li>
             <li>
-              Hold <span className="font-semibold">{MIN_TOKEN_BALANCE} Agri Land token</span>, the
+              Hold <span className="font-semibold">{MIN_TOKEN_BALANCE} Ansem Land token</span>, the
               gate check is read-only; the game never asks you to sign a transaction.
             </li>
             <li>
@@ -94,7 +94,7 @@ function DocsPage() {
         {/* Token */}
         <Section id="token" title="🪙 Token Access">
           <p className="text-sm text-ink/80">
-            Access to Agri Land is gated by holding {MIN_TOKEN_BALANCE} token of this mint on Solana
+            Access to Ansem Land is gated by holding {MIN_TOKEN_BALANCE} token of this mint on Solana
             mainnet:
           </p>
           <code className="mt-3 block overflow-x-auto rounded-xl bg-foam p-3 text-xs ink-border">
@@ -249,7 +249,7 @@ function DocsPage() {
         {/* Rewards */}
         <Section id="rewards" title="🎁 Leaderboard Rewards">
           <p className="text-sm text-ink/80">
-            Agri Land is competitive: the gold leaderboard pays. The program is funded entirely by
+            Ansem Land is competitive: the gold leaderboard pays. The program is funded entirely by
             the token's <span className="font-semibold">creator trading fees</span>, split 50/50:
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">

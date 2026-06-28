@@ -43,10 +43,10 @@ export const Route = createFileRoute("/world")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "The Town · Agri Land" },
+      { title: "The Town · Ansem Land" },
       {
         name: "description",
-        content: "Walk around the Agri Land town, meet other players, and tend the shared fields.",
+        content: "Walk around the Ansem Land town, meet other players, and tend the shared fields.",
       },
     ],
   }),

@@ -1,4 +1,4 @@
-# 🧑‍🌾 Agri Land — Plant, Grow, Prosper on Solana
+# 🧑‍🌾 Ansem Land — Plant, Grow, Prosper on Solana
 
 A cozy, token-gated multiplayer farming game. Connect a Solana wallet, hold at
 least **1 token**, claim your field, and grow it from a single tomato plot into
