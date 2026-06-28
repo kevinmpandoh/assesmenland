@@ -135,6 +135,8 @@ export function saveState(s: GameState) {
  * the global leaderboard stays live.
  */
 export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[0]) {
+  const isGuest = !!walletAddress && walletAddress.startsWith("guest-");
+  const cloudWallet = isGuest ? null : walletAddress;
   const [state, setState] = useState<GameState>(initial);
   const [mounted, setMounted] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("idle");
