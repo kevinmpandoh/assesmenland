@@ -10,7 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import logoAsset from "@/assets/agriland-logo.png.asset.json";
+import ansemLogo from "@/assets/ansem-logo.jpg.asset.json";
 // Wallet adapter base styles, vendored into src/wallet-adapter.css. The
 // package's own styles.css starts with a remote Google Fonts @import that
 // lightningcss can't resolve (the old "Vite 500 CSS error"), so we keep a
@@ -108,11 +108,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         property: "og:image",
-        content: logoAsset.url,
+        content: ansemLogo.url,
       },
       {
         name: "twitter:image",
-        content: logoAsset.url,
+        content: ansemLogo.url,
       },
       { name: "description", content: "Claim a field, plant a seed, and grow your farm." },
       {
@@ -145,12 +145,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/78f968d6-2833-4f25-95c1-bc743a79bb36",
       },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/yILXCrgqGZVI6UiEHNlc1CBqiAH3/social-images/social-1781338453519-asgasdar.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/yILXCrgqGZVI6UiEHNlc1CBqiAH3/social-images/social-1781338453519-asgasdar.webp" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8a5ca54-7880-4815-9666-5a8fca31353a/id-preview-d7df4c1b--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1782651420040.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8a5ca54-7880-4815-9666-5a8fca31353a/id-preview-d7df4c1b--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1782651420040.png" },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: logoAsset.url },
-      { rel: "apple-touch-icon", href: logoAsset.url },
+      { rel: "icon", type: "image/jpeg", href: ansemLogo.url },
+      { rel: "apple-touch-icon", href: ansemLogo.url },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

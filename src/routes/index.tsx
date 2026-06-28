@@ -6,7 +6,7 @@ import { useTokenGate } from "@/hooks/useTokenGate";
 import { CROPS } from "@/lib/game-logic";
 import { MIN_TOKEN_BALANCE, PUMP_FUN_URL, shortAddress } from "@/lib/solana-config";
 import { CheckCircle2, AlertCircle, Wallet, ArrowDown } from "lucide-react";
-import { Logo } from "@/components/Logo";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -83,10 +83,6 @@ function Hero() {
   return (
     <section className="relative">
       <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-10 pt-6 text-center sm:px-6">
-        <div className="boat-bob" aria-hidden>
-          <Logo className="h-28 w-28" />
-        </div>
-
         <h1 className="pixel mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
           ANSEM&nbsp;<span className="text-sunset-deep">LAND</span>
         </h1>

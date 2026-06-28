@@ -1,12 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Logo } from "./Logo";
+
 
 export function Footer() {
   return (
     <footer className="mt-20">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:px-6">
         <div className="flex items-center gap-2">
-          <Logo className="h-7 w-7" />
           <span className="pixel text-xs text-ink">ANSEM&nbsp;LAND</span>
         </div>
 
@@ -15,7 +14,7 @@ export function Footer() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <a
-            href="https://x.com/agrilandcc"
+            href="https://x.com/ansemlandcc"
             target="_blank"
             rel="noreferrer"
             className="pill text-xs"
@@ -44,8 +43,8 @@ export function Footer() {
             Terms
           </Link>
           <span>·</span>
-          <a href="mailto:hello@agriland.cc" className="hover:text-ink">
-            hello@agriland.cc
+          <a href="mailto:hello@ansemland.cc" className="hover:text-ink">
+            hello@ansemland.cc
           </a>
         </div>
         <div className="text-xs text-muted-foreground">
