@@ -34,3 +34,5 @@ dist-ssr
 # SawahVerse local data + secrets
 .data/
 .env
+
+/server

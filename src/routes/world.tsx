@@ -7,6 +7,7 @@ import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/h
 import { cropById, tierForBalance, tierById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import { supabase } from "@/integrations/supabase/client";
+import { Client as ColyseusClient } from "colyseus.js";
 import type { StallKind } from "@/lib/world-map";
 import { getWorldPlots, plantWorldPlot, harvestWorldPlot } from "@/lib/api/game.functions";
 import {
@@ -353,89 +354,82 @@ function World({ address, balance }: { address: string; balance: number }) {
     bubblesRef.current = map;
   }, [messages.data]);
 
-  // Presence via Supabase Realtime "presence" — every player tracks their
-  // position on one shared channel and reads everyone else's live. This
-  // works on Lovable Cloud's client Supabase (already connected) without
-  // any DB writes or RLS, unlike the old server ping which fell back to
-  // per-instance memory and left players invisible to each other.
+  // Presence via Colyseus Room (WebSocket Server)
   useEffect(() => {
-    type Meta = {
-      wallet: string;
-      name: string;
-      level: number;
-      tier: string;
-      x: number;
-      y: number;
-    };
+    let room: any = null;
+    const connectColyseus = async () => {
+      const colyseusUrl = import.meta.env.VITE_COLYSEUS_URL || "ws://localhost:2567";
+      const client = new ColyseusClient(colyseusUrl);
+      
+      try {
+        const me = meRef.current;
+        room = await client.joinOrCreate("world", {
+          wallet: address,
+          name: nameRef.current,
+          level: levelRef.current,
+          tier: tierRef.current,
+          x: Math.round(me.x * 100) / 100,
+          y: Math.round(me.y * 100) / 100
+        });
 
-    const channel = supabase.channel("agriland-world", {
-      config: { presence: { key: address } },
-    });
-
-    const applyState = () => {
-      const everyone = channel.presenceState() as Record<string, Meta[]>;
-      const seen = new Set<string>();
-      for (const key of Object.keys(everyone)) {
-        const meta = everyone[key]?.[0];
-        if (!meta || !meta.wallet || meta.wallet === address) continue;
-        seen.add(meta.wallet);
-        const existing = othersRef.current.get(meta.wallet);
-        if (existing) {
-          existing.tx = meta.x;
-          existing.ty = meta.y;
-          existing.name = meta.name;
-          existing.level = meta.level;
-          existing.tier = meta.tier ?? "sprout";
-        } else {
-          othersRef.current.set(meta.wallet, {
-            x: meta.x,
-            y: meta.y,
-            tx: meta.x,
-            ty: meta.y,
-            name: meta.name,
-            level: meta.level,
-            tier: meta.tier ?? "sprout",
+        // Listen for other players joining
+        room.state.players.onAdd((player: any, sessionId: string) => {
+          if (!player || !player.wallet || player.wallet === address) return;
+          
+          othersRef.current.set(player.wallet, {
+            x: player.x,
+            y: player.y,
+            tx: player.x,
+            ty: player.y,
+            name: player.name,
+            level: player.level,
+            tier: player.tier || "sprout",
           });
-        }
+          setOnlineCount(othersRef.current.size + 1);
+
+          // Listen for this specific player's property changes (movement)
+          player.onChange(() => {
+            const existing = othersRef.current.get(player.wallet);
+            if (existing) {
+              existing.tx = player.x;
+              existing.ty = player.y;
+              existing.name = player.name;
+              existing.level = player.level;
+              existing.tier = player.tier || "sprout";
+            }
+          });
+        });
+
+        // Listen for other players leaving
+        room.state.players.onRemove((player: any, sessionId: string) => {
+          if (player && player.wallet) {
+            othersRef.current.delete(player.wallet);
+            setOnlineCount(othersRef.current.size + 1);
+          }
+        });
+
+      } catch (e) {
+        console.error("Colyseus connection failed", e);
       }
-      for (const key of othersRef.current.keys()) {
-        if (!seen.has(key)) othersRef.current.delete(key);
-      }
-      setOnlineCount(seen.size + 1);
     };
 
-    const trackMe = () => {
-      const me = meRef.current;
-      sessionStorage.setItem(POS_KEY, JSON.stringify({ x: me.x, y: me.y }));
-      return channel.track({
-        wallet: address,
-        name: nameRef.current,
-        level: levelRef.current,
-        tier: tierRef.current,
-        x: Math.round(me.x * 100) / 100,
-        y: Math.round(me.y * 100) / 100,
-      });
-    };
+    connectColyseus();
 
-    channel
-      .on("presence", { event: "sync" }, applyState)
-      .on("presence", { event: "join" }, applyState)
-      .on("presence", { event: "leave" }, applyState)
-      .subscribe((status: string) => {
-        if (status === "SUBSCRIBED") {
-          Promise.resolve(trackMe()).catch(() => {});
-        }
-      });
-
-    // Re-broadcast my position so others see me move (presence diffs only
-    // when the tracked payload changes).
+    // Periodically send my position
     const t = setInterval(() => {
-      Promise.resolve(trackMe()).catch(() => {});
+      if (room && room.connection.isOpen) {
+        const me = meRef.current;
+        sessionStorage.setItem(POS_KEY, JSON.stringify({ x: me.x, y: me.y }));
+        room.send("move", {
+          x: Math.round(me.x * 100) / 100,
+          y: Math.round(me.y * 100) / 100
+        });
+      }
     }, PING_MS);
 
     return () => {
       clearInterval(t);
-      supabase.removeChannel(channel);
+      if (room) room.leave();
     };
   }, [address]);
 
