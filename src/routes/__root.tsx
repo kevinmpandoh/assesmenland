@@ -149,8 +149,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8a5ca54-7880-4815-9666-5a8fca31353a/id-preview-d7df4c1b--003f58c1-4f49-4fb2-937c-f878eee3fbf6.lovable.app-1782651420040.png" },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: logoAsset.url },
-      { rel: "apple-touch-icon", href: logoAsset.url },
+      { rel: "icon", type: "image/jpeg", href: ansemLogo.url },
+      { rel: "apple-touch-icon", href: ansemLogo.url },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
