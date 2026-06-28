@@ -68,13 +68,40 @@ export const Route = createFileRoute("/game")({
   component: GamePage,
 });
 
+const GUEST_KEY = "agriland-guest-address";
+
+function getOrCreateGuestAddress(): string {
+  if (typeof window === "undefined") return "guest";
+  let id = window.localStorage.getItem(GUEST_KEY);
+  if (!id) {
+    id = "guest-" + Math.random().toString(36).slice(2, 10);
+    window.localStorage.setItem(GUEST_KEY, id);
+  }
+  return id;
+}
+
 function GamePage() {
   const gate = useTokenGate();
+  const [guest, setGuest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem(GUEST_KEY)) setGuest(getOrCreateGuestAddress());
+  }, []);
+
+  const enterGuest = () => setGuest(getOrCreateGuestAddress());
+  const exitGuest = () => {
+    if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_KEY);
+    setGuest(null);
+  };
+
+  const useGuest = !!guest && !gate.connected;
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <main className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
-        {!gate.connected && <ConnectGate />}
+        {!gate.connected && !useGuest && <ConnectGate onGuest={enterGuest} />}
         {gate.connected && gate.status === "loading" && <LoadingGate />}
         {gate.connected && gate.status === "insufficient" && (
           <InsufficientGate balance={gate.balance} />
@@ -82,6 +109,17 @@ function GamePage() {
         {gate.connected && gate.status === "error" && <ErrorGate onRetry={gate.refresh} />}
         {gate.connected && gate.status === "granted" && (
           <Dashboard address={gate.address!} balance={gate.balance} />
+        )}
+        {useGuest && (
+          <>
+            <div className="mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-xl bg-sunset/20 px-4 py-2 text-xs text-ink ink-border">
+              <span>🎮 Guest mode — progress saved on this device only.</span>
+              <button onClick={exitGuest} className="pill text-xs">
+                Exit guest
+              </button>
+            </div>
+            <Dashboard address={guest!} balance={0} />
+          </>
         )}
       </main>
       <Footer />
@@ -118,14 +156,22 @@ function GateShell({
   );
 }
 
-function ConnectGate() {
+function ConnectGate({ onGuest }: { onGuest: () => void }) {
   return (
     <GateShell icon={Wallet} title="Connect wallet to start farming">
       <p className="mt-3 text-ink/70">
         Hold {MIN_TOKEN_BALANCE} Agri Land token to claim your farm.
       </p>
-      <div className="mt-6 flex justify-center">
+      <div className="mt-6 flex flex-col items-center gap-3">
         <WalletButton />
+        <p className="text-xs text-muted-foreground">or</p>
+        <button onClick={onGuest} className="chunky-btn chunky-btn-sky text-ink">
+          🎮 Play as Guest
+        </button>
+        <p className="max-w-xs text-[11px] text-ink/60">
+          Try the game without a wallet. Progress is saved only on this device and won't appear on
+          the leaderboard.
+        </p>
       </div>
     </GateShell>
   );
