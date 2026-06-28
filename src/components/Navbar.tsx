@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { WalletButton } from "./WalletButton";
-import { Logo } from "./Logo";
-
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full">
