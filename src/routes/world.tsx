@@ -7,7 +7,6 @@ import { useGame, CROPS, EQUIPMENT, effectiveSellPrice, seedBagSpace } from "@/h
 import { cropById, tierForBalance, tierById } from "@/lib/game-logic";
 import { useChat } from "@/hooks/useVillage";
 import { supabase } from "@/integrations/supabase/client";
-import { Client as ColyseusClient } from "colyseus.js";
 import type { StallKind } from "@/lib/world-map";
 import { getWorldPlots, plantWorldPlot, harvestWorldPlot } from "@/lib/api/game.functions";
 import {
@@ -363,6 +362,9 @@ function World({ address, balance }: { address: string; balance: number }) {
         (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
           ? "ws://localhost:2567"
           : "wss://ansemland-production.up.railway.app";
+      
+      // Dynamically import colyseus.js only on the client side to prevent SSR crashes
+      const { Client: ColyseusClient } = await import("colyseus.js");
       const client = new ColyseusClient(colyseusUrl);
       
       try {
