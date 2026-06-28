@@ -125,12 +125,14 @@ function Gate({
   connect,
   getToken,
   onRetry,
+  onGuest,
 }: {
   icon: LucideIcon;
   title: string;
   connect?: boolean;
   getToken?: boolean;
   onRetry?: () => void;
+  onGuest?: () => void;
 }) {
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-10">
@@ -140,8 +142,20 @@ function Gate({
         </div>
         <h2 className="pixel mt-5 text-xl text-ink">{title}</h2>
         {connect && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-col items-center gap-3">
             <WalletButton />
+            {onGuest && (
+              <>
+                <p className="text-xs text-muted-foreground">or</p>
+                <button onClick={onGuest} className="chunky-btn chunky-btn-sky text-ink">
+                  🎮 Enter as Guest
+                </button>
+                <p className="max-w-xs text-[11px] text-ink/60">
+                  Walk around the town without a wallet. Guests stay at level 1 and aren't ranked
+                  on the leaderboard.
+                </p>
+              </>
+            )}
           </div>
         )}
         {getToken && (
