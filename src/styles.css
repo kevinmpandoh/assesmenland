@@ -56,50 +56,51 @@
 :root {
   --radius: 1rem;
 
-  /* Ansem Land palette — green fields + warm sun accents */
-  --sky: #cdebb0;
-  --sky-deep: #9ed87a;
-  --ocean: #4ca64c;
-  --foam: #eef9e2;
-  --sunset: #ffb05a;
-  --sunset-deep: #f48b2a;
-  --ink: #1f3320;
-  --leaf: #6cc26a;
-  --gold: #ffd166;
-  --sand: #fff1d6;
-  --cyan-soft: #def5c4;
+  /* Ansem Land palette — warm earth, tilled soil + harvest gold */
+  --sky: #e9d3b0;
+  --sky-deep: #c89b6a;
+  --ocean: #6b3e1f;
+  --foam: #f6e7d1;
+  --sunset: #e8a24a;
+  --sunset-deep: #c4671c;
+  --ink: #2a1a10;
+  --leaf: #9c7b3f;
+  --gold: #f0c068;
+  --sand: #fbe9c8;
+  --cyan-soft: #efd8b4;
 
-  --background: #f3fbe8;
+  --background: #f4e3c6;
   --foreground: var(--ink);
-  --card: #ffffff;
+  --card: #fff7e8;
   --card-foreground: var(--ink);
-  --popover: #ffffff;
+  --popover: #fff7e8;
   --popover-foreground: var(--ink);
   --primary: var(--sunset);
   --primary-foreground: var(--ink);
   --secondary: var(--foam);
   --secondary-foreground: var(--ink);
-  --muted: #ecf6df;
-  --muted-foreground: #5a6a4a;
+  --muted: #ead4b0;
+  --muted-foreground: #6b4a30;
   --accent: var(--sky-deep);
   --accent-foreground: var(--ink);
-  --destructive: #e84a4a;
-  --destructive-foreground: #ffffff;
-  --border: #cfe6b3;
-  --input: #e2efce;
+  --destructive: #c0392b;
+  --destructive-foreground: #fff7e8;
+  --border: #c89b6a;
+  --input: #e6c79a;
   --ring: var(--sunset-deep);
 
-  --gradient-sky: linear-gradient(180deg, #cdebb0 0%, #e8f6d2 60%, #fff7e6 100%);
-  --gradient-ocean: linear-gradient(135deg, #4ca64c, #9ed87a);
-  --gradient-sunset: linear-gradient(180deg, #ffc481, #ffb05a 60%, #f48b2a);
+  --gradient-sky: linear-gradient(180deg, #e9d3b0 0%, #f1dfba 60%, #fbe9c8 100%);
+  --gradient-ocean: linear-gradient(135deg, #6b3e1f, #c89b6a);
+  --gradient-sunset: linear-gradient(180deg, #f3c07a, #e8a24a 60%, #c4671c);
   --gradient-hero: radial-gradient(
     ellipse at 80% -5%,
-    #ffd58a 0%,
-    #ffe9b8 25%,
-    #d9efba 60%,
-    #f3fbe8 100%
+    #f7c878 0%,
+    #f0d7a0 25%,
+    #e3bf8a 60%,
+    #f4e3c6 100%
   );
 }
+
 
 @layer base {
   * {
