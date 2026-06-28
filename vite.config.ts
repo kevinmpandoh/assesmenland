@@ -3,7 +3,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 const SERVER_FN_BASE = "/_serverFn/";
 
-export default defineConfig({
+export default defineConfig(({ ssrBuild }) => ({
   tanstackStart: {
     server: { entry: "server" },
   },
@@ -22,13 +22,13 @@ export default defineConfig({
     },
   },
   plugins: [
-    nodePolyfills({
-      // Only polyfill what Solana wallet libs need on the CLIENT. Polyfilling
-      // `process` breaks TanStack Start's `process.env.TSS_*` server-fn base
-      // URL injection (URLs become "/undefined<id>").
-      include: ["buffer", "util", "stream", "events"],
-      globals: { Buffer: true, global: true, process: false },
-      protocolImports: false,
-    }),
-  ],
-});
+    // Only polyfill Node.js built-ins on the client build.
+    // Polyfilling them on the server breaks native Node.js modules (like util in react-dom/server).
+    !ssrBuild &&
+      nodePolyfills({
+        include: ["buffer", "util", "stream", "events"],
+        globals: { Buffer: true, global: true, process: false },
+        protocolImports: false,
+      }),
+  ].filter(Boolean) as any,
+}));
