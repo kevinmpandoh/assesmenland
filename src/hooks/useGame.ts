@@ -135,6 +135,8 @@ export function saveState(s: GameState) {
  * the global leaderboard stays live.
  */
 export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[0]) {
+  const isGuest = !!walletAddress && walletAddress.startsWith("guest-");
+  const cloudWallet = isGuest ? null : walletAddress;
   const [state, setState] = useState<GameState>(initial);
   const [mounted, setMounted] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("idle");
@@ -194,16 +196,16 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   const hydratedFor = useRef<string | null>(null);
   useEffect(() => {
     if (!mounted) return;
-    if (!walletAddress) {
+    if (!cloudWallet) {
       setHydrated(true);
       return;
     }
-    if (hydratedFor.current === walletAddress) return;
-    hydratedFor.current = walletAddress;
+    if (hydratedFor.current === cloudWallet) return;
+    hydratedFor.current = cloudWallet;
     setHydrated(false);
     (async () => {
       try {
-        const remote = await fetchPlayer({ data: { wallet: walletAddress } });
+        const remote = await fetchPlayer({ data: { wallet: cloudWallet } });
         if (remote) {
           setState((s) => {
             if (remote.xp <= s.xp && remote.level <= s.level && remote.coins <= s.gold) return s;
@@ -223,19 +225,19 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
         setHydrated(true);
       }
     })();
-  }, [mounted, walletAddress]);
+  }, [mounted, cloudWallet]);
 
   // Debounced cloud sync for the leaderboard/profile.
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!mounted || !walletAddress || !hydrated) return;
+    if (!mounted || !cloudWallet || !hydrated) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(async () => {
       setSyncState("syncing");
       try {
         await syncPlayer({
           data: {
-            wallet: walletAddress,
+            wallet: cloudWallet,
             username: state.username || undefined,
             level: state.level,
             xp: state.xp,
@@ -253,7 +255,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
     };
-  }, [mounted, hydrated, walletAddress, state.username, state.level, state.xp, state.gold, state.harvests]);
+  }, [mounted, hydrated, cloudWallet, state.username, state.level, state.xp, state.gold, state.harvests]);
 
   // 1s tick: re-render growth bars and flip grown tiles to ready.
   const [, force] = useState(0);
@@ -290,10 +292,14 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
 
   const grant = useCallback((xp: number, gold = 0) => {
     setState((s) => {
+      if (isGuest) {
+        // Guests can earn coins but stay at level 1 with no XP progress.
+        return { ...s, gold: s.gold + gold };
+      }
       const leveled = applyXp(s.level, s.xp, xp);
       return { ...s, xp: leveled.xp, level: leveled.level, gold: s.gold + gold };
     });
-  }, []);
+  }, [isGuest]);
 
   const setUsername = (name: string) => {
     setState((s) => ({ ...s, username: name.trim().slice(0, 20) }));
@@ -345,10 +351,10 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     grant(crop.xp);
     bumpQuest("harvest", 1);
     // High-tier harvests show up in the village activity feed.
-    if (walletAddress && crop.unlockLevel >= 5) {
+    if (cloudWallet && crop.unlockLevel >= 5) {
       logFishCatch({
         data: {
-          wallet: walletAddress,
+          wallet: cloudWallet,
           fishName: crop.name,
           rarity: cropTier(crop),
           value: crop.sellPrice,
@@ -450,10 +456,10 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
     }));
     grant(crop.xp);
     bumpQuest("harvest", 1);
-    if (walletAddress && crop.unlockLevel >= 5) {
+    if (cloudWallet && crop.unlockLevel >= 5) {
       logFishCatch({
         data: {
-          wallet: walletAddress,
+          wallet: cloudWallet,
           fishName: crop.name,
           rarity: cropTier(crop),
           value: crop.sellPrice,
@@ -510,6 +516,7 @@ export function useGame(walletAddress: string | null = null, tier: Tier = TIERS[
   return {
     state,
     syncState,
+    isGuest,
     setUsername,
     plant,
     harvest,
