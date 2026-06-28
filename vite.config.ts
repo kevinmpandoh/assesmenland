@@ -28,7 +28,7 @@ export default defineConfig({
       // URL injection (URLs become "/undefined<id>").
       include: ["buffer", "util", "stream", "events"],
       globals: { Buffer: true, global: true, process: false },
-      protocolImports: true,
+      protocolImports: false,
     }),
   ],
 });
