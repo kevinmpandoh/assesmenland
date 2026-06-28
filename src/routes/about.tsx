@@ -53,12 +53,12 @@ function About() {
         <p className="mt-4 text-ink/80 leading-relaxed">
           The fastest way to reach us is on X:{" "}
           <a
-            href="https://x.com/agrilandcc"
+            href="https://x.com/ansemlandcc"
             target="_blank"
             rel="noreferrer"
             className="text-ocean underline"
           >
-            @agrilandcc
+            @ansemlandcc
           </a>
           . For privacy or legal questions, see our{" "}
           <Link to="/privacy" className="text-ocean underline">

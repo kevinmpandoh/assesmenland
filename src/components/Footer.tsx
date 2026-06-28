@@ -15,7 +15,7 @@ export function Footer() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           <a
-            href="https://x.com/agrilandcc"
+            href="https://x.com/ansemlandcc"
             target="_blank"
             rel="noreferrer"
             className="pill text-xs"
@@ -44,8 +44,8 @@ export function Footer() {
             Terms
           </Link>
           <span>·</span>
-          <a href="mailto:hello@agriland.cc" className="hover:text-ink">
-            hello@agriland.cc
+          <a href="mailto:hello@ansemland.cc" className="hover:text-ink">
+            hello@ansemland.cc
           </a>
         </div>
         <div className="text-xs text-muted-foreground">
